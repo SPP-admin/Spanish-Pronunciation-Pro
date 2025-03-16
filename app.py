@@ -59,7 +59,7 @@ async def login(request: LoginSchema):
     password = request.password
 
     try:
-        user = firebase.auth().sign_in_with_email_and_password(
+        user = auth().sign_in_with_email_and_password(
             email = email,
             password = password
         )
