@@ -1,6 +1,7 @@
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from firebase_admin import credentials, auth
+from firebase_admin import firestore
 import firebase_admin
 from fastapi.responses import JSONResponse
 from models import LoginSchema, SignUpSchema
@@ -10,14 +11,10 @@ import config
 
 sys.path.append("mydir")
 
+
 if not firebase_admin._apps:
     cred = credentials.Certificate("serviceAccountKey.json")
     firebase_admin.initialize_app(cred)
-
-
-firebase = pyrebase.initialize_app(config.firebaseConfig)
-
-
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)
@@ -27,6 +24,8 @@ app = FastAPI(
     title = "Login/Signup",
     docs_url= "/"
 )
+
+firebase = pyrebase.initialize_app(config.firebaseConfig)
 
 @app.post("/signup")
 async def signup(request: SignUpSchema):
@@ -59,7 +58,7 @@ async def login(request: LoginSchema):
     password = request.password
 
     try:
-        user = auth().sign_in_with_email_and_password(
+        user = firebase.auth().sign_in_with_email_and_password(
             email = email,
             password = password
         )
@@ -72,5 +71,3 @@ async def login(request: LoginSchema):
             status_code = 400,
             detail= f"Incorrect login information"
         )
-
-
