@@ -1,5 +1,5 @@
 <button class="fa fa-microphone" id="icon-record-audio" onclick="recordAudio()" style="cursor: pointer;">Start recording</button>
-<p id="transcription-text"></p>
+<p id="transcription-text">Transcription here:</p>
 <script>
 	let recorder = null;
 	
@@ -14,11 +14,13 @@
 		const formData = new FormData();
 		formData.append("base64", base64);
 
+		// Update html with transcription
+		ajax.onreadystatechange = function() {
+		if (this.readyState == 4 && this.status == 200) {
+				document.getElementById("transcription-text").innerText = ajax.responseText;
+			}
+		};
 		ajax.send(formData);
-
-		// Get transcription from server
-		
-		document.getElementById("transcription-text").innerText = ajax.response;
 	}
 
 	function doRecordAudio() {
