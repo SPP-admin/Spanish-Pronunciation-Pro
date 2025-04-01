@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaGoogle } from "react-icons/fa"; // Make sure you installed react-icons
+import { FaGoogle } from "react-icons/fa"; 
 
 // Import Shadcn UI components
 import { Button } from "@/components/ui/button";
@@ -13,11 +13,11 @@ function LoginPage() {
     // Center the card vertically and horizontally
     <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 px-4">
 
-      {/* Use Card as the main container */}
+      {/* Use Card as the main container for login*/}
       <Card className="w-full max-w-sm"> {/* Apply width constraints here */}
         <CardHeader className="text-center space-y-1"> {/* Center header text */}
           <CardTitle className="text-xl font-bold">Welcome To</CardTitle>
-          {/* Apply custom color using arbitrary value */}
+          {/* Applying custom color */}
           <CardDescription className="text-[#00B7FF] text-2xl font-bold">
             !Pronunciemos¡
           </CardDescription>
@@ -30,9 +30,9 @@ function LoginPage() {
             <Input
               id="email"
               type="email"
-              placeholder="" // You might want to add "you@example.com" back
+              placeholder=""
               required
-              // Remember to add state management (e.g., useState) later
+         
             />
           </div>
 
@@ -41,7 +41,7 @@ function LoginPage() {
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Password</Label>
               <Link
-                to="/forgot-password" // Define this route later if needed
+                to="/forgot-password"
                 className="text-sm font-medium text-blue-600 hover:underline dark:text-blue-500"
               >
                 Forgot password?
@@ -50,25 +50,24 @@ function LoginPage() {
             <Input
               id="password"
               type="password"
-              placeholder="" // You might want to add "••••••••" back
+              placeholder=""
               required
-              // Remember to add state management later
+           
             />
           </div>
         </CardContent>
 
-        <CardFooter className="flex flex-col space-y-3 pt-6"> {/* Adjusted spacing */}
+        <CardFooter className="flex flex-col space-y-3 pt-6">
           {/* Email/Password Login Button */}
           <Button
             type="submit"
-            className="w-full bg-[#00B7FF] text-white hover:bg-[#00A3E0]" // Using arbitrary colors
-            // Add onClick handler later for form submission
+            className="w-full bg-[#00B7FF] text-white hover:bg-[#00A3E0]" 
+            // Add onClick handler later 
           >
             Login
           </Button>
 
-          {/* Optional Separator */}
-          <div className="relative my-1"> {/* Adjusted margin */}
+          <div className="relative my-1">
               <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t"></span>
               </div>
@@ -85,11 +84,11 @@ function LoginPage() {
           </Button>
 
           {/* Sign Up Link */}
-          <div className="text-center text-sm text-muted-foreground pt-2"> {/* Use muted-foreground */}
+          <div className="text-center text-sm text-muted-foreground pt-2">
             Don't have an account?{' '}
             <Link
-              to="/signup" // Define this route later if needed
-              className="font-medium hover:underline text-blue-600 " // Use primary text color for link
+              to="/signup"
+              className="font-medium hover:underline text-blue-600 " 
             >
               Register
             </Link>
