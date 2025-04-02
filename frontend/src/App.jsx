@@ -1,11 +1,11 @@
 import React from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button"; // Import Shadcn Button
-import LoginPage from './pages/LoginPage.jsx'; // Import LoginPage component
-import LessonsPage from './pages/LessonsPage.jsx'; // Import LessonsPage component
-import Dashboard from './pages/Dashboard.jsx'; // Import Dashboard component
-import ForgotPasswordPage from './pages/PasswordReset.jsx';  // Import ForgotPasswordPage component
-import SignupPage from './pages/Signup.jsx'; // Import SignupPage component
+import LoginPage from './pages/loginPage.jsx'; // Import LoginPage component
+import LessonsPage from './pages/lessonsPage.jsx'; // Import LessonsPage component
+import Dashboard from './pages/dashboard.jsx'; // Import Dashboard component
+import ForgotPasswordPage from './pages/passwordReset.jsx';  // Import ForgotPasswordPage component
+import SignupPage from './pages/signup.jsx'; // Import SignupPage component
 
 function HomePage() {
   return (
