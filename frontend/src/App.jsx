@@ -1,11 +1,14 @@
 import React from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button"; // Import Shadcn Button
+import Layout from './components/layout.jsx';  // Import Layout component
+
 import LoginPage from './pages/loginPage.jsx'; // Import LoginPage component
-import LessonsPage from './pages/lessonsPage.jsx'; // Import LessonsPage component
+import LessonsPracticePage from './pages/lessonsPracticePage.jsx'; // Import LessonsPage component
 import Dashboard from './pages/dashboard.jsx'; // Import Dashboard component
 import ForgotPasswordPage from './pages/passwordReset.jsx';  // Import ForgotPasswordPage component
 import SignupPage from './pages/signup.jsx'; // Import SignupPage component
+import LessonsPage from './pages/lessons.jsx'; // Import LessonsPage component
 
 function HomePage() {
   return (
@@ -37,21 +40,29 @@ function HomePage() {
 function App() {
   return (
     <div>
-
       {/* --- Route Display Area --- */}
       <Routes>
-        {/* Route for the initial page */}
+        {/* Routes without the navbar*/}
         <Route path="/" element={<HomePage />} />
-        {/* Route for the login page */}
         <Route path="/login" element={<LoginPage />} />
- 
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/passwordReset" element={<ForgotPasswordPage />} />
+
+        {/* Routes with the navbar, wrapped by the layout.jsx component.*/}
+        <Route element={<Layout />}>
+          <Route path="/lessonsPractice" element={<LessonsPracticePage />} />
+          <Route path="/lessons" element={<LessonsPage />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/profile" element={<div>Profile Page</div>} />
+        </Route>
+
+        {/* Example of a route with the layout */}
+
+        <Route path="/lessonsPractice" element={<LessonsPracticePage />} />
+
         <Route path="/lessons" element={<LessonsPage />} />
 
         <Route path="/dashboard" element={<Dashboard />} />
-
-        <Route path="/signup" element={<SignupPage />} />
-
-        <Route path="/passwordReset" element={<ForgotPasswordPage />} />
       </Routes>
     </div>
   );

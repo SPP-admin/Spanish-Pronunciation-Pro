@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
-import loginImage from '@/assets/images/login.jpg';
+import loginImage from '@/assets/images/login2.png';
 
 
 function LoginPage() {
@@ -41,7 +41,7 @@ function LoginPage() {
              <CardHeader className="text-center space-y-1">
                <CardTitle className="text-xl font-bold">Welcome To</CardTitle>
                <CardDescription className="text-[#00B7FF] text-2xl font-bold">
-                 !Pronunciemos!
+               ¡Pronunciemos!
                </CardDescription>
              </CardHeader>
              <CardContent className="space-y-4">
@@ -52,7 +52,7 @@ function LoginPage() {
                <div className="space-y-2">
                  <div className="flex items-center justify-between">
                    <Label htmlFor="password">Password</Label>
-                   <Link to="/forgot-password" className="text-sm font-medium text-blue-600 hover:underline dark:text-blue-500">
+                   <Link to="/passwordReset" className="text-sm font-medium text-blue-600 hover:underline dark:text-blue-500">
                      Forgot password?
                    </Link>
                  </div>
@@ -76,7 +76,7 @@ function LoginPage() {
                </Button>
                <div className="text-center text-sm text-muted-foreground pt-2">
                  Don't have an account?{' '}
-                 <Link to="/signup" className="font-medium text-primary hover:underline">
+                 <Link to="/signup" className="text-sm font-medium text-blue-600 hover:underline dark:text-blue-500">
                    Register
                  </Link>
                </div>

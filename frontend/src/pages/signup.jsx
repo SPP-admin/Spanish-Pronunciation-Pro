@@ -22,7 +22,7 @@ function SignupPage() {
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center space-y-1">
           <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
-          <CardDescription className="text-[#00B7FF] text-2xl font-bold">Join !Pronunciemos¡</CardDescription>
+          <CardDescription className="text-[#00B7FF] text-2xl font-bold">Join ¡Pronunciemos!</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
