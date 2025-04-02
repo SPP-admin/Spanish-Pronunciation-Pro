@@ -3,16 +3,14 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* @theme {
-  --color-brand-blue: #00B7FF; 
-  --color-brand-blue-hover: #00A3E0; 
-
- 
-} */
-
 :root {
-  --color-brand-blue: #00B7FF; 
-  --color-brand-blue-hover: #00A3E0; 
+  --primary: #00B7FF; 
+  --primary-foreground: #FFFFFF; 
+  --primary-hover: #00A3E0; 
+
+  --color-brand-blue: #00B7FF;
+  --color-brand-blue-hover: #00A3E0;
+  
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.13 0.028 261.692);
@@ -20,8 +18,9 @@
   --card-foreground: oklch(0.13 0.028 261.692);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.13 0.028 261.692);
-  --primary: oklch(0.21 0.034 264.665);
-  --primary-foreground: oklch(0.985 0.002 247.839);
+  --primary: #00B7FF;
+  --primary-foreground: #FFFFFF;
+  --primary-hover: #e05d00;
   --secondary: oklch(0.967 0.003 264.542);
   --secondary-foreground: oklch(0.21 0.034 264.665);
   --muted: oklch(0.967 0.003 264.542);
@@ -94,6 +93,7 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
