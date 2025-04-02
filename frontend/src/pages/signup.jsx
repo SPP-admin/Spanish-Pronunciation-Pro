@@ -1,8 +1,6 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom'; // useNavigate for potential redirect after signup
+import { Link, useNavigate } from 'react-router-dom'; 
 
-
-// Import Shadcn UI components (Make sure to add them via CLI if needed)
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,11 +35,6 @@ function SignupPage() {
             <Label htmlFor="password">Password</Label>
             <Input id="password" type="password" placeholder="" required />
           </div>
-           {/* Possible Add Confirm Password field */}
-           {/* <div className="space-y-2">
-             <Label htmlFor="confirm-password">Confirm Password</Label>
-             <Input id="confirm-password" type="password" placeholder="••••••••" required />
-           </div> */}
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <Button onClick={handleSignupClick} className="text-primary-foreground hover:bg-[#00A3E0]">
