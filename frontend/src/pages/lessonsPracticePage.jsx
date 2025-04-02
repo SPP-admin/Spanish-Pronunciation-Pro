@@ -1,6 +1,6 @@
 // src/pages/lessonsPracticePage.jsx
 import React, { useState } from 'react';
-import AudioRecorder from '@/components/AudioRecorder';
+import AudioRecorder from '@/components/audioRecorder.jsx';
 import { Button } from "@/components/ui/button"; //
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"; //
 import { FaArrowLeft, FaArrowRight, FaClock } from 'react-icons/fa';
