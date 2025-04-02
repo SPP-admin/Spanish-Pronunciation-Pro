@@ -8,7 +8,7 @@ function Navbar() {
       <div className="container mx-auto flex items-center justify-between">
         {/* Logo/Brand */}
         <Link to="/" className="text-xl font-bold text-primary"> {/* Using primary color from theme */}
-          Pronuncia
+        ¡Pronunciemos!
         </Link>
 
         {/* Navigation Links */}
