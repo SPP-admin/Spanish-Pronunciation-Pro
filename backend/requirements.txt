@@ -1,0 +1,4 @@
+uvicorn
+fastapi
+firebase_admin
+google-cloud-firestore
