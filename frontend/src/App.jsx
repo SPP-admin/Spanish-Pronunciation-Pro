@@ -1,35 +1,70 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React from 'react';
+import { Routes, Route, Link } from 'react-router-dom';
+import { Button } from "@/components/ui/button"; // Import Shadcn Button
+import Layout from './components/layout.jsx';  // Import Layout component
 
-function App() {
-  const [count, setCount] = useState(0)
+import LoginPage from './pages/loginPage.jsx'; // Import LoginPage component
+import LessonsPracticePage from './pages/lessonsPracticePage.jsx'; // Import LessonsPage component
+import Dashboard from './pages/dashboard.jsx'; // Import Dashboard component
+import ForgotPasswordPage from './pages/passwordReset.jsx';  // Import ForgotPasswordPage component
+import SignupPage from './pages/signup.jsx'; // Import SignupPage component
+import LessonsPage from './pages/lessons.jsx'; // Import LessonsPage component
 
+function HomePage() {
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div>
+      <h1>Spanish Pronunciation Pro</h1>
+
+        <h2>Home Page</h2>
+      <p>This is the initial page. Click the button below to go to Login.</p>
+
+
+{/* --- Navigation Area --- */}
+
+<nav style={{ marginBottom: '20px' }}>
+
+  <Button asChild variant="default" className="text-primary-foreground hover:bg-[#00A3E0]">
+   
+    <Link to="/login">Go to Login Page</Link>
+  </Button>
+
+  <Button asChild variant="default" className="text-primary-foreground hover:bg-[#00A3E0]">
+    <Link to="/lessons">Go to Lessons Page</Link>
+  </Button>
+
+</nav>
+    </div>
+  );
 }
 
-export default App
+function App() {
+  return (
+    <div>
+      {/* --- Route Display Area --- */}
+      <Routes>
+        {/* Routes without the navbar*/}
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/passwordReset" element={<ForgotPasswordPage />} />
+
+        {/* Routes with the navbar, wrapped by the layout.jsx component.*/}
+        <Route element={<Layout />}>
+          <Route path="/lessonsPractice" element={<LessonsPracticePage />} />
+          <Route path="/lessons" element={<LessonsPage />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/profile" element={<div>Profile Page</div>} />
+        </Route>
+
+        {/* Example of a route with the layout */}
+
+        <Route path="/lessonsPractice" element={<LessonsPracticePage />} />
+
+        <Route path="/lessons" element={<LessonsPage />} />
+
+        <Route path="/dashboard" element={<Dashboard />} />
+      </Routes>
+    </div>
+  );
+}
+export default App;
