@@ -5,7 +5,7 @@ from firebase_admin import firestore
 import firebase_admin
 from fastapi.responses import JSONResponse
 from models import LoginSchema, SignUpSchema
-import pyrebase
+#import pyrebase
 #import config
 from datetime import datetime
 from google.cloud.firestore_v1.base_query import FieldFilter
