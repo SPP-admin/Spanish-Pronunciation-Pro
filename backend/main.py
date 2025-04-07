@@ -6,16 +6,16 @@ import firebase_admin
 from fastapi.responses import JSONResponse
 from models import LoginSchema, SignUpSchema
 import pyrebase
-import config
+#import config
 from datetime import datetime
 from google.cloud.firestore_v1.base_query import FieldFilter
 
 if not firebase_admin._apps:
-    cred = credentials.Certificate("serviceAccountKey.json")
-    firebase_admin.initialize_app(cred)
+    #cred = credentials.Certificate("serviceAccountKey.json")
+    firebase_admin.initialize_app()
 
 if __name__ == "__main__":
-    uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("app:app", host="0.0.0.0", port=8080, reload=True)
 
 app = FastAPI(
     description = "API's for the Spanish Pronunciation Pro Project",
@@ -24,7 +24,7 @@ app = FastAPI(
 )
 
 db = firestore.client()
-firebase = pyrebase.initialize_app(config.firebaseConfig)
+#firebase = pyrebase.initialize_app(config.firebaseConfig)
 
 @app.post("/signup")
 async def signup(request: SignUpSchema):
@@ -68,7 +68,7 @@ async def login(request: LoginSchema):
     password = request.password
 
     try:
-        user = firebase.auth().sign_in_with_email_and_password(
+        user = auth().sign_in_with_email_and_password(
             email = email,
             password = password
         )
