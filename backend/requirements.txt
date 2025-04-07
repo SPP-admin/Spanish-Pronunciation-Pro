@@ -1,3 +1,5 @@
-fastapi
 uvicorn
-gunicorn
+fastapi
+firebase_admin
+google-cloud-firestore
+
