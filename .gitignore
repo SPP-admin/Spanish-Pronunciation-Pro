@@ -131,3 +131,16 @@ dist
 
 # Ignore audio file
 audios.webm
+
+# Firebase Admin SDK key
+backend/spanish-pronunciation-pro-firebase-adminsdk-fbsvc-af37a865d2.json
+
+# Python temp files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.p~ 
+*.swp
+*.bak
