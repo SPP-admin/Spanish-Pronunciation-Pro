@@ -1,5 +1,8 @@
-<button class="fa fa-microphone" id="icon-record-audio" onclick="recordAudio()" style="cursor: pointer;">Start recording</button>
-<p id="transcription-text">Transcription here:</p>
+<button onclick="generateSentence()" style="cursor:pointer; font-size:5vw">Generate a practice sentence</button>
+<p id="generated-sentence" style="font-size:5vw"></p>
+<br>
+<button class="fa fa-microphone" id="icon-record-audio" onclick="recordAudio()" style="cursor: pointer; font-size:5vw">Start recording</button>
+<p id="transcription-text" style="font-size:5vw">Transcription here:</p>
 <script>
 	let recorder = null;
 	
@@ -121,7 +124,25 @@
 			})
 		})
 	}
+	function generateSentence() {
+		// create an instance for AJAX
+		var ajax = new XMLHttpRequest();
 
+		// set request method as POST, set URL and set asynchronous to true
+		ajax.open("POST", "http://localhost:8080/generateSentence", true);
+
+		// send base64 string to server
+		const formData = new FormData();
+		formData.append("Generate a Spanish sentence.", "Generate a Spanish sentence.");
+
+		// Update html with transcription
+		ajax.onreadystatechange = function() {
+		if (this.readyState == 4 && this.status == 200) {
+				document.getElementById("generated-sentence").innerText = ajax.responseText;
+			}
+		};
+		ajax.send(formData);
+	}
 	// function to record audio
 	async function recordAudio() {
 		// get permission to access microphone

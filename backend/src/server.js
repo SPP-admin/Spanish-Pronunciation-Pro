@@ -24,6 +24,15 @@ const openai = new OpenAI({
 });
 
 http.listen(8080, function () {
+	app.post("/generateSentence", async function (request, result) {
+		const response = await openai.responses.create({
+			model: "gpt-4o",
+			input: "Generate a sentence in Spanish.",
+		});
+		
+		  console.log(response.output_text);
+		  result.send(response.output_text);
+	})
     app.post("/sendVoiceNote", async function (request, result) {
         const base64 = request.fields.base64
 		let transcribedText = request.fields.transcribedText;
