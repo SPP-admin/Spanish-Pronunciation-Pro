@@ -27,7 +27,7 @@ http.listen(8080, function () {
 	app.post("/generateSentence", async function (request, result) {
 		const response = await openai.responses.create({
 			model: "gpt-4o",
-			input: "Generate a sentence in Spanish.",
+			input: "Generate a sentence in Spanish. I only want a sentence, no explanation.",
 		});
 		
 		  console.log(response.output_text);
