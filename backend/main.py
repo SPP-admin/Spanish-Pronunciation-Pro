@@ -141,7 +141,7 @@ async def updateAccuracy(uid, new_accuracy):
         query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
         doc_id = query_ref[0].id
         doc_ref = db.collection('stats').document(doc_id).update({"accuracy_rate": new_accuracy})
-        return JSONResponse(content={"message": f"Accuracy was successfully updated to a value of {int(new_accuracy)}" }, 
+        return JSONResponse(content={"message": f"Accuracy was successfully updated to a value of {int(new_accuracy)}%" }, 
                                     status_code = 201)
     except Exception:
         raise HTTPException(
@@ -183,7 +183,7 @@ async def updateCompletedLessons(uid):
     
 # When a user logs in consecutively update their study streak.
 @app.patch("/updateStudyStreak")
-async def updateCompletedLessons(uid):
+async def updateStudyStreak(uid):
     try:
         doc_ref = db.collection('stats')
         query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
@@ -199,7 +199,7 @@ async def updateCompletedLessons(uid):
    
 # When a user uses the pronounciation checker, update the value.
 @app.patch("/updateUses")
-async def updateCompletedLessons(uid):
+async def updateCompletedUses(uid):
     try:
         doc_ref = db.collection('stats')
         query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
@@ -214,8 +214,8 @@ async def updateCompletedLessons(uid):
         )
    
 # Get the lessons that the user has previously completed.
-@app.get("/getLessons")
-async def getLessons(uid):
+@app.get("/getLessonProgress")
+async def getLessonProgress(uid):
     try:
         doc_ref = db.collection('lessons')
 
@@ -228,11 +228,8 @@ async def getLessons(uid):
             status_code=400,
             detail= f"Error loading lesson data."
         )
-    
-@app.get("/setLessons")
-async def setLessons(uid):
-    pass
 
+# Get the user achievments from the database.
 @app.get("/getAchievements")
 async def getAchievements(uid):
     try:
@@ -248,18 +245,74 @@ async def getAchievements(uid):
             detail= f"Error fetching user achievements."
         )
 
+# Push newest activity to the activities array, if the list is full then pop the old activities.
+@app.patch("/updateActivityHistory")
+async def updateActivityHistory(uid, activity):
+    try:
+        doc_ref = db.collection('activity_history')
+        query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
+        doc_id = query_ref[0].id
+        doc_ref = db.collection('activity_history').document(doc_id).get()
+        activities = doc_ref.to_dict().get('activities', [])
+
+        while(len(activities) >= 3):
+            activities.pop(0)
+
+        activities.append(activity)
+
+        doc_ref = db.collection('activity_history').document(doc_id).update({"activities": activities})
+        return JSONResponse(content={"message": f"User's recent activity has been added to their history.'" }, 
+                                    status_code = 201)
+
+    except Exception:
+        raise HTTPException(
+            status_code=400,
+            detail= f"Error updating activity history."
+        )
+
+# Get the activities array from the database
 @app.get("/getActivityHistory")
-async def getActivityHistory():
-    pass
+async def getActivityHistory(uid):
+    try: 
+        doc_ref = db.collection('activity_history')
+        query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
+        doc_id = query_ref[0].id
+        doc_ref = db.collection('activity_history').document(doc_id).get()
+        activities = doc_ref.to_dict().get('activities', [])
 
-@app.get("/getProgress")
-async def getProgress():
-    pass
+        return JSONResponse(content={"activity_history": activities }, 
+                                    status_code = 201)
+    except Exception:
+        raise HTTPException(
+            status_code=400,
+            detail= f"Error fetching activity history."
+        )
 
+# Fetch the user 
 @app.get("/getUserAccuracy")
-async def getUserAccuracy():
+async def getUserAccuracy(uid):
+    try: 
+        doc_ref = db.collection('stats')
+
+        query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
+        stats = query_ref[0].to_dict()
+        return JSONResponse(content={"accuracy_rate": int(stats["accuracy_rate"])},
+                            status_code=201)
+    except:
+                         raise HTTPException(
+            status_code=400,
+            detail= f"Error fetching accuracy."
+        )
+
+@app.get("/getChunkProgress")
+async def getProgress(uid, lesson):
     pass
 
+@app.get("/setLessonProgress")
+async def setLessons(uid):
+    pass
+
+# Datetime test
 @app.post("/")
 async def function():
     date = datetime.now()
