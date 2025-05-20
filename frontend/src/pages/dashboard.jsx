@@ -21,7 +21,7 @@ function Dashboard() {
 
   return (
     <div className="container mx-auto p-4 md:p-6"> {/* Basic container */}
-      <h2 className="text-3xl font-bold mb-6">Your Dashboard - Soon to be Profile page.</h2>
+      <h2 className="text-3xl font-bold mb-6">Your Dashboard</h2>
 
       {/* Layout based on Mockup (using placeholders) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

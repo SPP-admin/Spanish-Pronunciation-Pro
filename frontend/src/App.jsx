@@ -9,6 +9,7 @@ import Dashboard from './pages/dashboard.jsx'; // Import Dashboard component
 import ForgotPasswordPage from './pages/passwordReset.jsx';  // Import ForgotPasswordPage component
 import SignupPage from './pages/signup.jsx'; // Import SignupPage component
 import LessonsPage from './pages/lessons.jsx'; // Import LessonsPage component
+import ProfilePage from './pages/profilePage.jsx';
 
 function HomePage() {
   return (
@@ -53,10 +54,10 @@ function App() {
           <Route path="/lessonsPractice" element={<LessonsPracticePage />} />
           <Route path="/lessons" element={<LessonsPage />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/profile" element={<div>Profile Page</div>} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Route>
 
-        {/* Example of a route with the layout */}
+        {/* Routes with the navbar, wrapped by the layout.jsx component.*/}
 
         <Route path="/lessonsPractice" element={<LessonsPracticePage />} />
 
