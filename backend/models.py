@@ -8,3 +8,12 @@ class SignUpSchema(BaseModel):
 class LoginSchema(BaseModel):
     email:str
     password:str
+
+class ChunkSchema(BaseModel):
+    lesson:str
+    chunk:str
+    completed:bool
+    completionDate:str
+
+class BaseSchema(BaseModel):
+    uid: str

@@ -221,7 +221,9 @@ async def getLessonProgress(uid):
 
         query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
 
-        return JSONResponse(content={"lesson_data": query_ref[0].to_dict()},
+        data = query_ref[0].to_dict()
+
+        return JSONResponse(content={"lesson_data": data["lesson_data"]},
                             status_code=201)
     except:
                 raise HTTPException(
@@ -233,11 +235,11 @@ async def getLessonProgress(uid):
 @app.get("/getAchievements")
 async def getAchievements(uid):
     try:
-        doc_ref = db.collection('lessons')
+        doc_ref = db.collection('achievements')
 
         query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
 
-        return JSONResponse(content={"lesson_data": query_ref[0].to_dict()},
+        return JSONResponse(content={"achievments": query_ref[0].to_dict()},
                             status_code=201)
     except:
                          raise HTTPException(
@@ -288,7 +290,7 @@ async def getActivityHistory(uid):
             detail= f"Error fetching activity history."
         )
 
-# Fetch the user 
+# Fetch the user accuracy
 @app.get("/getUserAccuracy")
 async def getUserAccuracy(uid):
     try: 
@@ -296,6 +298,7 @@ async def getUserAccuracy(uid):
 
         query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
         stats = query_ref[0].to_dict()
+        
         return JSONResponse(content={"accuracy_rate": int(stats["accuracy_rate"])},
                             status_code=201)
     except:
@@ -305,12 +308,86 @@ async def getUserAccuracy(uid):
         )
 
 @app.get("/getChunkProgress")
-async def getProgress(uid, lesson):
+async def getProgress(uid, ChunkSchema):
     pass
 
-@app.get("/setLessonProgress")
-async def setLessons(uid):
+@app.patch("/updateChunkProgress")
+async def getProgress(uid, ChunkSchema):
     pass
+
+# Sets the chunk progress. Not done
+@app.post("/setChunkProgress")
+async def setChunkProgress(request: ChunkSchema, uid):
+    chunk = request.chunk
+    completed = request.completed
+    try:
+         doc_ref = db.collection('chunks')
+         
+         query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
+         doc_id = query_ref[0].id
+         doc_ref = db.collection('chunks').document(doc_id).get()
+        
+         return JSONResponse(content={"message": "Chunk was successfully updated."}, 
+                                    status_code = 201)
+    except:
+         raise HTTPException(
+              status_code=400,
+              detail= f"Error setting chunk progress."
+         )
+
+# Updates the lesson progress array in the lessons collection.
+@app.patch("/updateLessonProgress")
+async def updateLessonProgress(uid, lesson: int):
+     try:
+          doc_ref = db.collection('lessons')
+          query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
+          doc_id = query_ref[0].id
+          data = query_ref[0].to_dict()
+          data['lesson_data'][lesson]['completed'] = True
+          print(data['lesson_data'])
+
+          doc_ref = db.collection('lessons').document(doc_id).update({"lesson_data": data})
+
+          return JSONResponse(content={"message": "Lesson progress was successfully updated."}, 
+                                    status_code = 201)
+        
+     except:
+         raise HTTPException(
+              status_code=400,
+              detail= f"Error updating lesson progress."
+         )
+
+# Sets the lesson progress to false and initializes the chunk array.
+@app.post("/setLessonProgress")
+async def setLessonProgress(uid):
+    try:
+         doc_ref = db.collection('lessons')
+
+         query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
+         if(query_ref):
+                    raise HTTPException(
+                    status_code=400,
+                    detail= f"Lesson Progress already exists"
+                ) 
+         else:
+            doc = doc_ref.document()
+            data = {
+              'id': uid,
+              'lesson_data': [
+                   {'completed': False, 'completion_date': None} for _ in range(7)
+              ],
+              'chunks': None
+            }
+
+            doc.set(data)
+
+            return JSONResponse(content={"message": "Lesson progress was successfully intialized."}, 
+                                    status_code = 201)
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail= f"Error intializing lesson progress {str(e)}."
+        )
 
 # Datetime test
 @app.post("/")
@@ -333,6 +410,3 @@ async def function():
         )'
     '''
     return ret_date
-
-
-
