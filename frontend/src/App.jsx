@@ -44,7 +44,7 @@ function App() {
       {/* --- Route Display Area --- */}
       <Routes>
         {/* Routes without the navbar*/}
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<LoginPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/passwordReset" element={<ForgotPasswordPage />} />
