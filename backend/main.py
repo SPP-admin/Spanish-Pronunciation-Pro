@@ -12,10 +12,11 @@ from google.cloud.firestore_v1.base_query import FieldFilter
 
 if not firebase_admin._apps:
     #cred = credentials.Certificate("serviceAccountKey.json")
-    firebase_admin.initialize_app()
+    cred = credentials.Certificate("spanish-pronunciation-pro-firebase-adminsdk-fbsvc-af37a865d2.json")
+    firebase_admin.initialize_app(cred)
 
 if __name__ == "__main__":
-    uvicorn.run("app:app", host="0.0.0.0", port=8080, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8080, reload=True)
 
 app = FastAPI(
     description = "API's for the Spanish Pronunciation Pro Project",
