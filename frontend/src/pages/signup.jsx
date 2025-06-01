@@ -5,13 +5,36 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import api from "../api.js";
+import {useState} from 'react';
 
 function SignupPage() {
   const navigate = useNavigate(); // For navigation after signup
+  const [cred, setCred] = useState({
+    email: '',
+    password: '',
+    displayName: '',
+  });
 
-  const handleSignupClick = () => {
+  const handleChange = (e) => {
+    setCred({...cred,
+      [e.target.name]: e.target.value
+    });
+  };
+
+
+  const handleSignupClick = async () => {
     // TODO: Implement Firebase signup logic here (validate inputs, call Firebase auth)
     console.log("Signup clicked (Not Implemented)");
+    console.log(cred);
+
+    try {
+      const response = await api.post('/signup', cred);
+      console.log(response)
+
+      } catch(error) {
+        console.log(error)
+      }
     // Example: navigate('/dashboard'); // Navigate after successful signup
   };
 
@@ -25,15 +48,15 @@ function SignupPage() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="username">Username</Label>
-            <Input id="username" placeholder="Choose a username" required />
+            <Input id="username" name="displayName" placeholder="Choose a username" value = {cred.displayName} onChange = {handleChange} required />
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="you@example.com" required />
+            <Input id="email" name="email" type="email" placeholder="you@example.com" value = {cred.email} onChange = {handleChange} required />
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" placeholder="" required />
+            <Input id="password" name="password" type="password" placeholder="" required value = {cred.password} onChange = {handleChange} />
           </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">

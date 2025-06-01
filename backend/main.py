@@ -4,18 +4,19 @@ from firebase_admin import credentials, auth
 from firebase_admin import firestore
 import firebase_admin
 from fastapi.responses import JSONResponse
-from models import LoginSchema, SignUpSchema
-#import pyrebase
-#import config
+from models import LoginSchema, SignUpSchema, ChunkSchema
+import pyrebase
+import config
 from datetime import datetime
 from google.cloud.firestore_v1.base_query import FieldFilter
+from fastapi.middleware.cors import CORSMiddleware
 
 if not firebase_admin._apps:
-    #cred = credentials.Certificate("serviceAccountKey.json")
-    firebase_admin.initialize_app()
+    cred = credentials.Certificate("serviceAccountKey.json")
+    firebase_admin.initialize_app(cred)
 
 if __name__ == "__main__":
-    uvicorn.run("app:app", host="0.0.0.0", port=8080, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
 
 app = FastAPI(
     description = "API's for the Spanish Pronunciation Pro Project",
@@ -23,8 +24,21 @@ app = FastAPI(
     docs_url= "/"
 )
 
+origins = [
+      "http://localhost:5173",
+      "http://127.0.0.1:5173",
+]
+
+app.add_middleware(
+      CORSMiddleware,
+      allow_origins = origins,
+      allow_credentials = True,
+      allow_methods=["*"],
+      allow_headers=["*"],
+)
+
 db = firestore.client()
-#firebase = pyrebase.initialize_app(config.firebaseConfig)
+firebase = pyrebase.initialize_app(config.firebaseConfig)
 
 @app.post("/signup")
 async def signup(request: SignUpSchema):
@@ -68,19 +82,28 @@ async def login(request: LoginSchema):
     password = request.password
 
     try:
-        user = auth().sign_in_with_email_and_password(
+        user = firebase.auth().sign_in_with_email_and_password(
             email = email,
             password = password
         )
         id = user['idToken']
+
+        print(user['localId'])
+
         # user.localId gives id for database purposes
-        return JSONResponse(content={"id":id
-                                     }, status_code = 201
-                            )
-    except:
+        return JSONResponse(
+            content={
+                "user_ids": {
+                    "auth_id": id,
+                    "local_id": user['localId']
+                }
+            },
+            status_code=201
+)
+    except Exception as e:
         raise HTTPException(
             status_code = 400,
-            detail= f"Incorrect login information."
+            detail= f"Incorrect login information. {str(e)}"
         )
 
 # user statistics are display on the profile page.
@@ -467,3 +490,6 @@ async def setLessonProgress(uid):
             status_code=400,
             detail= f"Error intializing lesson progress {str(e)}."
         )
+
+
+
