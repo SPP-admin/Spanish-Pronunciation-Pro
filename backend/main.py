@@ -4,7 +4,7 @@ from firebase_admin import credentials, auth
 from firebase_admin import firestore
 import firebase_admin
 from fastapi.responses import JSONResponse
-from models import LoginSchema, SignUpSchema, ChunkSchema
+from models import LoginSchema, SignUpSchema, ChunkSchema, BaseSchema
 import pyrebase
 import config
 from datetime import datetime
@@ -66,7 +66,7 @@ async def signup(request: SignUpSchema):
         }
         doc_ref.set(data)
 
-        return JSONResponse(content={"message": "User was successfully added."}, 
+        return JSONResponse(content={"id": data['id']}, 
                                 status_code = 201)
 
     except auth.EmailAlreadyExistsError:
@@ -126,20 +126,20 @@ async def getUserStatistics(uid):
     
 # Initialize the user statistics after the user creates an account.
 @app.post("/setUserStatistics")
-async def setUserStaistics(uid):
+async def setUserStatistics(request: BaseSchema):
     try:
         doc_ref = db.collection('stats')
 
         data = {
             'accuracy_rate': int(0),
-            'id': uid,
+            'id': request.id,
             'completed_lessons': int(0),
             'practice_sessions': int(0),
             'study_streak': int(0),
             'uses': int(0)
         }
 
-        query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
+        query_ref = doc_ref.where(filter= FieldFilter("id", "==", request.id)).get()
         if(query_ref):
                     raise HTTPException(
                     status_code=400,
@@ -258,11 +258,11 @@ async def getLessonProgress(uid):
 
 # Initializes the achievement array.
 @app.post("/setAchievements")
-async def setAchievements(uid):
+async def setAchievements(request: BaseSchema):
      try:
           doc_ref = db.collection('achievements')
 
-          query_ref = doc_ref.where(filter=FieldFilter("id", "==", uid)).get()
+          query_ref = doc_ref.where(filter=FieldFilter("id", "==", request.id)).get()
           if(query_ref):
                     raise HTTPException(
                     status_code=400,
@@ -271,7 +271,7 @@ async def setAchievements(uid):
           else: 
             doc = doc_ref.document()
             data = {
-                 'id': uid,
+                 'id': request.id,
                  'achievements': []
             }
             doc.set(data)
@@ -461,11 +461,11 @@ async def updateLessonProgress(uid, lesson: int):
 
 # Sets the lesson progress to false and initializes the chunk array.
 @app.post("/setLessonProgress")
-async def setLessonProgress(uid):
+async def setLessonProgress(request: BaseSchema):
     try:
          doc_ref = db.collection('lessons')
 
-         query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
+         query_ref = doc_ref.where(filter= FieldFilter("id", "==", request.id)).get()
          if(query_ref):
                     raise HTTPException(
                     status_code=400,
@@ -474,7 +474,7 @@ async def setLessonProgress(uid):
          else:
             doc = doc_ref.document()
             data = {
-              'id': uid,
+              'id': request.id,
               'lesson_data': [
                    {'completed': False, 'completion_date': None} for _ in range(7)
               ],

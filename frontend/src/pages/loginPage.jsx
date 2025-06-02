@@ -10,12 +10,36 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 
 import loginImage from '@/assets/images/login2.png';
 
+import api from "../api.js";
+import {useState} from 'react';
+
 
 function LoginPage() {
   const navigate = useNavigate();
+  const [cred, setCred] = useState({
+    email: '',
+    password: '',
+  });
 
-  const handleLoginClick = () => {
-    navigate('/dashboard');
+  const handleChange = (e) => {
+    setCred(
+      {...cred, 
+        [e.target.name]: e.target.value
+      })
+  }
+
+  const handleLoginClick = async () => {
+    console.log("login clicked (Not Implemented)");
+    console.log(cred);
+
+    try {
+      const response = await api.post('/login', cred);
+      alert(response)
+      navigate('/dashboard');
+
+      } catch(error) {
+        console.log(error)
+      }
   };
 
   const handleGoogleClick = () => {
@@ -47,7 +71,7 @@ function LoginPage() {
              <CardContent className="space-y-4">
                <div className="space-y-2">
                  <Label htmlFor="email">Email</Label>
-                 <Input id="email" type="email" placeholder="" required />
+                 <Input id="email" type="email" placeholder="" name ="email" value = {cred.email} onChange = {handleChange} required />
                </div>
                <div className="space-y-2">
                  <div className="flex items-center justify-between">
@@ -56,7 +80,7 @@ function LoginPage() {
                      Forgot password?
                    </Link>
                  </div>
-                 <Input id="password" type="password" placeholder="" required />
+                 <Input id="password" type="password" placeholder="" name ="password" value = {cred.password} onChange = {handleChange} required />
                </div>
              </CardContent>
              <CardFooter className="flex flex-col space-y-3 pt-6">

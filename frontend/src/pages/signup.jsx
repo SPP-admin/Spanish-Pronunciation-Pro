@@ -30,13 +30,15 @@ function SignupPage() {
 
     try {
       const response = await api.post('/signup', cred);
-      alert(response.data.message)
+      await api.post('/setUserStatistics', {id: response.data.id})
+      await api.post('/setAchievements', {id: response.data.id})
+      await api.post('/setLessonProgress', {id: response.data.id})
+      alert('Account Created!')
       navigate('/login');
 
       } catch(error) {
-        console.log(error)
+        alert(error)
       }
-    // Example: navigate('/dashboard'); // Navigate after successful signup
   };
 
   return (
