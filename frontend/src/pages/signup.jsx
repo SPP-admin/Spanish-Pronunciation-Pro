@@ -30,7 +30,8 @@ function SignupPage() {
 
     try {
       const response = await api.post('/signup', cred);
-      console.log(response)
+      alert(response.data.message)
+      navigate('/login');
 
       } catch(error) {
         console.log(error)
