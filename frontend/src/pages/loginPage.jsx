@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/firebase.js';
 
 import loginImage from '@/assets/images/login2.png';
 
@@ -14,7 +16,7 @@ import api from "../api.js";
 import {useState} from 'react';
 
 
-function LoginPage() {
+function LoginPage({}) {
   const navigate = useNavigate();
   const [cred, setCred] = useState({
     email: '',
@@ -29,15 +31,14 @@ function LoginPage() {
   }
 
   const handleLoginClick = async () => {
-    console.log("login clicked (Not Implemented)");
-    console.log(cred);
 
     try {
-      const response = await api.post('/login', cred);
-      alert(response)
+      const userCredential = await signInWithEmailAndPassword(auth, cred.email, cred.password)
+
       navigate('/dashboard');
 
       } catch(error) {
+        set
         console.log(error)
       }
   };
