@@ -80,9 +80,9 @@ function App() {
         <Route element={<ProtectedRoute user={user} />}>
         {/* Routes with the navbar, wrapped by the layout.jsx component.*/}
           <Route element={<Layout />}>
-            <Route path="/lessonsPractice" element={<LessonsPracticePage />} />
-            <Route path="/lessons" element={<LessonsPage />} />
-            <Route path="/dashboard" element={<Dashboard/>} />
+            <Route path="/lessonsPractice" element={<LessonsPracticePage user={user}/>} />
+            <Route path="/lessons" element={<LessonsPage user={user}/>} />
+            <Route path="/dashboard" element={<Dashboard user={user}/>} />
             <Route path="/profile" element={<div>Profile Page</div>} />
           </Route>
         </Route>

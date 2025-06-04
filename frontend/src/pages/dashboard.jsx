@@ -1,23 +1,56 @@
 import React from 'react';
+import api from "../api.js";
+import App from '@/App';
+import { useEffect } from 'react';
+import { useState } from 'react';
+
 // Import components as needed, ex, Card for layout
 // import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-function Dashboard() {
+function Dashboard({user}) {
   // Placeholder data - This will come from the backend later...
-  const userData = {
-    name: "Jose Luna", 
-    learningSince: "January 2025", 
-    lessonsCompleted: 24,
-    practiceSessions: 56, 
-    accuracyRate: "78%", 
-    studyStreak: "12 days", 
-  };
+  const [userData, setUserData] = useState({
+    name: " ", 
+    learningSince: " ", 
+    lessonsCompleted: 0,
+    practiceSessions: 0, 
+    accuracyRate: 0, 
+    studyStreak: 0,  
+  })
+
+  const fetched = false
+
   const achievements = ["Perfect Week", "10 Day Streak", "Level 5"];
   const recentActivity = [
     { action: "Completed Lesson 5: Common Phrases", time: "2 hours ago" },
     { action: "Practice Session: Greetings", time: "Yesterday" },
     { action: "Earned Perfect Pronunciation Badge", time: "3 days ago" },
   ]; 
+
+  useEffect(() => {
+  const getData = async () => {
+
+    if (!user) return;
+    try {
+      const fetchedData = await api.get(`/getUserStatistics?uid=${user.uid}`)
+      let userStats = fetchedData.data
+      setUserData(prevData => ({
+        ...prevData,
+        lessonsCompleted: userStats.completed_lessons,
+        accuracyRate: userStats.accuracy_rate,
+        practiceSessions: userStats.practice_sessions,
+        studyStreak: userStats.study_streak,
+      }));
+      console.log(userStats)
+
+    }
+    catch (error) {
+      console.log(error)
+    }
+  }
+
+  if(user) getData();
+}, [user]);
 
   return (
     <div className="container mx-auto p-4 md:p-6"> {/* Basic container */}
