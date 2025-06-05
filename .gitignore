@@ -131,6 +131,7 @@ dist
 
 # Ignore audio file
 audios.webm
+audio.webm
 
 # Firebase Admin SDK key
 backend/spanish-pronunciation-pro-firebase-adminsdk-fbsvc-af37a865d2.json
