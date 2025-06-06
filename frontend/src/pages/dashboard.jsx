@@ -39,7 +39,7 @@ function Dashboard({user}) {
         lessonsCompleted: userStats.completed_lessons,
         accuracyRate: userStats.accuracy_rate,
         practiceSessions: userStats.practice_sessions,
-        studyStreak: userStats.study_streak,
+        studyStreak: userStats.study_streak,  
       }));
       console.log(userStats)
 
