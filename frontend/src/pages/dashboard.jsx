@@ -3,11 +3,17 @@ import api from "../api.js";
 import App from '@/App';
 import { useEffect } from 'react';
 import { useState } from 'react';
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 
 // Import components as needed, ex, Card for layout
 // import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 function Dashboard({user}) {
+  const lessonsCompleted = 26;
+  const totalLessons = 100;
+  const progressValue = (lessonsCompleted / totalLessons) * 100;
   // Placeholder data - This will come from the backend later...
   const [userData, setUserData] = useState({
     name: " ", 
@@ -17,8 +23,6 @@ function Dashboard({user}) {
     accuracyRate: 0, 
     studyStreak: 0,  
   })
-
-  const fetched = false
 
   const achievements = ["Perfect Week", "10 Day Streak", "Level 5"];
   const recentActivity = [
@@ -57,7 +61,7 @@ function Dashboard({user}) {
       <h1>Dashboard</h1>
       <section>
         <h2>Your Progress</h2>
-        <p>Lessons completed: {lessonsCompleted}/{totalLessons}</p>
+        <p>Lessons completed: {userData.lessonsCompleted}/{totalLessons}</p>
         <Progress value={progressValue} className="w-[60%] max-w-xs" />
       </section>
 
