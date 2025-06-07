@@ -15,6 +15,7 @@ import { useEffect } from 'react';
 import { useState } from 'react';
 import { ProtectedRoute } from './components/protectedRoute.jsx';
 import { auth } from './firebase.js';
+import ProfilePage from './pages/profilePage.jsx';
 
 function HomePage() {
   
@@ -72,8 +73,8 @@ function App() {
       {/* --- Route Display Area --- */}
       <Routes>
         {/* Routes without the navbar*/}
-        <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<LoginPage />}/>
+        <Route path="/" element={<LoginPage />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/passwordReset" element={<ForgotPasswordPage />} />
 
@@ -83,11 +84,17 @@ function App() {
             <Route path="/lessonsPractice" element={<LessonsPracticePage user={user}/>} />
             <Route path="/lessons" element={<LessonsPage user={user}/>} />
             <Route path="/dashboard" element={<Dashboard user={user}/>} />
-            <Route path="/profile" element={<div>Profile Page</div>} />
+            <Route path="/profile" element={<ProfilePage />} />
           </Route>
         </Route>
 
-        {/* Example of a route with the layout */}
+        {/* Routes with the navbar, wrapped by the layout.jsx component.*/}
+
+        <Route path="/lessonsPractice" element={<LessonsPracticePage />} />
+
+        <Route path="/lessons" element={<LessonsPage />} />
+
+        <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
     </div>
   );

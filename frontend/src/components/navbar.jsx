@@ -7,7 +7,7 @@ function Navbar() {
     <nav className="bg-card text-card-foreground shadow-sm py-2 px-4 md:px-6 border-b"> 
       <div className="container mx-auto flex items-center justify-between">
         {/* Logo/Brand */}
-        <Link to="/" className="text-xl font-bold text-primary"> {/* Using primary color from theme */}
+        <Link to="/dashboard" className="text-xl font-bold text-primary"> {/* Using primary color from theme */}
         ¡Pronunciemos!
         </Link>
 
