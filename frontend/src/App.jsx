@@ -17,34 +17,6 @@ import { ProtectedRoute } from './components/protectedRoute.jsx';
 import { auth } from './firebase.js';
 import ProfilePage from './pages/profilePage.jsx';
 
-function HomePage() {
-  
-  return (
-    <div>
-      <h1>Spanish Pronunciation Pro</h1>
-
-        <h2>Home Page</h2>
-      <p>This is the initial page. Click the button below to go to Login.</p>
-
-
-{/* --- Navigation Area --- */}
-
-<nav style={{ marginBottom: '20px' }}>
-
-  <Button asChild variant="default" className="text-primary-foreground hover:bg-[#00A3E0]">
-   
-    <Link to="/login">Go to Login Page</Link>
-  </Button>
-
-  <Button asChild variant="default" className="text-primary-foreground hover:bg-[#00A3E0]">
-    <Link to="/lessons">Go to Lessons Page</Link>
-  </Button>
-
-</nav>
-    </div>
-  );
-}
-
 function App() {
   const [user, setUser] = useState(null);
   const [isFetching, setIsFetching] = useState(true);
@@ -84,7 +56,7 @@ function App() {
             <Route path="/lessonsPractice" element={<LessonsPracticePage user={user}/>} />
             <Route path="/lessons" element={<LessonsPage user={user}/>} />
             <Route path="/dashboard" element={<Dashboard user={user}/>} />
-            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/profile" element={<ProfilePage user={user} />} />
           </Route>
         </Route>
 

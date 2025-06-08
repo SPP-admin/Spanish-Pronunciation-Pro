@@ -14,15 +14,6 @@ function Dashboard({user}) {
   const lessonsCompleted = 26;
   const totalLessons = 100;
   const progressValue = (lessonsCompleted / totalLessons) * 100;
-  // Placeholder data - This will come from the backend later...
-  const [userData, setUserData] = useState({
-    name: " ", 
-    learningSince: " ", 
-    lessonsCompleted: 0,
-    practiceSessions: 0, 
-    accuracyRate: 0, 
-    studyStreak: 0,  
-  })
 
   const achievements = ["Perfect Week", "10 Day Streak", "Level 5"];
   const recentActivity = [
@@ -31,37 +22,12 @@ function Dashboard({user}) {
     { action: "Earned Perfect Pronunciation Badge", time: "3 days ago" },
   ]; 
 
-  useEffect(() => {
-  const getData = async () => {
-
-    if (!user) return;
-    try {
-      const fetchedData = await api.get(`/getUserStatistics?uid=${user.uid}`)
-      let userStats = fetchedData.data
-      setUserData(prevData => ({
-        ...prevData,
-        lessonsCompleted: userStats.completed_lessons,
-        accuracyRate: userStats.accuracy_rate,
-        practiceSessions: userStats.practice_sessions,
-        studyStreak: userStats.study_streak,  
-      }));
-      console.log(userStats)
-
-    }
-    catch (error) {
-      console.log(error)
-    }
-  }
-
-  if(user) getData();
-}, [user]);
-
   return (
     <div>
       <h1>Dashboard</h1>
       <section>
         <h2>Your Progress</h2>
-        <p>Lessons completed: {userData.lessonsCompleted}/{totalLessons}</p>
+        <p>Lessons completed: {lessonsCompleted}/{totalLessons}</p>
         <Progress value={progressValue} className="w-[60%] max-w-xs" />
       </section>
 

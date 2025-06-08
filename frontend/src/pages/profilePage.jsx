@@ -1,22 +1,53 @@
 import React from 'react';
+import api from "../api.js";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useEffect } from 'react';
+import { useState } from 'react';
 
-function ProfilePage() {
-    // Placeholder data - This will come from the backend later...
-    const userData = {
-        name: "Jose Luna",
-        learningSince: "January 2025",
-        lessonsCompleted: 24,
-        practiceSessions: 56,
-        accuracyRate: "78%",
-        studyStreak: "12 days",
-    };
+function ProfilePage({user}) {
+// Placeholder data - This will come from the backend later...
+  const [userData, setUserData] = useState({
+    name: " ", 
+    learningSince: " ", 
+    lessonsCompleted: 0,
+    practiceSessions: 0, 
+    accuracyRate: 0, 
+    studyStreak: 0,  
+  })
+    
     const achievements = ["Perfect Week", "10 Day Streak", "Level 5"];
     const recentActivity = [
         { action: "Completed Lesson 5: Common Phrases", time: "2 hours ago" },
         { action: "Practice Session: Greetings", time: "Yesterday" },
         { action: "Earned Perfect Pronunciation Badge", time: "3 days ago" },
     ];
+
+    useEffect(() => {
+      const getData = async () => {
+    
+        if (!user) return;
+        try {
+          const fetchedData = await api.get(`/getUserStatistics?uid=${user.uid}`)
+          let userStats = fetchedData.data
+          setUserData(prevData => ({
+            ...prevData,
+            lessonsCompleted: userStats.completed_lessons,
+            accuracyRate: userStats.accuracy_rate,
+            practiceSessions: userStats.practice_sessions,
+            studyStreak: userStats.study_streak,  
+          }));
+          console.log(fetchedData.data)
+    
+        }
+        catch (error) {
+          console.log(error)
+        }
+      }
+    
+      if(user) getData();
+    }, []);
+
+
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
