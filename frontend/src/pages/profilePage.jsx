@@ -4,8 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useEffect } from 'react';
 import { useState } from 'react';
 
-function ProfilePage({user}) {
-// Placeholder data - This will come from the backend later...
+function ProfilePage({user, profile}) {
+
   const [userData, setUserData] = useState({
     name: " ", 
     learningSince: " ", 
@@ -16,25 +16,22 @@ function ProfilePage({user}) {
   })
     
     const achievements = ["Perfect Week", "10 Day Streak", "Level 5"];
-    const recentActivity = [
-        { action: "Completed Lesson 5: Common Phrases", time: "2 hours ago" },
-        { action: "Practice Session: Greetings", time: "Yesterday" },
-        { action: "Earned Perfect Pronunciation Badge", time: "3 days ago" },
-    ];
+    const [recentActivity, setRecentActivity] = useState(['']);
 
     useEffect(() => {
       const getData = async () => {
+        console.log(user)
     
         if (!user) return;
         try {
           const fetchedData = await api.get(`/getUserStatistics?uid=${user.uid}`)
-          let userStats = fetchedData.data
-          setUserData(prevData => ({
-            ...prevData,
-            lessonsCompleted: userStats.completed_lessons,
-            accuracyRate: userStats.accuracy_rate,
-            practiceSessions: userStats.practice_sessions,
-            studyStreak: userStats.study_streak,  
+          let userStats = fetchedData.data.user_stats
+          setUserData(prev => ({
+            ...prev,
+            lessonsCompleted: userStats.completed_lessons ?? prev.lessonsCompleted,
+            accuracyRate: userStats.accuracy_rate ?? prev.accuracyRate,
+            practiceSessions: userStats.practice_sessions ?? prev.practiceSessions,
+            studyStreak: userStats.study_streak ?? prev.studyStreak
           }));
           console.log(fetchedData.data)
     
@@ -45,7 +42,24 @@ function ProfilePage({user}) {
       }
     
       if(user) getData();
-    }, []);
+    }, [user.id]);
+
+    useEffect(() => {
+        const getActivities = async () => {
+            if(!user) return;
+            try {
+                const fetchedData = await api.get(`/getActivityHistory?uid=${user.uid}`)
+                let activities = fetchedData.data.activity_history
+                console.log(activities)
+                setRecentActivity(activities)
+            }
+            catch (error) {
+             console.log(error)
+            }
+        }
+
+        if(user) getActivities();
+    }, [user.id]);
 
 
 
@@ -57,8 +71,8 @@ function ProfilePage({user}) {
                     <CardTitle>User Information</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p>Name: {userData.name}</p>
-                    <p>Learning Since: {userData.learningSince}</p>
+                    <p>Name: {profile.name}</p>
+                    <p>Learning Since: {profile.creationDate}</p>
                 </CardContent>
             </Card>
 
@@ -96,7 +110,7 @@ function ProfilePage({user}) {
                     <ul>
                         {recentActivity.map((act, index) => (
                             <li key={index} className="text-sm mb-1">
-                                {act.action} - <span className="text-muted-foreground">{act.time}</span>
+                                {act} <span className="text-muted-foreground"></span>
                             </li>
                         ))}
                     </ul>

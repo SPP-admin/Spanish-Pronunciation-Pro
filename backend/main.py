@@ -420,6 +420,24 @@ async def getActivityHistory(uid):
             detail= f"Error fetching activity history. {str(e)}"
         )
 
+@app.get("/getUser")
+async def getUser(uid):
+    try:
+            doc_ref = db.collection('users')
+
+            query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
+            stats = query_ref[0].to_dict()
+
+            return JSONResponse(content={"user": stats}, 
+                                status_code=201)
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail= f"Error fetching activity history. {str(e)}"
+        )
+      
+
+
 # Fetch the user accuracy
 @app.get("/getUserAccuracy")
 async def getUserAccuracy(uid):

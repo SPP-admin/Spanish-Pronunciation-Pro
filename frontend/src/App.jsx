@@ -1,4 +1,5 @@
 import React from 'react';
+import api from './api.js';
 import { Routes, Route, Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button"; // Import Shadcn Button
 import Layout from './components/layout.jsx';  // Import Layout component
@@ -20,6 +21,10 @@ import ProfilePage from './pages/profilePage.jsx';
 function App() {
   const [user, setUser] = useState(null);
   const [isFetching, setIsFetching] = useState(true);
+  const [profile, setProfile] = useState({
+    name: "N/A",
+    creationDate: "N/A"
+  })
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -35,6 +40,23 @@ function App() {
 
     return () => unsubscribe();
   }, [])
+
+  useEffect(() => {
+    const getUser = async () => {
+     if(user) {
+        const fetchedData = await api.get(`/getUser?uid=${user.uid}`)
+        let userStats = fetchedData.data.user
+        setProfile(prev => ({
+            ...prev,
+          name: userStats.name ?? prev.name,
+          creationDate: userStats.creation_date ?? prev.creationDate
+     }));
+        console.log(userStats)
+     }
+  }
+  if(user) getUser();
+
+}, [user])
 
   if(isFetching) {
     return <h2>Loading...</h2>
@@ -56,7 +78,7 @@ function App() {
             <Route path="/lessonsPractice" element={<LessonsPracticePage user={user}/>} />
             <Route path="/lessons" element={<LessonsPage user={user}/>} />
             <Route path="/dashboard" element={<Dashboard user={user}/>} />
-            <Route path="/profile" element={<ProfilePage user={user} />} />
+            <Route path="/profile" element={<ProfilePage user={user} profile={profile}/>} />
           </Route>
         </Route>
 
