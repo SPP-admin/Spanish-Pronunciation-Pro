@@ -39,9 +39,15 @@ app = FastAPI(
     docs_url= "/"
 )
 
+origins = [
+    "http://localhost:5173/",
+    "http://127.0.0.1:5173/",
+    "https://spanish-pronunciation-pro.vercel.app/"
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # adjust for your domain in production
+    allow_origins = origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
