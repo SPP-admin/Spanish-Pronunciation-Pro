@@ -1,10 +1,18 @@
+import os
+import base64
 import uvicorn
-from fastapi import FastAPI, HTTPException
-from firebase_admin import credentials, auth
-from firebase_admin import firestore
-import firebase_admin
+from fastapi import FastAPI, HTTPException, Form
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+
+import firebase_admin
+from firebase_admin import credentials, auth, firestore
+from google.cloud.firestore_v1.base_query import FieldFilter
+
+from pydantic import BaseModel
+
 from models import LoginSchema, SignUpSchema
+
 #import pyrebase
 #import config
 from datetime import datetime
@@ -16,12 +24,16 @@ from dotenv import load_dotenv
 load_dotenv()
 
 if not firebase_admin._apps:
-    #cred = credentials.Certificate("serviceAccountKey.json")
-    cred = credentials.Certificate("spanish-pronunciation-pro-firebase-adminsdk-fbsvc-af37a865d2.json")
+    #check if file exists
+    if os.path.exists("spanish-pronunciation-pro-firebase-adminsdk-fbsvc-af37a865d2.json"):
+        cred = credentials.Certificate("spanish-pronunciation-pro-firebase-adminsdk-fbsvc-af37a865d2.json")
+    else:
+        firebase_creds_json = os.environ.get("FIREBASE_CREDENTIALS")
+        temp_path = "/tmp/firebase_credentials.json"
+        with open(temp_path, "w") as f:
+            f.write(firebase_creds_json)
+        cred = credentials.Certificate(temp_path)
     firebase_admin.initialize_app(cred)
-
-if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8080, reload=True)
 
 app = FastAPI(
     description = "API's for the Spanish Pronunciation Pro Project",
@@ -29,8 +41,57 @@ app = FastAPI(
     docs_url= "/"
 )
 
+origins = [
+    "http://localhost:5173/",
+    "http://127.0.0.1:5173/",
+    "https://spanish-pronunciation-pro.vercel.app/"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins = origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 db = firestore.client()
 #firebase = pyrebase.initialize_app(config.firebaseConfig)
+
+class AudioData(BaseModel):
+    base64_data: str
+
+# openai import
+import openai
+openai.api_key = os.getenv("OPENAI_KEY")
+
+@app.post("/sendVoiceNote")
+async def send_voice_note(data: AudioData):
+    try:
+        # Decode base64 string
+        audio_bytes = base64.b64decode(data.base64_data)
+
+        # Write to disk
+        audio_file_name = "audio.webm"
+        with open(audio_file_name, "wb") as f:
+            f.write(audio_bytes)
+
+        # Transcribe using OpenAI Whisper
+        with open(audio_file_name, "rb") as audio_file:
+            transcript = openai.audio.transcriptions.create(
+                model="whisper-1",
+                file=audio_file,
+                response_format="text",
+                language="es" 
+            )
+
+        return transcript  # returns raw text
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Error processing audio: {str(e)}"
+        )
+
 
 @app.post("/signup")
 async def signup(request: SignUpSchema):
