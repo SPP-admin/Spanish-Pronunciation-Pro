@@ -9,6 +9,11 @@ from models import LoginSchema, SignUpSchema
 #import config
 from datetime import datetime
 from google.cloud.firestore_v1.base_query import FieldFilter
+from openai import OpenAI
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 if not firebase_admin._apps:
     #cred = credentials.Certificate("serviceAccountKey.json")
@@ -468,3 +473,14 @@ async def setLessonProgress(uid):
             status_code=400,
             detail= f"Error intializing lesson progress {str(e)}."
         )
+    
+@app.post("/generateSentence")
+async def generateSentence(difficulty: str):
+      client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
+      response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "system", "content": "You are a helpful assistant that generates sentences for a Spanish pronunciation app. Make sure to use the spanish alphabet, and make sure to use the correct accent marks."},
+                      {"role": "user", "content": "Generate a sentence that is " + difficulty + " to say."}],
+            temperature=1
+      )
+      return response.choices[0].message.content
