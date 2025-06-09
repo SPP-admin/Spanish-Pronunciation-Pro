@@ -22,8 +22,15 @@ load_dotenv()
 
 
 if not firebase_admin._apps:
-    #cred = credentials.Certificate("serviceAccountKey.json")
-    cred = credentials.Certificate("spanish-pronunciation-pro-firebase-adminsdk-fbsvc-af37a865d2.json")
+    #check if file exists
+    if os.path.exists("spanish-pronunciation-pro-firebase-adminsdk-fbsvc-af37a865d2.json"):
+        cred = credentials.Certificate("spanish-pronunciation-pro-firebase-adminsdk-fbsvc-af37a865d2.json")
+    else:
+        firebase_creds_json = os.environ.get("FIREBASE_CREDENTIALS")
+        temp_path = "/tmp/firebase_credentials.json"
+        with open(temp_path, "w") as f:
+            f.write(firebase_creds_json)
+        cred = credentials.Certificate(temp_path)
     firebase_admin.initialize_app(cred)
 
 app = FastAPI(
