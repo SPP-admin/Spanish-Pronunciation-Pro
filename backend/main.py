@@ -11,16 +11,10 @@ from google.cloud.firestore_v1.base_query import FieldFilter
 
 from pydantic import BaseModel
 
-from models import LoginSchema, SignUpSchema
-
-#import pyrebase
-#import config
 from models import LoginSchema, SignUpSchema, ChunkSchema, BaseSchema
 import pyrebase
 import config
 from datetime import datetime
-from google.cloud.firestore_v1.base_query import FieldFilter
-from fastapi.middleware.cors import CORSMiddleware
 
 if not firebase_admin._apps:
     cred = credentials.Certificate("serviceAccountKey.json")
