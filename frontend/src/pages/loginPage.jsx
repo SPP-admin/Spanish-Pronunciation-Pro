@@ -38,7 +38,6 @@ function LoginPage({}) {
       navigate('/dashboard');
 
       } catch(error) {
-        set
         console.log(error)
       }
   };

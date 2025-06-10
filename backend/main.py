@@ -12,8 +12,9 @@ from google.cloud.firestore_v1.base_query import FieldFilter
 from pydantic import BaseModel
 
 from models import LoginSchema, SignUpSchema, ChunkSchema, BaseSchema
-import pyrebase
-import config
+
+#import pyrebase
+#import config
 from datetime import datetime
 
 if not firebase_admin._apps:
@@ -37,6 +38,7 @@ app = FastAPI(
 origins = [
       "http://localhost:5173",
       "http://127.0.0.1:5173",
+      "https://spanish-pronunciation-pro.vercel.app/"
 ]
 
 app.add_middleware(
@@ -48,7 +50,7 @@ app.add_middleware(
 )
 
 db = firestore.client()
-firebase = pyrebase.initialize_app(config.firebaseConfig)
+#firebase = pyrebase.initialize_app(config.firebaseConfig)
 
 class AudioData(BaseModel):
     base64_data: str
@@ -120,14 +122,14 @@ async def signup(request: SignUpSchema):
             detail= f"Account exists with this email."
         )
     
-
+""" UNUSED
 @app.post("/login")
 async def login(request: LoginSchema):
     email = request.email
     password = request.password
 
     try:
-        user = firebase.auth().sign_in_with_email_and_password(
+        user = auth().sign_in_with_email_and_password(
             email = email,
             password = password
         )
@@ -150,6 +152,7 @@ async def login(request: LoginSchema):
             status_code = 400,
             detail= f"Incorrect login information. {str(e)}"
         )
+"""
 
 # user statistics are display on the profile page.
 @app.get("/getUserStatistics")
