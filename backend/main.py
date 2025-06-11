@@ -36,17 +36,17 @@ app = FastAPI(
 )
 
 origins = [
-      "http://localhost:5173",
-      "http://127.0.0.1:5173",
-      "https://spanish-pronunciation-pro.vercel.app/"
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://spanish-pronunciation-pro.vercel.app"
 ]
 
 app.add_middleware(
-      CORSMiddleware,
-      allow_origins = origins,
-      allow_credentials = True,
-      allow_methods=["*"],
-      allow_headers=["*"],
+    CORSMiddleware,
+    allow_origins = origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 db = firestore.client()
@@ -556,6 +556,3 @@ async def setLessonProgress(request: BaseSchema):
             status_code=400,
             detail= f"Error intializing lesson progress {str(e)}."
         )
-
-
-
