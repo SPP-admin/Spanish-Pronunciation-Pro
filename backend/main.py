@@ -12,6 +12,8 @@ from google.cloud.firestore_v1.base_query import FieldFilter
 from openai import OpenAI
 import os
 from dotenv import load_dotenv
+import pronunciationChecking
+import random
 
 load_dotenv()
 
@@ -31,6 +33,7 @@ app = FastAPI(
 
 db = firestore.client()
 #firebase = pyrebase.initialize_app(config.firebaseConfig)
+current_sentence = ""
 
 @app.post("/signup")
 async def signup(request: SignUpSchema):
@@ -483,4 +486,20 @@ async def generateSentence(difficulty: str):
                       {"role": "user", "content": "Generate a sentence that is " + difficulty + " to say."}],
             temperature=1
       )
-      return response.choices[0].message.content
+      # if there is an error with OpenAI, use a backup list of sentences
+      if (response.error != None):
+            backup_sentences = ["El gato duerme.", "La niña corre.", 
+                                "El perro ladra.", "Hace mucho calor.",
+                                "Llueve afuera.", "El vaso está lleno.",
+                                "La casa es grande.", "El pan está caliente.",
+                                "Hay una flor.", "La cama es cómoda."]
+            current_sentence = random.choice(backup_sentences)
+      else:
+        current_sentence = response.choices[0].message.content
+      return current_sentence
+
+@app.post("/transcribeAudio")
+async def checkPronunciation(audio_path: str):
+      transcription = pronunciationChecking.transcribe_audio(audio_path)
+        
+      return transcription
