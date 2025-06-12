@@ -1,6 +1,6 @@
 import React from 'react';
 import api from './api.js';
-import { Routes, Route, Link } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { Button } from "@/components/ui/button"; // Import Shadcn Button
 import Layout from './components/layout.jsx';  // Import Layout component
 
@@ -11,9 +11,8 @@ import ForgotPasswordPage from './pages/passwordReset.jsx';  // Import ForgotPas
 import SignupPage from './pages/signup.jsx'; // Import SignupPage component
 import LessonsPage from './pages/lessons.jsx'; // Import LessonsPage component
 
-import { onAuthStateChanged } from 'firebase/auth';
-import { useEffect } from 'react';  
-import { useState } from 'react';
+import { onAuthStateChanged} from 'firebase/auth';
+import { useEffect, useState, useRef } from 'react';  
 import { ProtectedRoute } from './components/protectedRoute.jsx';
 import { auth } from './firebase.js';
 import ProfilePage from './pages/profilePage.jsx';
@@ -41,17 +40,16 @@ function App() {
     return () => unsubscribe();
   }, [])
 
+  // This is a mess, fix this later.
   useEffect(() => {
     const getUser = async () => {
      if(user) {
-        const fetchedData = await api.get(`/getUser?uid=${user.uid}`)
-        let userStats = fetchedData.data.user
         setProfile(prev => ({
             ...prev,
-          name: userStats.name ?? prev.name,
-          creationDate: userStats.creation_date ?? prev.creationDate
+          name: user.displayName ?? prev.name,
+          creationDate: user.metadata.creationDate ?? prev.creationDate
      }));
-        console.log(userStats)
+        console.log(profile)
      }
   }
   if(user) getUser();

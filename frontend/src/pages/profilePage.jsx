@@ -7,8 +7,6 @@ import { useState } from 'react';
 function ProfilePage({user, profile}) {
 
   const [userData, setUserData] = useState({
-    name: " ", 
-    learningSince: " ", 
     lessonsCompleted: 0,
     practiceSessions: 0, 
     accuracyRate: 0, 
@@ -20,8 +18,6 @@ function ProfilePage({user, profile}) {
 
     useEffect(() => {
       const getData = async () => {
-        console.log(user)
-    
         if (!user) return;
         try {
           const fetchedData = await api.get(`/getUserStatistics?uid=${user.uid}`)
@@ -71,8 +67,8 @@ function ProfilePage({user, profile}) {
                     <CardTitle>User Information</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p>Name: {profile.name}</p>
-                    <p>Learning Since: {profile.creationDate}</p>
+                    <p>Name: {user.displayName}</p>
+                    <p>Learning Since: {user.metadata.creationTime}</p>
                 </CardContent>
             </Card>
 

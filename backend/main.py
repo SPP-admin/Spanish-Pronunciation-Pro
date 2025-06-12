@@ -19,8 +19,8 @@ from datetime import datetime
 
 if not firebase_admin._apps:
     #check if file exists
-    if os.path.exists("spanish-pronunciation-pro-firebase-adminsdk-fbsvc-af37a865d2.json"):
-        cred = credentials.Certificate("spanish-pronunciation-pro-firebase-adminsdk-fbsvc-af37a865d2.json")
+    if os.path.exists("spanish-pronunciation-pro-firebase-adminsdk-fbsvc-ede0ecd420.json"):
+        cred = credentials.Certificate("spanish-pronunciation-pro-firebase-adminsdk-fbsvc-ede0ecd420.json")
     else:
         firebase_creds_json = os.environ.get("FIREBASE_CREDENTIALS")
         temp_path = "/tmp/firebase_credentials.json"
@@ -85,8 +85,8 @@ async def send_voice_note(data: AudioData):
             status_code=400,
             detail=f"Error processing audio: {str(e)}"
         )
-
-
+      
+"""
 @app.post("/signup")
 async def signup(request: SignUpSchema):
     email = request.email
@@ -121,6 +121,7 @@ async def signup(request: SignUpSchema):
             status_code = 400,
             detail= f"Account exists with this email."
         )
+"""
     
 """ UNUSED
 @app.post("/login")
@@ -198,6 +199,7 @@ async def setUserStatistics(request: BaseSchema):
             doc.set(data)
             return JSONResponse(content={"message": "User statistics were successfully intialized."}, 
                                     status_code = 201)
+        
     except Exception as e:
         raise HTTPException(
             status_code=400,
@@ -422,6 +424,34 @@ async def getActivityHistory(uid):
             detail= f"Error fetching activity history. {str(e)}"
         )
 
+@app.post("/setUser")
+async def setUser(uid):
+    try:
+            doc_ref = db.collection('users')
+
+            query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
+
+            if(query_ref):
+                    raise HTTPException(
+                    status_code=400,
+                    detail= f"User already exists"
+                )
+            else: 
+                doc = doc_ref.document()
+                data = {
+                    'id': uid,
+                    'initialized': True
+                }
+            doc.set(data)
+
+            return JSONResponse(content={"user": data}, 
+                                status_code=201)
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail= f"Error fetching user, No user exists. {str(e)}"
+        )
+
 @app.get("/getUser")
 async def getUser(uid):
     try:
@@ -435,10 +465,8 @@ async def getUser(uid):
     except Exception as e:
         raise HTTPException(
             status_code=400,
-            detail= f"Error fetching activity history. {str(e)}"
+            detail= f"Error fetching user, No user exists. {str(e)}"
         )
-      
-
 
 # Fetch the user accuracy
 @app.get("/getUserAccuracy")

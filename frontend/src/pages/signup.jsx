@@ -5,6 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+
+import { auth } from '../firebase.js';
+
 import api from "../api.js";
 import {useState} from 'react';
 
@@ -29,10 +33,22 @@ function SignupPage() {
     console.log(cred);
 
     try {
-      const response = await api.post('/signup', cred);
-      await api.post('/setUserStatistics', {id: response.data.id})
-      await api.post('/setAchievements', {id: response.data.id})
-      await api.post('/setLessonProgress', {id: response.data.id})
+
+      const account = await createUserWithEmailAndPassword(auth, cred.email, cred.password)
+
+      console.log(account.user.uid)
+
+      await updateProfile(account.user, {
+        displayName: cred.displayName
+      })
+
+            console.log(account.user.uid)
+
+            
+      await api.post('/setUserStatistics', {id: account.user.uid})
+      await api.post('/setAchievements', {id: account.user.uid})
+      await api.post('/setLessonProgress', {id: account.user.uid})
+
       alert('Account Created!')
       navigate('/login');
 

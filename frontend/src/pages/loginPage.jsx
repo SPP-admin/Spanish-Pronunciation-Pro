@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/firebase.js';
+import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+
+import { auth, googleProvider } from '../firebase.js';
 
 import loginImage from '@/assets/images/login2.png';
 
@@ -16,12 +17,35 @@ import api from "../api.js";
 import {useState} from 'react';
 
 
-function LoginPage({}) {
+function LoginPage({user}) {
   const navigate = useNavigate();
   const [cred, setCred] = useState({
     email: '',
     password: '',
   });
+
+  const googleLogin = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider)
+      user = result.user
+      console.log(user)
+    } catch(error) {
+      alert(error.message)
+      return;
+    }
+
+    /* Firebase treats logging in / signing up with google the same, so I assume the user doesn't have an account. 
+       If they do then the calls will just fail and redirec the user anyways.
+
+       Fix later!
+    */
+    
+    await api.post('/setUserStatistics', {id: user.uid}).catch((err) => {})
+    await api.post('/setAchievements', {id: user.uid}).catch(() => {})
+    await api.post('/setLessonProgress', {id: user.uid}).catch(() => {})
+    alert('Success!')
+    navigate('/dashboard');
+  }
 
   const handleChange = (e) => {
     setCred(
@@ -40,10 +64,6 @@ function LoginPage({}) {
       } catch(error) {
         console.log(error)
       }
-  };
-
-  const handleGoogleClick = () => {
-    console.log("Google Sign-in Clicked (Not Implemented)");
   };
 
   return (
@@ -94,7 +114,7 @@ function LoginPage({}) {
                    <div className="absolute inset-0 flex items-center"><span className="w-full border-t"></span></div>
                    <div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-2 text-muted-foreground dark:bg-card">Or continue with</span></div>
                </div>
-               <Button variant="outline" className="w-full" onClick={handleGoogleClick}>
+               <Button variant="outline" className="w-full" onClick={googleLogin}>
                  <FaGoogle className="mr-2 h-4 w-4" />
                  Sign in with Google
                </Button>
