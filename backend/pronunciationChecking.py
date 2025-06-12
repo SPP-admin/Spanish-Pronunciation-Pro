@@ -13,7 +13,9 @@ translator = str.maketrans('', '', string.punctuation + string.whitespace + 'ː'
 
 # Take audio, return IPA transcription without whitespace or punctuation
 def transcribe_audio(audio_path: str) -> str:
-	ipa_transcription = model.recognize(audio_path, 'spa')
+	print(audio_path)
+	# Dummy file for now
+	ipa_transcription = model.recognize('src/audios/University of Central Florida 24.wav', 'spa')
 	ipa_transcription = ipa_transcription.translate(translator)
 	return ipa_transcription
 	
