@@ -129,11 +129,11 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-# Ignore audio file
-audios.webm
+# Ignore audio files
+audios/
 
 # Firebase Admin SDK key
-backend/spanish-pronunciation-pro-firebase-adminsdk-fbsvc-af37a865d2.json
+spanish-pronunciation-pro-firebase-admin*
 
 # Python temp files
 __pycache__/

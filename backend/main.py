@@ -33,7 +33,6 @@ app = FastAPI(
 
 db = firestore.client()
 #firebase = pyrebase.initialize_app(config.firebaseConfig)
-current_sentence = ""
 
 @app.post("/signup")
 async def signup(request: SignUpSchema):
@@ -479,27 +478,31 @@ async def setLessonProgress(uid):
     
 @app.post("/generateSentence")
 async def generateSentence(difficulty: str):
-      client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
-      response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[{"role": "system", "content": "You are a helpful assistant that generates sentences for a Spanish pronunciation app. Make sure to use the spanish alphabet, and make sure to use the correct accent marks."},
-                      {"role": "user", "content": "Generate a sentence that is " + difficulty + " to say."}],
-            temperature=1
-      )
+      client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+      try:
+        response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[{"role": "system", "content": "You are a helpful assistant that generates sentences for a Spanish pronunciation app. Make sure to use the spanish alphabet, and make sure to use the correct accent marks."},
+                        {"role": "user", "content": "Generate a sentence that is " + difficulty + " to say."}],
+                temperature=1
+        )
+        current_sentence = response.choices[0].message.content
       # if there is an error with OpenAI, use a backup list of sentences
-      if (response.error != None):
+      except:
             backup_sentences = ["El gato duerme.", "La niña corre.", 
                                 "El perro ladra.", "Hace mucho calor.",
                                 "Llueve afuera.", "El vaso está lleno.",
                                 "La casa es grande.", "El pan está caliente.",
                                 "Hay una flor.", "La cama es cómoda."]
             current_sentence = random.choice(backup_sentences)
-      else:
-        current_sentence = response.choices[0].message.content
-      return current_sentence
+      finally:
+        return current_sentence
 
-@app.post("/transcribeAudio")
-async def checkPronunciation(audio_path: str):
-      transcription = pronunciationChecking.transcribe_audio(audio_path)
-        
-      return transcription
+@app.post("/checkPronunciation")
+async def checkPronunciation(audio_path: str, sentence: str):
+      # Transcribe audio, then compare to correct pronunciation
+      user_ipa = pronunciationChecking.transcribe_audio(audio_path)
+      correct_transcription = pronunciationChecking.get_correct_pronunciation(sentence)
+      print(f"User IPA: {user_ipa}")
+      print(f"Correct IPA: {correct_transcription}")
+      return user_ipa == correct_transcription
