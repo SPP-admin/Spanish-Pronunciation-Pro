@@ -14,15 +14,24 @@ import { auth, googleProvider } from '../firebase.js';
 import loginImage from '@/assets/images/login2.png';
 
 import api from "../api.js";
-import {useState} from 'react';
+import {useState, useEffect} from 'react';
 
 
-function LoginPage({user}) {
+function LoginPage({user, isFetching}) {
+  console.log(user)
   const navigate = useNavigate();
   const [cred, setCred] = useState({
     email: '',
     password: '',
   });
+
+  useEffect(() => {
+    console.log(user)
+    console.log(isFetching)
+    if(!isFetching && user) {
+      navigate('/dashboard')
+    }
+  }, [user, isFetching, navigate])
 
   const googleLogin = async () => {
     try {
@@ -39,7 +48,6 @@ function LoginPage({user}) {
 
        Fix later!
     */
-    
     await api.post('/setUserStatistics', {id: user.uid}).catch((err) => {})
     await api.post('/setAchievements', {id: user.uid}).catch(() => {})
     await api.post('/setLessonProgress', {id: user.uid}).catch(() => {})

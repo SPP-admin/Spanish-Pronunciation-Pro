@@ -19,8 +19,8 @@ from datetime import datetime
 
 if not firebase_admin._apps:
     #check if file exists
-    if os.path.exists("spanish-pronunciation-pro-firebase-adminsdk-fbsvc-ede0ecd420.json"):
-        cred = credentials.Certificate("spanish-pronunciation-pro-firebase-adminsdk-fbsvc-ede0ecd420.json")
+    if os.path.exists("spanish-pronunciation-pro-firebase-adminsdk-fbsvc-af37a865d2.json"):
+        cred = credentials.Certificate("spanish-pronunciation-pro-firebase-adminsdk-fbsvc-af37a865d2.json")
     else:
         firebase_creds_json = os.environ.get("FIREBASE_CREDENTIALS")
         temp_path = "/tmp/firebase_credentials.json"
