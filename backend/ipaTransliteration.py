@@ -8,10 +8,10 @@ class ipaMapping:
 		self.ortho_letter = ortho_letter
 		self.ipa_letter = ipa_letter
 		self.pronounced_correctly = True
-		
+
 # Class that contains sentence, a list of letter(s) with their corresponding IPA symbols
 # index j in ipa_indices holds the IPA letter at j & the index of the ipaMapping that corresponds to it
-# eg ipa_indices[0] = ("g", 2) means that "g" at ipa[0] corresponds to ipa_mapping[2] 
+# eg ipa_indices[0] = ("g", 2) means that ipa[0] is "g" & corresponds to ipa_mapping[2] 
 # (and the corresponding actually written text)
 class sentenceMapping:
 	def __init__(self, sentence):
@@ -277,7 +277,7 @@ class sentenceMapping:
 					case "u":
 						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="u"))
 					case _:
-						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter=self.sentence[i]))
+						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter=""))
 				i += 1
 		self.ipa_mapping = tuple(mapping)
 		return(self.ipa_mapping)
