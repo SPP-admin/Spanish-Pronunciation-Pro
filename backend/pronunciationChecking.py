@@ -42,7 +42,7 @@ def compare_strings(sentence_mapping, user_ipa):
 	correct_ipa = sentence_mapping.get_ipa()
 	indices = sentence_mapping.get_indices()
 
-	sequence_matcher = SequenceMatcher(lambda x: x in " ", user_ipa, correct_ipa)
+	sequence_matcher = SequenceMatcher(None, user_ipa, correct_ipa)
 	opcode_list = sequence_matcher.get_opcodes()
 	for opcode in opcode_list:
 		# opcode[3] is index of first char in correct_ipa that is correctly pronounced
@@ -61,6 +61,7 @@ def compare_strings(sentence_mapping, user_ipa):
 # if consonant, mark prev consonant as incorrect, if no prev consonant, mark next consonant as incorrect, 
 # otherwise mark prev vowel as incorrect 
 def delete_incorrect(sentence_mapping, current_ipa, index):
+	index = sentence_mapping.ipa_indices[index][1]
 	prev_mapping = sentence_mapping.ipa_mapping[index - 1]
 	next_mapping = sentence_mapping.ipa_mapping[index] if index < len(sentence_mapping.ipa_mapping) else None
 	if is_vowel_ipa(current_ipa):
@@ -80,6 +81,8 @@ def delete_incorrect(sentence_mapping, current_ipa, index):
 # so mark all ipa_mapping from start_index to end_index as incorrect
 # replacement uses same logic
 def insert_incorrect(sentence_mapping, start_index, end_index):
+	start_index = sentence_mapping.ipa_indices[start_index][1]
+	end_index = sentence_mapping.ipa_indices[end_index - 1][1]
 	for i in range(start_index, end_index):
 		next_mapping = sentence_mapping.ipa_mapping[i]
 		next_mapping.pronounced_correctly = False
