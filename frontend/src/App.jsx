@@ -15,7 +15,8 @@ import { onAuthStateChanged} from 'firebase/auth';
 import { useEffect, useState } from 'react';  
 import { ProtectedRoute } from './components/protectedRoute.jsx';
 import { auth } from './firebase.js';
-import ProfilePage from './pages/profilePage.jsx';
+import ProfilePage from './pages/profilePage.jsx'; // Import ProfilePage component
+import SettingsPage from './pages/settingsPage.jsx'; // Import SettingsPage component
 
 function App() {
   const navigate = useNavigate('')
@@ -75,8 +76,9 @@ function App() {
           <Route element={<Layout />}>
             <Route path="/lessonsPractice" element={<LessonsPracticePage user={user}/>} />
             <Route path="/lessons" element={<LessonsPage user={user}/>} />
-            <Route path="/dashboard" element={<Dashboard user={user}/>} />
-            <Route path="/profile" element={<ProfilePage user={user} profile={profile}/>} />
+            <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/dashboard" element={<Dashboard user={user}/>} />
+            <Route path="/settings" element={<SettingsPage user={user} profile={profile}/>} />
           </Route>
         </Route>
 
