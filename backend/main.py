@@ -373,7 +373,7 @@ async def getAchievements(uid):
 
         query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
 
-        return JSONResponse(content={"achievments": query_ref[0].to_dict()},
+        return JSONResponse(content={"achievements": query_ref[0].to_dict()},
                             status_code=201)
     except Exception as e:
                          raise HTTPException(
