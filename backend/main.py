@@ -35,6 +35,9 @@ app = FastAPI(
     docs_url= "/"
 )
 
+if __name__ == "__main__":
+      uvicorn.run("main:app", host="0.0.0.0", port=8080, reload=True)
+
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
@@ -387,16 +390,20 @@ async def updateActivityHistory(uid, activity):
     try:
         doc_ref = db.collection('activity_history')
         query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
-        doc_id = query_ref[0].id
-        doc_ref = db.collection('activity_history').document(doc_id).get()
-        activities = doc_ref.to_dict().get('activities', [])
+        if (not query_ref):
+            new_doc = doc_ref.document()
+            new_doc.set({'activities': [activity], 'id': uid})
+        else:
+            doc_id = query_ref[0].id
+            doc_ref = db.collection('activity_history').document(doc_id).get()
+            activities = doc_ref.to_dict().get('activities', [])
 
-        while(len(activities) >= 3):
-            activities.pop(0)
+            while(len(activities) >= 3 and len(activities) > 0):
+                activities.pop(0)
 
-        activities.append(activity)
+            activities.append(activity)
 
-        doc_ref = db.collection('activity_history').document(doc_id).update({"activities": activities})
+            doc_ref = db.collection('activity_history').document(doc_id).update({"activities": activities})
         return JSONResponse(content={"message": f"User's recent activity has been added to their history.'" }, 
                                     status_code = 201)
 
