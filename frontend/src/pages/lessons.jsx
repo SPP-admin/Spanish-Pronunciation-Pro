@@ -118,22 +118,29 @@ const lessonCategories = [
 ];
 
 // Check if every possible combination in a category is complete
-const isCategoryFullyComplete = (category, selections) => {
-    const progress = selections[category.id];
-    if (!progress || !progress.completedCombinations) return false;
-    
-    for (const lesson of category.lessons) {
-        for (const level of category.levels) {
-            const comboKey = `${lesson.value}-${level.value}`;
-            if (!progress.completedCombinations[comboKey]) {
-                return false; // Found a combo that is incomplete
+
+function LessonsPage({lessons, isFetching}) {
+    if(isFetching) return null;
+    const isCategoryFullyComplete = (category, selections, index) => {
+        /*
+        const progress = selections[category.id];
+        if (!progress || !progress.completedCombinations) return false;
+        
+        for (const lesson of category.lessons) {
+            for (const level of category.levels) {
+                const comboKey = `${lesson.value}-${level.value}`;
+                if (!progress.completedCombinations[comboKey]) {
+                    return false; // Found a combo that is incomplete
+                }
             }
         }
-    }
-    return true; // All combinations are complete
-};
+            */
+        if(lessons[index].completed == false) {
+            return false
+        }
+        return true; // All combinations are complete
+    };
 
-function LessonsPage() {
   const [selections, setSelections] = useState(() => {
     const saved = localStorage.getItem('lessonSelections');
     return saved ? JSON.parse(saved) : {};
@@ -160,7 +167,7 @@ function LessonsPage() {
     <div className="container mx-auto p-4 md:p-6">
       <h2 className="text-3xl font-bold mb-6 text-center">Choose a Lesson</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {lessonCategories.map((category) => {
+        {lessonCategories.map((category, index) => {
           const currentProgress = selections[category.id] || {};
           const currentLesson = currentProgress.currentLesson || category.lessons[0].value;
           const currentLevel = currentProgress.currentLevel || category.levels[0].value;
@@ -170,7 +177,7 @@ function LessonsPage() {
           const isComboComplete = currentProgress.completedCombinations?.[comboKey] || false;
 
           // Check 2: Is the entire category complete?
-          const isCategoryComplete = isCategoryFullyComplete(category, selections);
+          const isCategoryComplete = isCategoryFullyComplete(category, selections, index);
           
           const practicePath = `/lessonsPractice?topic=${category.id}&lesson=${currentLesson}&level=${currentLevel}`;
 
@@ -217,7 +224,7 @@ function LessonsPage() {
               </CardContent>
               <CardFooter>
                 <Button asChild className="w-full">
-                  <Link to={practicePath}>
+                  <Link to={practicePath} >
                     {isComboComplete ? 'Practice Again' : 'Start Practice'}
                   </Link>
                 </Button>

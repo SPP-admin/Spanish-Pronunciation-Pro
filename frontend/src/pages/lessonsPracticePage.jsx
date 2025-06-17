@@ -63,7 +63,7 @@ const lessonsContent = {
     },
   };
 
-function LessonsPracticePage() {
+function LessonsPracticePage({lessons}) {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -79,6 +79,8 @@ function LessonsPracticePage() {
   const [selectedText, setSelectedText] = useState(null);
   const [recordedAudio, setRecordedAudio] = useState(null);
   const [transcription, setTranscription] = useState("");
+
+  console.log(lessons)
 
   useEffect(() => {
     // Reset selection when the phrase changes
@@ -127,6 +129,7 @@ function LessonsPracticePage() {
   const handleAudioRecording = (blob) => {
     setRecordedAudio(blob);
     sendAudioToServer(blob);
+    console.log("hello")
   };
 
   const handleFinishAndNext = () => {

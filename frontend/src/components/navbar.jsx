@@ -13,6 +13,9 @@ import {
 } from "@/components/ui/navigation-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+import { signOut } from 'firebase/auth';
+import { auth } from '../firebase.js'
+
 
 // Re-usable component for list items in the navigation menu, as per shadcn/ui docs
 const ListItem = React.forwardRef(({ className, title, to, children, ...props }, ref) => {
@@ -88,7 +91,7 @@ function Navbar() {
                   <ListItem to="/settings" title="Settings">
                     Manage your account details.
                   </ListItem>
-                  <ListItem to="/" title="Logout">
+                  <ListItem onClick={() => signOut(auth)} title="Logout">
                     Log out of your account.
                   </ListItem>
                 </ul>

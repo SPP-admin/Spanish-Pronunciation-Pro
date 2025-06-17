@@ -26,8 +26,6 @@ function LoginPage({user, isFetching}) {
   });
 
   useEffect(() => {
-    console.log(user)
-    console.log(isFetching)
     if(!isFetching && user) {
       navigate('/dashboard')
     }
@@ -37,17 +35,10 @@ function LoginPage({user, isFetching}) {
     try {
       const result = await signInWithPopup(auth, googleProvider)
       user = result.user
-      console.log(user)
     } catch(error) {
       alert(error.message)
       return;
     }
-
-    /* Firebase treats logging in / signing up with google the same, so I assume the user doesn't have an account. 
-       If they do then the calls will just fail and redirec the user anyways.
-
-       Fix later!
-    */
     await api.post('/setUserStatistics', {id: user.uid}).catch((err) => {})
     await api.post('/setAchievements', {id: user.uid}).catch(() => {})
     await api.post('/setLessonProgress', {id: user.uid}).catch(() => {})
@@ -66,7 +57,6 @@ function LoginPage({user, isFetching}) {
 
     try {
       const userCredential = await signInWithEmailAndPassword(auth, cred.email, cred.password)
-
       navigate('/dashboard');
 
       } catch(error) {

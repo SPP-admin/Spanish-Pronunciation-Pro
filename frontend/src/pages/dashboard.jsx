@@ -15,10 +15,9 @@ import {
 } from "@/components/ui/card";
 import { TrophiesCard } from "@/components/trophies";
 
-function Dashboard({user}) {
-  const lessonsCompleted = 26;
+function Dashboard({user, profile, activities}) {
   const totalLessons = 100;
-  const progressValue = (lessonsCompleted / totalLessons) * 100;
+  const progressValue = (profile.lessonsCompleted / totalLessons) * 100;
 
   // MOCK achievements for the dashboard
   const recentAchievements = [
@@ -46,7 +45,7 @@ function Dashboard({user}) {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Lessons completed: {lessonsCompleted}/{totalLessons}
+              Lessons completed: {profile.lessonsCompleted}/{totalLessons}
             </p>
             <Progress value={progressValue} className="w-[60%] max-w-xs mt-2" />
           </CardContent>
@@ -72,8 +71,11 @@ function Dashboard({user}) {
           </CardHeader>
           <CardContent>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li>Lesson 5 completed - 2 days ago</li>
-              <li>Practiced pronunciation - 1 day ago</li>
+                {activities.map((act, index) => (
+                  <li key={index} className="text-sm">
+                    {activities[index]}
+                  </li>
+                ))}
             </ul>
           </CardContent>
         </Card>
