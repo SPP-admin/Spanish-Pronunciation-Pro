@@ -17,6 +17,18 @@ from models import LoginSchema, SignUpSchema, ChunkSchema, BaseSchema
 #import config
 from datetime import datetime
 
+from google.cloud.firestore_v1.base_query import FieldFilter
+from openai import OpenAI
+
+
+import pronunciationChecking
+import ipaTransliteration as epi
+import random
+
+from dotenv import load_dotenv
+load_dotenv()
+
+
 if not firebase_admin._apps:
     #check if file exists
     if os.path.exists("spanish-pronunciation-pro-firebase-adminsdk-fbsvc-af37a865d2.json"):
@@ -584,3 +596,32 @@ async def setLessonProgress(request: BaseSchema):
             status_code=400,
             detail= f"Error intializing lesson progress {str(e)}."
         )
+    
+@app.post("/generateSentence")
+async def generateSentence(difficulty: str):
+      client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+      try:
+        response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[{"role": "system", "content": "You are a helpful assistant that generates sentences for a Spanish pronunciation app. Make sure to use the spanish alphabet, and make sure to use the correct accent marks."},
+                        {"role": "user", "content": "Generate a sentence that is " + difficulty + " to say."}],
+                temperature=1
+        )
+        current_sentence = response.choices[0].message.content
+      # if there is an error with OpenAI, use a backup list of sentences
+      except:
+            backup_sentences = ["El gato duerme.", "La niña corre.", 
+                                "El perro ladra.", "Hace mucho calor.",
+                                "Llueve afuera.", "El vaso está lleno.",
+                                "La casa es grande.", "El pan está caliente.",
+                                "Hay una flor.", "La cama es cómoda."]
+            current_sentence = random.choice(backup_sentences)
+      finally:
+        return current_sentence
+
+@app.post("/checkPronunciation")
+async def checkPronunciation(audio_path: str, sentence: str):
+      # Transcribe audio, then compare to correct pronunciation
+      user_ipa = pronunciationChecking.transcribe_audio(audio_path)
+      output = pronunciationChecking.compare_strings(sentence, user_ipa)
+      return output
