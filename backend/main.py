@@ -432,11 +432,11 @@ async def getActivityHistory(uid):
         )
 
 @app.post("/setUser")
-async def setUser(uid):
+async def setUser(request: BaseSchema):
     try:
             doc_ref = db.collection('users')
 
-            query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
+            query_ref = doc_ref.where(filter= FieldFilter("id", "==", request.id)).get()
 
             if(query_ref):
                     raise HTTPException(
@@ -446,7 +446,7 @@ async def setUser(uid):
             else: 
                 doc = doc_ref.document()
                 data = {
-                    'id': uid,
+                    'id': request.id,
                     'initialized': True
                 }
             doc.set(data)

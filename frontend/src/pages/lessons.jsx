@@ -120,7 +120,7 @@ const lessonCategories = [
 // Check if every possible combination in a category is complete
 
 function LessonsPage({lessons, isFetching}) {
-    if(isFetching) return null;
+    //if(isFetching) return null;
     const isCategoryFullyComplete = (category, selections, index) => {
         /*
         const progress = selections[category.id];
@@ -135,7 +135,7 @@ function LessonsPage({lessons, isFetching}) {
             }
         }
             */
-        if(lessons[index].completed == false) {
+        if(!lessons[index] || !lessons[index].completed || lessons[index].completed == false) {
             return false
         }
         return true; // All combinations are complete
@@ -224,7 +224,7 @@ function LessonsPage({lessons, isFetching}) {
               </CardContent>
               <CardFooter>
                 <Button asChild className="w-full">
-                  <Link to={practicePath} >
+                  <Link to={practicePath}>
                     {isComboComplete ? 'Practice Again' : 'Start Practice'}
                   </Link>
                 </Button>

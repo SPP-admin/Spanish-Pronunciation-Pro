@@ -55,6 +55,20 @@ function App() {
     const getUser = async () => {
       if (user) {
         try {
+          let response = await api.get(`/getUser?uid=${user.uid}`)
+          console.log(response)
+        } catch (error) {
+          console.log(error.response.status)
+          if(error.response.status === 400) {
+            await api.post('/setUser', {id: user.uid}).catch(() => {})
+            await api.post('/setUserStatistics', {id: user.uid}).catch(() => {})
+            await api.post('/setAchievements', {id: user.uid}).catch(() => {})
+            await api.post('/setLessonProgress', {id: user.uid}).catch(() => {})
+            console.log("Account initialized.")
+          }
+        }
+
+        try {
           let fetchedData = await api.get(`/getUserStatistics?uid=${user.uid}`)
           let userStats = fetchedData.data.user_stats
           setProfile(prev => ({
@@ -113,7 +127,7 @@ function App() {
         <Route element={<ProtectedRoute user={user} />}>
         {/* Routes with the navbar, wrapped by the layout.jsx component.*/}
           <Route element={<Layout />}>
-            <Route path="/lessonsPractice" element={<LessonsPracticePage user={user}/>} />
+            <Route path="/lessonsPractice" element={<LessonsPracticePage/>} />
             <Route path="/lessons" element={<LessonsPage user={user} lessons={lessons} isFetching={fetchingData}/>} />
             <Route path="/profile" element={<ProfilePage user={user} profile={profile} achievements={achievements} activities={activities}/>} />
           <Route path="/dashboard" element={<Dashboard user={user} profile={profile} activities={activities}/>} />
