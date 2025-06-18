@@ -16,4 +16,4 @@ class ChunkSchema(BaseModel):
     completionDate:str
 
 class BaseSchema(BaseModel):
-    uid: str
+    id: str

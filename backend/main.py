@@ -11,17 +11,22 @@ from google.cloud.firestore_v1.base_query import FieldFilter
 
 from pydantic import BaseModel
 
-from models import LoginSchema, SignUpSchema
+from models import LoginSchema, SignUpSchema, ChunkSchema, BaseSchema
 
 #import pyrebase
 #import config
 from datetime import datetime
 from google.cloud.firestore_v1.base_query import FieldFilter
 from openai import OpenAI
-import os
-from dotenv import load_dotenv
 
+
+import pronunciationChecking
+import ipaTransliteration as epi
+import random
+
+from dotenv import load_dotenv
 load_dotenv()
+
 
 if not firebase_admin._apps:
     #check if file exists
@@ -42,9 +47,9 @@ app = FastAPI(
 )
 
 origins = [
-    "http://localhost:5173/",
-    "http://127.0.0.1:5173/",
-    "https://spanish-pronunciation-pro.vercel.app/"
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://spanish-pronunciation-pro.vercel.app"
 ]
 
 app.add_middleware(
@@ -91,8 +96,8 @@ async def send_voice_note(data: AudioData):
             status_code=400,
             detail=f"Error processing audio: {str(e)}"
         )
-
-
+      
+"""
 @app.post("/signup")
 async def signup(request: SignUpSchema):
     email = request.email
@@ -119,7 +124,7 @@ async def signup(request: SignUpSchema):
         }
         doc_ref.set(data)
 
-        return JSONResponse(content={"message": "User was successfully added."}, 
+        return JSONResponse(content={"id": data['id']}, 
                                 status_code = 201)
 
     except auth.EmailAlreadyExistsError:
@@ -127,8 +132,9 @@ async def signup(request: SignUpSchema):
             status_code = 400,
             detail= f"Account exists with this email."
         )
+"""
     
-
+""" UNUSED
 @app.post("/login")
 async def login(request: LoginSchema):
     email = request.email
@@ -140,15 +146,25 @@ async def login(request: LoginSchema):
             password = password
         )
         id = user['idToken']
+
+        print(user['localId'])
+
         # user.localId gives id for database purposes
-        return JSONResponse(content={"id":id
-                                     }, status_code = 201
-                            )
-    except:
+        return JSONResponse(
+            content={
+                "user_ids": {
+                    "auth_id": id,
+                    "local_id": user['localId']
+                }
+            },
+            status_code=201
+)
+    except Exception as e:
         raise HTTPException(
             status_code = 400,
-            detail= f"Incorrect login information."
+            detail= f"Incorrect login information. {str(e)}"
         )
+"""
 
 # user statistics are display on the profile page.
 @app.get("/getUserStatistics")
@@ -170,20 +186,20 @@ async def getUserStatistics(uid):
     
 # Initialize the user statistics after the user creates an account.
 @app.post("/setUserStatistics")
-async def setUserStaistics(uid):
+async def setUserStatistics(request: BaseSchema):
     try:
         doc_ref = db.collection('stats')
 
         data = {
             'accuracy_rate': int(0),
-            'id': uid,
+            'id': request.id,
             'completed_lessons': int(0),
             'practice_sessions': int(0),
             'study_streak': int(0),
             'uses': int(0)
         }
 
-        query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
+        query_ref = doc_ref.where(filter= FieldFilter("id", "==", request.id)).get()
         if(query_ref):
                     raise HTTPException(
                     status_code=400,
@@ -194,6 +210,7 @@ async def setUserStaistics(uid):
             doc.set(data)
             return JSONResponse(content={"message": "User statistics were successfully intialized."}, 
                                     status_code = 201)
+        
     except Exception as e:
         raise HTTPException(
             status_code=400,
@@ -302,11 +319,11 @@ async def getLessonProgress(uid):
 
 # Initializes the achievement array.
 @app.post("/setAchievements")
-async def setAchievements(uid):
+async def setAchievements(request: BaseSchema):
      try:
           doc_ref = db.collection('achievements')
 
-          query_ref = doc_ref.where(filter=FieldFilter("id", "==", uid)).get()
+          query_ref = doc_ref.where(filter=FieldFilter("id", "==", request.id)).get()
           if(query_ref):
                     raise HTTPException(
                     status_code=400,
@@ -315,7 +332,7 @@ async def setAchievements(uid):
           else: 
             doc = doc_ref.document()
             data = {
-                 'id': uid,
+                 'id': request.id,
                  'achievements': []
             }
             doc.set(data)
@@ -418,6 +435,50 @@ async def getActivityHistory(uid):
             detail= f"Error fetching activity history. {str(e)}"
         )
 
+@app.post("/setUser")
+async def setUser(uid):
+    try:
+            doc_ref = db.collection('users')
+
+            query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
+
+            if(query_ref):
+                    raise HTTPException(
+                    status_code=400,
+                    detail= f"User already exists"
+                )
+            else: 
+                doc = doc_ref.document()
+                data = {
+                    'id': uid,
+                    'initialized': True
+                }
+            doc.set(data)
+
+            return JSONResponse(content={"user": data}, 
+                                status_code=201)
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail= f"Error fetching user, No user exists. {str(e)}"
+        )
+
+@app.get("/getUser")
+async def getUser(uid):
+    try:
+            doc_ref = db.collection('users')
+
+            query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
+            stats = query_ref[0].to_dict()
+
+            return JSONResponse(content={"user": stats}, 
+                                status_code=201)
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail= f"Error fetching user, No user exists. {str(e)}"
+        )
+
 # Fetch the user accuracy
 @app.get("/getUserAccuracy")
 async def getUserAccuracy(uid):
@@ -505,11 +566,11 @@ async def updateLessonProgress(uid, lesson: int):
 
 # Sets the lesson progress to false and initializes the chunk array.
 @app.post("/setLessonProgress")
-async def setLessonProgress(uid):
+async def setLessonProgress(request: BaseSchema):
     try:
          doc_ref = db.collection('lessons')
 
-         query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
+         query_ref = doc_ref.where(filter= FieldFilter("id", "==", request.id)).get()
          if(query_ref):
                     raise HTTPException(
                     status_code=400,
@@ -518,7 +579,7 @@ async def setLessonProgress(uid):
          else:
             doc = doc_ref.document()
             data = {
-              'id': uid,
+              'id': request.id,
               'lesson_data': [
                    {'completed': False, 'completion_date': None} for _ in range(7)
               ],
@@ -537,11 +598,29 @@ async def setLessonProgress(uid):
     
 @app.post("/generateSentence")
 async def generateSentence(difficulty: str):
-      client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
-      response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[{"role": "system", "content": "You are a helpful assistant that generates sentences for a Spanish pronunciation app. Make sure to use the spanish alphabet, and make sure to use the correct accent marks."},
-                      {"role": "user", "content": "Generate a sentence that is " + difficulty + " to say."}],
-            temperature=1
-      )
-      return response.choices[0].message.content
+      client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+      try:
+        response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[{"role": "system", "content": "You are a helpful assistant that generates sentences for a Spanish pronunciation app. Make sure to use the spanish alphabet, and make sure to use the correct accent marks."},
+                        {"role": "user", "content": "Generate a sentence that is " + difficulty + " to say."}],
+                temperature=1
+        )
+        current_sentence = response.choices[0].message.content
+      # if there is an error with OpenAI, use a backup list of sentences
+      except:
+            backup_sentences = ["El gato duerme.", "La niña corre.", 
+                                "El perro ladra.", "Hace mucho calor.",
+                                "Llueve afuera.", "El vaso está lleno.",
+                                "La casa es grande.", "El pan está caliente.",
+                                "Hay una flor.", "La cama es cómoda."]
+            current_sentence = random.choice(backup_sentences)
+      finally:
+        return current_sentence
+
+@app.post("/checkPronunciation")
+async def checkPronunciation(audio_path: str, sentence: str):
+      # Transcribe audio, then compare to correct pronunciation
+      user_ipa = pronunciationChecking.transcribe_audio(audio_path)
+      output = pronunciationChecking.compare_strings(sentence, user_ipa)
+      return output

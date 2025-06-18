@@ -1,13 +1,26 @@
-import React from "react";
+import React from 'react';
+import api from "../api.js";
+import App from '@/App';
+import { useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress"; // Use shadcn/ui Progress
+import { Progress } from "@/components/ui/progress";
 
-function Dashboard() {
-  // replace with real data 
+// Import components as needed, ex, Card for layout
+// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+function Dashboard({user}) {
   const lessonsCompleted = 26;
   const totalLessons = 100;
   const progressValue = (lessonsCompleted / totalLessons) * 100;
+
+  const achievements = ["Perfect Week", "10 Day Streak", "Level 5"];
+  const recentActivity = [
+    { action: "Completed Lesson 5: Common Phrases", time: "2 hours ago" },
+    { action: "Practice Session: Greetings", time: "Yesterday" },
+    { action: "Earned Perfect Pronunciation Badge", time: "3 days ago" },
+  ]; 
 
   return (
     <div>
