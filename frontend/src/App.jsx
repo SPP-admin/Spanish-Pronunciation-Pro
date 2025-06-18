@@ -60,12 +60,12 @@ function App() {
         </Route>
 
         {/* Routes with the navbar, wrapped by the layout.jsx component.*/}
-
+{/* 
         <Route path="/lessonsPractice" element={<LessonsPracticePage />} />
 
         <Route path="/lessons" element={<LessonsPage />} />
 
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/dashboard" element={<Dashboard />} /> */}
       </Routes>
     </div>
   );
