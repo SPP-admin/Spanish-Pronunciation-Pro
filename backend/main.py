@@ -13,6 +13,7 @@ from openai import OpenAI
 import os
 from dotenv import load_dotenv
 import pronunciationChecking
+import ipaTransliteration as epi
 import random
 
 load_dotenv()
@@ -502,7 +503,5 @@ async def generateSentence(difficulty: str):
 async def checkPronunciation(audio_path: str, sentence: str):
       # Transcribe audio, then compare to correct pronunciation
       user_ipa = pronunciationChecking.transcribe_audio(audio_path)
-      correct_transcription = pronunciationChecking.get_correct_pronunciation(sentence)
-      print(f"User IPA: {user_ipa}")
-      print(f"Correct IPA: {correct_transcription}")
-      return user_ipa == correct_transcription
+      output = pronunciationChecking.compare_strings(sentence, user_ipa)
+      return output
