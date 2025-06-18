@@ -1,6 +1,11 @@
-uvicorn
 fastapi
-firebase_admin
+uvicorn
+firebase-admin
 google-cloud-firestore
-openai
+
 allosaurus
+python-dotenv
+openai
+python-multipart
+pydantic
+

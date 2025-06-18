@@ -1,14 +1,21 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 // Import Shadcn UI components
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Button } from "@/components/ui/button";
 
 // Example lesson categories based on Design Doc
 const lessonCategories = [
   { title: "Vowels", description: "Practice the core Spanish vowel sounds.", path: "/lessonsPractice?topic=vowels" }, // Example: using query params later
   { title: "Consonants", description: "Master tricky consonant pronunciations.", path: "/lessonsPractice?topic=consonants" },
-  { title: "Unique Sounds (ñ, rr, ll)", description: "Learn sounds unique to Spanish.", path: "/lessonsPractice?topic=unique" },
+  { title: "Unique Sounds (ñ, rr, ll)", description: "Learn sounds unique to the Spanish language.", path: "/lessonsPractice?topic=unique" },
   // Add more categories as needed... might be a drop down later
 ];
 

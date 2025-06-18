@@ -1,17 +1,20 @@
 import React from 'react';
+import api from "../api.js";
+import App from '@/App';
+import { useEffect } from 'react';
+import { useState } from 'react';
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+
 // Import components as needed, ex, Card for layout
 // import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-function Dashboard() {
-  // Placeholder data - This will come from the backend later...
-  const userData = {
-    name: "Jose Luna", 
-    learningSince: "January 2025", 
-    lessonsCompleted: 24,
-    practiceSessions: 56, 
-    accuracyRate: "78%", 
-    studyStreak: "12 days", 
-  };
+function Dashboard({user}) {
+  const lessonsCompleted = 26;
+  const totalLessons = 100;
+  const progressValue = (lessonsCompleted / totalLessons) * 100;
+
   const achievements = ["Perfect Week", "10 Day Streak", "Level 5"];
   const recentActivity = [
     { action: "Completed Lesson 5: Common Phrases", time: "2 hours ago" },
@@ -20,47 +23,36 @@ function Dashboard() {
   ]; 
 
   return (
-    <div className="container mx-auto p-4 md:p-6"> {/* Basic container */}
-      <h2 className="text-3xl font-bold mb-6">Your Dashboard - Soon to be Profile page.</h2>
+    <div>
+      <h1>Dashboard</h1>
+      <section>
+        <h2>Your Progress</h2>
+        <p>Lessons completed: {lessonsCompleted}/{totalLessons}</p>
+        <Progress value={progressValue} className="w-[60%] max-w-xs" />
+      </section>
 
-      {/* Layout based on Mockup (using placeholders) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <section>
+        <h2>Quick Actions</h2>
+        <Button asChild>
+          <Link to="/lessons">Continue Lessons</Link>
+        </Button>
+        <Button asChild>
+          <Link to="/lessonsPractice">Practice Pronunciation</Link>
+        </Button>
+      </section>
 
-        {/* User Info Placeholder */}
-        <div className="md:col-span-1 p-4 border rounded-lg shadow">
-           <h3 className="text-xl font-semibold mb-2">{userData.name}</h3>
-           <p className="text-sm text-muted-foreground">Learning since {userData.learningSince}</p>
-        </div>
+      <section>
+        <h2>Recent Activity</h2>
+        <ul>
+          <li>Lesson 5 completed - 2 days ago</li>
+          <li>Practiced pronunciation - 1 day ago</li>
+        </ul>
+      </section>
 
-         {/* Statistics Placeholder */}
-        <div className="md:col-span-1 p-4 border rounded-lg shadow">
-           <h3 className="text-xl font-semibold mb-2">Statistics</h3>
-           <p>Lessons Completed: {userData.lessonsCompleted}</p>
-           <p>Practice Sessions: {userData.practiceSessions}</p>
-           <p>Accuracy Rate: {userData.accuracyRate}</p>
-           <p>Study Streak: {userData.studyStreak}</p>
-        </div>
-
-         {/* Achievements Placeholder */}
-         <div className="md:col-span-1 p-4 border rounded-lg shadow">
-           <h3 className="text-xl font-semibold mb-2">Achievements</h3>
-           <ul>
-             {achievements.map((ach, index) => <li key={index}>{ach}</li>)}
-           </ul>
-         </div>
-
-         {/* Recent Activity Placeholder */}
-         <div className="md:col-span-3 p-4 border rounded-lg shadow">
-           <h3 className="text-xl font-semibold mb-2">Recent Activity</h3>
-           <ul>
-              {recentActivity.map((act, index) => (
-                <li key={index} className="text-sm mb-1">
-                  {act.action} - <span className="text-muted-foreground">{act.time}</span>
-                </li>
-              ))}
-           </ul>
-         </div>
-      </div>
+      <section>
+        <h2>Achievements </h2>
+        <p> 3-day practice streak!<br/></p>
+      </section>
     </div>
   );
 }

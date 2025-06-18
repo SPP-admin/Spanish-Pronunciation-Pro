@@ -1,30 +1,45 @@
+import os
+import base64
 import uvicorn
-from fastapi import FastAPI, HTTPException
-from firebase_admin import credentials, auth
-from firebase_admin import firestore
-import firebase_admin
+from fastapi import FastAPI, HTTPException, Form
 from fastapi.responses import JSONResponse
-from models import LoginSchema, SignUpSchema
+from fastapi.middleware.cors import CORSMiddleware
+
+import firebase_admin
+from firebase_admin import credentials, auth, firestore
+from google.cloud.firestore_v1.base_query import FieldFilter
+
+from pydantic import BaseModel
+
+from models import LoginSchema, SignUpSchema, ChunkSchema, BaseSchema
+
 #import pyrebase
 #import config
 from datetime import datetime
+
 from google.cloud.firestore_v1.base_query import FieldFilter
 from openai import OpenAI
-import os
-from dotenv import load_dotenv
+
+
 import pronunciationChecking
 import ipaTransliteration as epi
 import random
 
+from dotenv import load_dotenv
 load_dotenv()
 
-if not firebase_admin._apps:
-    #cred = credentials.Certificate("serviceAccountKey.json")
-    cred = credentials.Certificate("spanish-pronunciation-pro-firebase-adminsdk-fbsvc-af37a865d2.json")
-    firebase_admin.initialize_app(cred)
 
-if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8080, reload=True)
+if not firebase_admin._apps:
+    #check if file exists
+    if os.path.exists("spanish-pronunciation-pro-firebase-adminsdk-fbsvc-af37a865d2.json"):
+        cred = credentials.Certificate("spanish-pronunciation-pro-firebase-adminsdk-fbsvc-af37a865d2.json")
+    else:
+        firebase_creds_json = os.environ.get("FIREBASE_CREDENTIALS")
+        temp_path = "/tmp/firebase_credentials.json"
+        with open(temp_path, "w") as f:
+            f.write(firebase_creds_json)
+        cred = credentials.Certificate(temp_path)
+    firebase_admin.initialize_app(cred)
 
 app = FastAPI(
     description = "API's for the Spanish Pronunciation Pro Project",
@@ -32,9 +47,58 @@ app = FastAPI(
     docs_url= "/"
 )
 
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://spanish-pronunciation-pro.vercel.app"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins = origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 db = firestore.client()
 #firebase = pyrebase.initialize_app(config.firebaseConfig)
 
+class AudioData(BaseModel):
+    base64_data: str
+
+# openai import
+import openai
+openai.api_key = os.getenv("OPENAI_KEY")
+
+@app.post("/sendVoiceNote")
+async def send_voice_note(data: AudioData):
+    try:
+        # Decode base64 string
+        audio_bytes = base64.b64decode(data.base64_data)
+
+        # Write to disk
+        audio_file_name = "audio.webm"
+        with open(audio_file_name, "wb") as f:
+            f.write(audio_bytes)
+
+        # Transcribe using OpenAI Whisper
+        with open(audio_file_name, "rb") as audio_file:
+            transcript = openai.audio.transcriptions.create(
+                model="whisper-1",
+                file=audio_file,
+                response_format="text",
+                language="es" 
+            )
+
+        return transcript  # returns raw text
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Error processing audio: {str(e)}"
+        )
+      
+"""
 @app.post("/signup")
 async def signup(request: SignUpSchema):
     email = request.email
@@ -61,7 +125,7 @@ async def signup(request: SignUpSchema):
         }
         doc_ref.set(data)
 
-        return JSONResponse(content={"message": "User was successfully added."}, 
+        return JSONResponse(content={"id": data['id']}, 
                                 status_code = 201)
 
     except auth.EmailAlreadyExistsError:
@@ -69,8 +133,9 @@ async def signup(request: SignUpSchema):
             status_code = 400,
             detail= f"Account exists with this email."
         )
+"""
     
-
+""" UNUSED
 @app.post("/login")
 async def login(request: LoginSchema):
     email = request.email
@@ -82,15 +147,25 @@ async def login(request: LoginSchema):
             password = password
         )
         id = user['idToken']
+
+        print(user['localId'])
+
         # user.localId gives id for database purposes
-        return JSONResponse(content={"id":id
-                                     }, status_code = 201
-                            )
-    except:
+        return JSONResponse(
+            content={
+                "user_ids": {
+                    "auth_id": id,
+                    "local_id": user['localId']
+                }
+            },
+            status_code=201
+)
+    except Exception as e:
         raise HTTPException(
             status_code = 400,
-            detail= f"Incorrect login information."
+            detail= f"Incorrect login information. {str(e)}"
         )
+"""
 
 # user statistics are display on the profile page.
 @app.get("/getUserStatistics")
@@ -112,20 +187,20 @@ async def getUserStatistics(uid):
     
 # Initialize the user statistics after the user creates an account.
 @app.post("/setUserStatistics")
-async def setUserStaistics(uid):
+async def setUserStatistics(request: BaseSchema):
     try:
         doc_ref = db.collection('stats')
 
         data = {
             'accuracy_rate': int(0),
-            'id': uid,
+            'id': request.id,
             'completed_lessons': int(0),
             'practice_sessions': int(0),
             'study_streak': int(0),
             'uses': int(0)
         }
 
-        query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
+        query_ref = doc_ref.where(filter= FieldFilter("id", "==", request.id)).get()
         if(query_ref):
                     raise HTTPException(
                     status_code=400,
@@ -136,6 +211,7 @@ async def setUserStaistics(uid):
             doc.set(data)
             return JSONResponse(content={"message": "User statistics were successfully intialized."}, 
                                     status_code = 201)
+        
     except Exception as e:
         raise HTTPException(
             status_code=400,
@@ -244,11 +320,11 @@ async def getLessonProgress(uid):
 
 # Initializes the achievement array.
 @app.post("/setAchievements")
-async def setAchievements(uid):
+async def setAchievements(request: BaseSchema):
      try:
           doc_ref = db.collection('achievements')
 
-          query_ref = doc_ref.where(filter=FieldFilter("id", "==", uid)).get()
+          query_ref = doc_ref.where(filter=FieldFilter("id", "==", request.id)).get()
           if(query_ref):
                     raise HTTPException(
                     status_code=400,
@@ -257,7 +333,7 @@ async def setAchievements(uid):
           else: 
             doc = doc_ref.document()
             data = {
-                 'id': uid,
+                 'id': request.id,
                  'achievements': []
             }
             doc.set(data)
@@ -360,6 +436,50 @@ async def getActivityHistory(uid):
             detail= f"Error fetching activity history. {str(e)}"
         )
 
+@app.post("/setUser")
+async def setUser(uid):
+    try:
+            doc_ref = db.collection('users')
+
+            query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
+
+            if(query_ref):
+                    raise HTTPException(
+                    status_code=400,
+                    detail= f"User already exists"
+                )
+            else: 
+                doc = doc_ref.document()
+                data = {
+                    'id': uid,
+                    'initialized': True
+                }
+            doc.set(data)
+
+            return JSONResponse(content={"user": data}, 
+                                status_code=201)
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail= f"Error fetching user, No user exists. {str(e)}"
+        )
+
+@app.get("/getUser")
+async def getUser(uid):
+    try:
+            doc_ref = db.collection('users')
+
+            query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
+            stats = query_ref[0].to_dict()
+
+            return JSONResponse(content={"user": stats}, 
+                                status_code=201)
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail= f"Error fetching user, No user exists. {str(e)}"
+        )
+
 # Fetch the user accuracy
 @app.get("/getUserAccuracy")
 async def getUserAccuracy(uid):
@@ -447,11 +567,11 @@ async def updateLessonProgress(uid, lesson: int):
 
 # Sets the lesson progress to false and initializes the chunk array.
 @app.post("/setLessonProgress")
-async def setLessonProgress(uid):
+async def setLessonProgress(request: BaseSchema):
     try:
          doc_ref = db.collection('lessons')
 
-         query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
+         query_ref = doc_ref.where(filter= FieldFilter("id", "==", request.id)).get()
          if(query_ref):
                     raise HTTPException(
                     status_code=400,
@@ -460,7 +580,7 @@ async def setLessonProgress(uid):
          else:
             doc = doc_ref.document()
             data = {
-              'id': uid,
+              'id': request.id,
               'lesson_data': [
                    {'completed': False, 'completion_date': None} for _ in range(7)
               ],
