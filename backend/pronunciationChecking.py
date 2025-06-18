@@ -63,6 +63,12 @@ def delete_incorrect(sentence_mapping, current_ipa, pos):
 	next_index = index
 	prev_mapping = sentence_mapping.ipa_mapping[prev_index]
 	next_mapping = sentence_mapping.ipa_mapping[next_index]
+
+	# edge case for 'h'
+	h = {'h', "H"}
+	if sentence_mapping.ipa_mapping[index - 1] in h and index > 0:
+		sentence_mapping.ipa_mapping[index - 1].pronounced_correctly = False
+
 	if is_vowel_ipa(current_ipa):
 		if index == 0:
 			next_mapping.pronounced_correctly = False
@@ -89,6 +95,14 @@ def delete_incorrect(sentence_mapping, current_ipa, pos):
 # so mark all ipa_mapping from start_index to end_index as incorrect
 # replacement uses same logic
 def insert_incorrect(sentence_mapping, start_pos, end_pos):
+	prev_index = sentence_mapping.ipa_indices[start_pos][1] - 1
+	prev_mapping = sentence_mapping.ipa_mapping[prev_index]
+
+	# edge case for 'h'
+	h = {'h', 'H'}
+	if prev_mapping.ortho_letter in h and prev_index >= 0:
+		prev_mapping.pronounced_correctly = False
+	
 	for i in range(start_pos, end_pos if end_pos < len(sentence_mapping.ipa_indices) else len(sentence_mapping.ipa_indices)):
 		# Convert IPA symbol index to sentence_mapping_index
 		index = sentence_mapping.ipa_indices[i][1]
