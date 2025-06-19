@@ -11,23 +11,23 @@ from google.cloud.firestore_v1.base_query import FieldFilter
 
 from pydantic import BaseModel
 
-from models import LoginSchema, SignUpSchema
+from models import LoginSchema, SignUpSchema, ChunkSchema, BaseSchema
 
 #import pyrebase
 #import config
 from datetime import datetime
 
-from dotenv import load_dotenv
-load_dotenv()
-
-
 if not firebase_admin._apps:
-    #cred = credentials.Certificate("serviceAccountKey.json")
-    cred = credentials.Certificate("spanish-pronunciation-pro-firebase-adminsdk-fbsvc-af37a865d2.json")
+    #check if file exists
+    if os.path.exists("spanish-pronunciation-pro-firebase-adminsdk-fbsvc-af37a865d2.json"):
+        cred = credentials.Certificate("spanish-pronunciation-pro-firebase-adminsdk-fbsvc-af37a865d2.json")
+    else:
+        firebase_creds_json = os.environ.get("FIREBASE_CREDENTIALS")
+        temp_path = "/tmp/firebase_credentials.json"
+        with open(temp_path, "w") as f:
+            f.write(firebase_creds_json)
+        cred = credentials.Certificate(temp_path)
     firebase_admin.initialize_app(cred)
-
-if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8080, reload=True)
 
 app = FastAPI(
     description = "API's for the Spanish Pronunciation Pro Project",
@@ -35,9 +35,18 @@ app = FastAPI(
     docs_url= "/"
 )
 
+if __name__ == "__main__":
+      uvicorn.run("main:app", host="0.0.0.0", port=8080, reload=True)
+
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://spanish-pronunciation-pro.vercel.app"
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # adjust for your domain in production
+    allow_origins = origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -79,8 +88,8 @@ async def send_voice_note(data: AudioData):
             status_code=400,
             detail=f"Error processing audio: {str(e)}"
         )
-
-
+      
+"""
 @app.post("/signup")
 async def signup(request: SignUpSchema):
     email = request.email
@@ -107,7 +116,7 @@ async def signup(request: SignUpSchema):
         }
         doc_ref.set(data)
 
-        return JSONResponse(content={"message": "User was successfully added."}, 
+        return JSONResponse(content={"id": data['id']}, 
                                 status_code = 201)
 
     except auth.EmailAlreadyExistsError:
@@ -115,8 +124,9 @@ async def signup(request: SignUpSchema):
             status_code = 400,
             detail= f"Account exists with this email."
         )
+"""
     
-
+""" UNUSED
 @app.post("/login")
 async def login(request: LoginSchema):
     email = request.email
@@ -128,15 +138,25 @@ async def login(request: LoginSchema):
             password = password
         )
         id = user['idToken']
+
+        print(user['localId'])
+
         # user.localId gives id for database purposes
-        return JSONResponse(content={"id":id
-                                     }, status_code = 201
-                            )
-    except:
+        return JSONResponse(
+            content={
+                "user_ids": {
+                    "auth_id": id,
+                    "local_id": user['localId']
+                }
+            },
+            status_code=201
+)
+    except Exception as e:
         raise HTTPException(
             status_code = 400,
-            detail= f"Incorrect login information."
+            detail= f"Incorrect login information. {str(e)}"
         )
+"""
 
 # user statistics are display on the profile page.
 @app.get("/getUserStatistics")
@@ -158,20 +178,20 @@ async def getUserStatistics(uid):
     
 # Initialize the user statistics after the user creates an account.
 @app.post("/setUserStatistics")
-async def setUserStaistics(uid):
+async def setUserStatistics(request: BaseSchema):
     try:
         doc_ref = db.collection('stats')
 
         data = {
             'accuracy_rate': int(0),
-            'id': uid,
+            'id': request.id,
             'completed_lessons': int(0),
             'practice_sessions': int(0),
             'study_streak': int(0),
             'uses': int(0)
         }
 
-        query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
+        query_ref = doc_ref.where(filter= FieldFilter("id", "==", request.id)).get()
         if(query_ref):
                     raise HTTPException(
                     status_code=400,
@@ -182,6 +202,7 @@ async def setUserStaistics(uid):
             doc.set(data)
             return JSONResponse(content={"message": "User statistics were successfully intialized."}, 
                                     status_code = 201)
+        
     except Exception as e:
         raise HTTPException(
             status_code=400,
@@ -290,11 +311,11 @@ async def getLessonProgress(uid):
 
 # Initializes the achievement array.
 @app.post("/setAchievements")
-async def setAchievements(uid):
+async def setAchievements(request: BaseSchema):
      try:
           doc_ref = db.collection('achievements')
 
-          query_ref = doc_ref.where(filter=FieldFilter("id", "==", uid)).get()
+          query_ref = doc_ref.where(filter=FieldFilter("id", "==", request.id)).get()
           if(query_ref):
                     raise HTTPException(
                     status_code=400,
@@ -303,7 +324,7 @@ async def setAchievements(uid):
           else: 
             doc = doc_ref.document()
             data = {
-                 'id': uid,
+                 'id': request.id,
                  'achievements': []
             }
             doc.set(data)
@@ -355,7 +376,7 @@ async def getAchievements(uid):
 
         query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
 
-        return JSONResponse(content={"achievments": query_ref[0].to_dict()},
+        return JSONResponse(content={"achievements": query_ref[0].to_dict()},
                             status_code=201)
     except Exception as e:
                          raise HTTPException(
@@ -369,16 +390,20 @@ async def updateActivityHistory(uid, activity):
     try:
         doc_ref = db.collection('activity_history')
         query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
-        doc_id = query_ref[0].id
-        doc_ref = db.collection('activity_history').document(doc_id).get()
-        activities = doc_ref.to_dict().get('activities', [])
+        if (not query_ref):
+            new_doc = doc_ref.document()
+            new_doc.set({'activities': [activity], 'id': uid})
+        else:
+            doc_id = query_ref[0].id
+            doc_ref = db.collection('activity_history').document(doc_id).get()
+            activities = doc_ref.to_dict().get('activities', [])
 
-        while(len(activities) >= 3):
-            activities.pop(0)
+            while(len(activities) >= 3 and len(activities) > 0):
+                activities.pop(0)
 
-        activities.append(activity)
+            activities.append(activity)
 
-        doc_ref = db.collection('activity_history').document(doc_id).update({"activities": activities})
+            doc_ref = db.collection('activity_history').document(doc_id).update({"activities": activities})
         return JSONResponse(content={"message": f"User's recent activity has been added to their history.'" }, 
                                     status_code = 201)
 
@@ -404,6 +429,50 @@ async def getActivityHistory(uid):
         raise HTTPException(
             status_code=400,
             detail= f"Error fetching activity history. {str(e)}"
+        )
+
+@app.post("/setUser")
+async def setUser(request: BaseSchema):
+    try:
+            doc_ref = db.collection('users')
+
+            query_ref = doc_ref.where(filter= FieldFilter("id", "==", request.id)).get()
+
+            if(query_ref):
+                    raise HTTPException(
+                    status_code=400,
+                    detail= f"User already exists"
+                )
+            else: 
+                doc = doc_ref.document()
+                data = {
+                    'id': request.id,
+                    'initialized': True
+                }
+            doc.set(data)
+
+            return JSONResponse(content={"user": data}, 
+                                status_code=201)
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail= f"Error fetching user, No user exists. {str(e)}"
+        )
+
+@app.get("/getUser")
+async def getUser(uid):
+    try:
+            doc_ref = db.collection('users')
+
+            query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
+            stats = query_ref[0].to_dict()
+
+            return JSONResponse(content={"user": stats}, 
+                                status_code=201)
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail= f"Error fetching user, No user exists. {str(e)}"
         )
 
 # Fetch the user accuracy
@@ -493,11 +562,11 @@ async def updateLessonProgress(uid, lesson: int):
 
 # Sets the lesson progress to false and initializes the chunk array.
 @app.post("/setLessonProgress")
-async def setLessonProgress(uid):
+async def setLessonProgress(request: BaseSchema):
     try:
          doc_ref = db.collection('lessons')
 
-         query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
+         query_ref = doc_ref.where(filter= FieldFilter("id", "==", request.id)).get()
          if(query_ref):
                     raise HTTPException(
                     status_code=400,
@@ -506,7 +575,7 @@ async def setLessonProgress(uid):
          else:
             doc = doc_ref.document()
             data = {
-              'id': uid,
+              'id': request.id,
               'lesson_data': [
                    {'completed': False, 'completion_date': None} for _ in range(7)
               ],

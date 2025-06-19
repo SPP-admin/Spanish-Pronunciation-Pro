@@ -10,12 +10,13 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { verifyBeforeUpdateEmail, updateEmail, updateProfile} from "firebase/auth";
 
-function SettingsPage() {
+function SettingsPage({user}) {
   //TODO: Replace with API data fetching logic
   const [userData, setUserData] = useState({
-    name: "Jose Luna",
-    email: "joseluna@example.com",
+    name: user.displayName,
+    email: user.email,
   });
 
   // Handle input changes
@@ -27,10 +28,32 @@ function SettingsPage() {
     }));
   };
 
-  const handleSaveChanges = () => {
+  const handleSaveChanges = async () => {
     // TODO: Make an API call
-    console.log("Saving changes:", userData);
+    if(user) {
+      try {
+        await updateProfile(user, {displayName: userData.name})
+      } catch (error) {
+        alert("Error changing credentials.")
+        return
+      }
+    }
+
+    alert("Success! Your display name has changed.")
   
+  };
+
+  const handleEmailChanges = async () => {
+    if(user) {
+      try {
+        await verifyBeforeUpdateEmail(user, userData.email)
+      } catch (error) {
+        alert("Error sending email change request." + error.message)
+        return
+      }
+    }
+
+    alert("Email request sent! Please check your email for the email change link.")
   };
 
   return (
@@ -51,6 +74,7 @@ function SettingsPage() {
               onChange={handleInputChange}
             />
           </div>
+          <Button onClick={handleSaveChanges}>Save Changes</Button>
           <div className="space-y-2">
             <Label htmlFor="email">Email Address</Label>
             <Input
@@ -62,7 +86,7 @@ function SettingsPage() {
           </div>
         </CardContent>
         <CardFooter>
-          <Button onClick={handleSaveChanges}>Save Changes</Button>
+          <Button onClick={handleEmailChanges}>Send Email Reset Link</Button>
         </CardFooter>
       </Card>
     </div>
