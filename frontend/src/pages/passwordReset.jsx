@@ -6,13 +6,26 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { sendPasswordResetEmail } from 'firebase/auth';
+import { useState } from 'react';
+import { auth } from '@/firebase.js';
 
 function ForgotPasswordPage() {
   const navigate = useNavigate();
+  const [email, setEmail] = useState('');
 
   const handleResetClick = () => {
     // TODO: Implement Firebase password reset logic here (get email, call Firebase auth)
-    console.log("Password Reset clicked (Not Implemented)");
+
+    if(email) {
+    try {
+      sendPasswordResetEmail(auth, email)
+      alert("Password Reset Email Sent!")
+      navigate('/login')
+    } catch (error) {
+      alert(error)
+    }
+  } else alert("Please enter valid email.")
     // Maybe navigate back to login or show a success message
   };
 
@@ -26,7 +39,7 @@ function ForgotPasswordPage() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="" required />
+            <Input id="email" type="email" placeholder="" onChange = {(e) => setEmail(e.target.value)}  required /> 
           </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">

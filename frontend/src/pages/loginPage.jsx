@@ -7,19 +7,63 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+
+import { auth, googleProvider } from '../firebase.js';
 
 import loginImage from '@/assets/images/login2.png';
 
+import api from "../api.js";
+import {useState, useEffect} from 'react';
 
-function LoginPage() {
+
+function LoginPage({user, isFetching}) {
+  console.log(user)
   const navigate = useNavigate();
+  const [cred, setCred] = useState({
+    email: '',
+    password: '',
+  });
 
-  const handleLoginClick = () => {
+  useEffect(() => {
+    if(!isFetching && user) {
+      navigate('/dashboard')
+    }
+  }, [user, isFetching, navigate])
+
+  const googleLogin = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider)
+      user = result.user
+    } catch(error) {
+      alert(error.message)
+      return;
+    }
+    /*
+    await api.post('/setUserStatistics', {id: user.uid}).catch(() => {})
+    await api.post('/setAchievements', {id: user.uid}).catch(() => {})
+    await api.post('/setLessonProgress', {id: user.uid}).catch(() => {})
+      */
+    alert('Success!')
     navigate('/dashboard');
-  };
+  }
 
-  const handleGoogleClick = () => {
-    console.log("Google Sign-in Clicked (Not Implemented)");
+  const handleChange = (e) => {
+    setCred(
+      {...cred, 
+        [e.target.name]: e.target.value
+      })
+  }
+
+  const handleLoginClick = async () => {
+
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, cred.email, cred.password)
+      navigate('/dashboard');
+
+      } catch(error) {
+        console.log(error)
+      }
   };
 
   return (
@@ -47,7 +91,7 @@ function LoginPage() {
              <CardContent className="space-y-4">
                <div className="space-y-2">
                  <Label htmlFor="email">Email</Label>
-                 <Input id="email" type="email" placeholder="" required />
+                 <Input id="email" type="email" placeholder="" name ="email" value = {cred.email} onChange = {handleChange} required />
                </div>
                <div className="space-y-2">
                  <div className="flex items-center justify-between">
@@ -56,7 +100,7 @@ function LoginPage() {
                      Forgot password?
                    </Link>
                  </div>
-                 <Input id="password" type="password" placeholder="" required />
+                 <Input id="password" type="password" placeholder="" name ="password" value = {cred.password} onChange = {handleChange} required />
                </div>
              </CardContent>
              <CardFooter className="flex flex-col space-y-3 pt-6">
@@ -70,7 +114,7 @@ function LoginPage() {
                    <div className="absolute inset-0 flex items-center"><span className="w-full border-t"></span></div>
                    <div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-2 text-muted-foreground dark:bg-card">Or continue with</span></div>
                </div>
-               <Button variant="outline" className="w-full" onClick={handleGoogleClick}>
+               <Button variant="outline" className="w-full" onClick={googleLogin}>
                  <FaGoogle className="mr-2 h-4 w-4" />
                  Sign in with Google
                </Button>

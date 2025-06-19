@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import Confetti from 'react-confetti';
 import AudioRecorder from '@/components/audioRecorder.jsx';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FaArrowLeft, FaArrowRight, FaClock, FaHighlighter } from 'react-icons/fa'; // Added FaHighlighter
+import api from '../api.js';
+import { auth } from '@/firebase.js';
+import { useAuthState } from 'react-firebase-hooks/auth';
 
-// --- Sample Lesson Data ---
+// --- Sample Lesson Data (no changes here) ---
 const lessonsContent = {
     default: {
       title: "Practice Session",
@@ -65,6 +68,9 @@ const lessonsContent = {
   };
 
 function LessonsPracticePage() {
+
+  const [user] = useAuthState(auth);
+
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [showConfetti, setShowConfetti] = useState(false);
@@ -81,6 +87,9 @@ function LessonsPracticePage() {
   const [selectedText, setSelectedText] = useState(null);
   const [recordedAudio, setRecordedAudio] = useState(null);
   const [transcription, setTranscription] = useState("");
+
+  const [practiced, setPracticed] = useState(false)
+
 
   useEffect(() => {
     // Reset selection when the phrase changes
@@ -125,9 +134,21 @@ function LessonsPracticePage() {
     reader.readAsDataURL(blob);
   };
 
-  const handleAudioRecording = (blob) => {
+  const handleAudioRecording = async (blob) => {
     setRecordedAudio(blob);
     sendAudioToServer(blob);
+    setPracticed(true)
+  
+    let activity = `Practiced ${topic} lesson ${lesson}, at ${level} difficulty!`;
+    if(!practiced) {
+      console.log(activity)
+      try {
+        await api.patch(`/updateActivityHistory?uid=${user.uid}&activity=${activity}`)
+
+      } catch (error) {
+        console.log(error)
+      }
+  }
   };
 
   const handleFinishAndNext = () => {
