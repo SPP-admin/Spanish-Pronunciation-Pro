@@ -17,6 +17,9 @@ from models import LoginSchema, SignUpSchema, ChunkSchema, BaseSchema
 #import config
 from datetime import datetime
 
+from dotenv import load_dotenv
+load_dotenv()
+
 if not firebase_admin._apps:
     #check if file exists
     if os.path.exists("spanish-pronunciation-pro-firebase-adminsdk-fbsvc-af37a865d2.json"):
