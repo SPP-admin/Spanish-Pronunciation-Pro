@@ -19,23 +19,18 @@ import ProfilePage from './pages/profilePage.jsx'; // Import ProfilePage compone
 import SettingsPage from './pages/settingsPage.jsx'; // Import SettingsPage component
 import { useAuthState } from 'react-firebase-hooks/auth';
 
-function App() {
+import { ProfileProvider } from './profileContext.jsx';
+import { useProfile } from './profileContext.jsx';
+
+function AppContent() {
   const navigate = useNavigate('')
   const [user ] = useAuthState(auth);
   const [isFetching, setIsFetching] = useState(true);
   const [fetchingData, setFetchingData] = useState(true);
-  const [profile, setProfile] = useState({
-
-    name: "N/A",
-    creationDate: "N/A",
-    studyStreak: 0,
-    lessonsCompleted: 0,
-    practiceSessions: 0,
-    accuracyRate: 0
-  })
   const [achievements, setAchievements] = useState([])
   const [activities, setActivities] = useState([])
   const [lessons, setLessons] = useState([])
+  const { setProfile } = useProfile();
 
 
   useEffect(() => {
@@ -77,30 +72,47 @@ function App() {
             accuracyRate: userStats.accuracy_rate ?? prev.accuracyRate,
             practiceSessions: userStats.practice_sessions ?? prev.practiceSessions,
             studyStreak: userStats.study_streak ?? prev.studyStreak}));
-          console.log(profile)
           fetchedData = await api.get(`/getAchievements?uid=${user.uid}`)
-          let achievements = fetchedData.data.achievements.achievements
+          let fetchedAchievements = fetchedData.data.achievements.achievements
+          setProfile(prev => ({
+            ...prev,
+            achievements: fetchedAchievements
+          }))
+          /*
           setAchievements(achievements)
           console.log(achievements)
+          */
         } catch (error) {
           console.log(error)
         }
 
         try {
           const fetchedData = await api.get(`/getActivityHistory?uid=${user.uid}`)
+
+          setProfile(prev => ({
+            ...prev,
+            activities: fetchedData.data.activity_history
+          }))
+          /*
           let activities = fetchedData.data.activity_history
           setActivities(activities)
           console.log(activities)
+          */
         } catch (error) {
           console.log(error)
         }
 
         try {
           const fetchedData = await api.get(`/getLessonProgress?uid=${user.uid}`)
-          let lessons = fetchedData.data.lesson_data
+          setProfile(prev => ({
+            ...prev,
+            lessons: fetchedData.data.lesson_data
+          }))
+          /*
           setLessons(lessons)
-          setFetchingData(false)
           console.log(lessons)
+          */
+          setFetchingData(false)
         } catch(error) {
           console.log(error)
         }
@@ -126,24 +138,25 @@ function App() {
 
         <Route element={<ProtectedRoute user={user} />}>
         {/* Routes with the navbar, wrapped by the layout.jsx component.*/}
+        
           <Route element={<Layout />}>
             <Route path="/lessonsPractice" element={<LessonsPracticePage/>} />
-            <Route path="/lessons" element={<LessonsPage user={user} lessons={lessons} isFetching={fetchingData}/>} />
-            <Route path="/profile" element={<ProfilePage user={user} profile={profile} achievements={achievements} activities={activities}/>} />
-          <Route path="/dashboard" element={<Dashboard user={user} profile={profile} activities={activities}/>} />
+            <Route path="/lessons" element={<LessonsPage user={user} isFetching={fetchingData}/>} />
+            <Route path="/profile" element={<ProfilePage user={user} />} />
+            <Route path="/dashboard" element={<Dashboard user={user} />} />
             <Route path="/settings" element={<SettingsPage user={user}/>} />
           </Route>
         </Route>
-
         {/* Routes with the navbar, wrapped by the layout.jsx component.*/}
-
-        <Route path="/lessonsPractice" element={<LessonsPracticePage />} />
-
-        <Route path="/lessons" element={<LessonsPage />} />
-
-        <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
+      
     </div>
   );
 }
-export default App;
+export default function App() {
+  return (
+    <ProfileProvider>
+      <AppContent/>
+    </ProfileProvider>
+  )
+};

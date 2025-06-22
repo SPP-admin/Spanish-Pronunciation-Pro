@@ -7,6 +7,7 @@ import { FaArrowLeft, FaArrowRight, FaClock, FaHighlighter } from 'react-icons/f
 import api from '../api.js';
 import { auth } from '@/firebase.js';
 import { useAuthState } from 'react-firebase-hooks/auth';
+import { useProfile } from '@/profileContext.jsx';
 
 // --- Sample Lesson Data (no changes here) ---
 
@@ -88,6 +89,7 @@ function LessonsPracticePage() {
   const [transcription, setTranscription] = useState("");
 
   const [practiced, setPracticed] = useState(false)
+  const { setProfile } = useProfile()
 
 
   useEffect(() => {

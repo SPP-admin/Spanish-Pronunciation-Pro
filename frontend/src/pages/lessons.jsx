@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2 } from 'lucide-react';
+import { useProfile } from '@/profileContext';
 
 const lessonCategories = [
     {
@@ -119,8 +120,11 @@ const lessonCategories = [
 
 // Check if every possible combination in a category is complete
 
-function LessonsPage({lessons, isFetching}) {
+function LessonsPage({isFetching}) {
     //if(isFetching) return null;
+
+    const { profile } = useProfile()
+
     const isCategoryFullyComplete = (category, selections, index) => {
         /*
         const progress = selections[category.id];
@@ -135,7 +139,7 @@ function LessonsPage({lessons, isFetching}) {
             }
         }
             */
-        if(!lessons[index] || !lessons[index].completed || lessons[index].completed == false) {
+        if(!profile.lessons || !profile.lessons[index] || !profile.lessons[index].completed || profile.lessons[index].completed == false) {
             return false
         }
         return true; // All combinations are complete

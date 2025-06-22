@@ -4,15 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { TrophiesCard } from "@/components/trophies"; 
 import { useEffect } from 'react';
 import { useState } from 'react';
+import { useProfile } from '@/profileContext.jsx';
 
-function ProfilePage({user, profile, achievements, activities}) {
+function ProfilePage({user}) {
 
-  const [userData, setUserData] = useState({
-    lessonsCompleted: 0,
-    practiceSessions: 0, 
-    accuracyRate: 0, 
-    studyStreak: 0,  
-  })
+  const { profile } = useProfile();
     
 // Trying out a mock achievements list
   const allAchievements = [
@@ -20,37 +16,37 @@ function ProfilePage({user, profile, achievements, activities}) {
       id: 1,
       name: "Perfect Week",
       description: "Complete a lesson every day for 7 days.",
-      unlocked: achievements[0] ?? false,
+      unlocked: profile.achievements[0] ?? false,
     },
     {
       id: 2,
       name: "14 Day Streak",
       description: "Maintain a 14-day practice streak.",
-      unlocked: achievements[1] ?? false,
+      unlocked: profile.achievements[1] ?? false,
     },
     {
       id: 3,
       name: "Vowel Virtuoso",
       description: "Complete all vowel lessons.",
-      unlocked: achievements[2] ?? false,
+      unlocked: profile.achievements[2] ?? false,
     },
     {
       id: 4,
       name: "Consonant Champion",
       description: "Complete all consonant lessons.",
-      unlocked: achievements[3] ?? false,
+      unlocked: profile.achievements[3] ?? false,
     },
     {
       id: 5,
       name: "Speedy Speaker",
       description: "Complete a lesson in under 2 minutes",
-      unlocked: achievements[4] ?? false,
+      unlocked: profile.achievements[4] ?? false,
     },
     {
       id: 6,
       name: "Max level",
       description: "Reach max level in any lesson category.",
-      unlocked: achievements[5] ?? false,
+      unlocked: profile.achievements[5] ?? false,
     },
   ];
 
@@ -154,9 +150,9 @@ function ProfilePage({user, profile, achievements, activities}) {
             </CardHeader>
             <CardContent>
               <ul className="space-y-3">
-                {activities.map((act, index) => (
+                {profile.activities.map((act, index) => (
                   <li key={index} className="text-sm">
-                    {activities[index]}
+                    {act}
                     <span className="text-xs text-muted-foreground block">
                       {act.time}
                     </span>
