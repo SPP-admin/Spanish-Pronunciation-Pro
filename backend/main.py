@@ -17,6 +17,9 @@ from models import LoginSchema, SignUpSchema, ChunkSchema, BaseSchema
 #import config
 from datetime import datetime
 
+from dotenv import load_dotenv
+load_dotenv()
+
 if not firebase_admin._apps:
     #check if file exists
     if os.path.exists("spanish-pronunciation-pro-firebase-adminsdk-fbsvc-af37a865d2.json"):
@@ -34,9 +37,6 @@ app = FastAPI(
     title = "SPP API's",
     docs_url= "/"
 )
-
-if __name__ == "__main__":
-      uvicorn.run("main:app", host="0.0.0.0", port=8080, reload=True)
 
 origins = [
     "http://localhost:5173",
@@ -549,7 +549,7 @@ async def updateLessonProgress(uid, lesson: int):
           data['lesson_data'][lesson]['completed'] = True
           print(data['lesson_data'])
 
-          doc_ref = db.collection('lessons').document(doc_id).update({"lesson_data": data})
+          doc_ref = db.collection('lessons').document(doc_id).update({"lesson_data": data['lesson_data']})
 
           return JSONResponse(content={"message": "Lesson progress was successfully updated."}, 
                                     status_code = 201)
