@@ -14,8 +14,7 @@ function ForgotPasswordPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
 
-  const handleResetClick = () => {
-    // TODO: Implement Firebase password reset logic here (get email, call Firebase auth)
+  const handleResetClick = () => { // Calls firebase password reset function to send a request email to the user. Alerts are for testing.
 
     if(email) {
     try {
@@ -26,7 +25,7 @@ function ForgotPasswordPage() {
       alert(error)
     }
   } else alert("Please enter valid email.")
-    // Maybe navigate back to login or show a success message
+
   };
 
   return (

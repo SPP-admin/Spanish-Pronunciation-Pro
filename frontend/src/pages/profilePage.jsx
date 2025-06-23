@@ -50,52 +50,6 @@ function ProfilePage({user}) {
     },
   ];
 
-    const [recentActivity, setRecentActivity] = useState(['']);
-    /*
-    useEffect(() => {
-      const getData = async () => {
-        if (!user) return;
-        try {
-          const fetchedData = await api.get(`/getUserStatistics?uid=${user.uid}`)
-          let userStats = fetchedData.data.user_stats
-          setUserData(prev => ({
-            ...prev,
-            lessonsCompleted: userStats.completed_lessons ?? prev.lessonsCompleted,
-            accuracyRate: userStats.accuracy_rate ?? prev.accuracyRate,
-            practiceSessions: userStats.practice_sessions ?? prev.practiceSessions,
-            studyStreak: userStats.study_streak ?? prev.studyStreak
-          }));
-          console.log(fetchedData.data)
-    
-        }
-        catch (error) {
-          console.log(error)
-        }
-      }
-    
-      if(user) getData();
-    }, [user]);
-
-    useEffect(() => {
-        const getActivities = async () => {
-            if(!user) return;
-            try {
-                const fetchedData = await api.get(`/getActivityHistory?uid=${user.uid}`)
-                let activities = fetchedData.data.activity_history
-                console.log(activities)
-                setRecentActivity(activities)
-            }
-            catch (error) {
-             console.log(error)
-            }
-        }
-
-        if(user) getActivities();
-    }, [user]);
-        */
-
-
-
   // Profile Page
   return (
     <div className="p-4 md:p-8">

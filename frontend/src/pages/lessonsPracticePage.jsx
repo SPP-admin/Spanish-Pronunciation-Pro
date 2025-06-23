@@ -141,11 +141,23 @@ function LessonsPracticePage() {
     sendAudioToServer(blob);
     setPracticed(true)
   
-    let activity = `Practiced ${topic} lesson ${lesson}, at ${level} difficulty!`;
+    let activity = `Practiced ${topic} lesson ${lesson}, at ${level} difficulty.`;
     if(!practiced) {
       console.log(activity)
       try {
+        // Store attempt in activity history.
         await api.patch(`/updateActivityHistory?uid=${user.uid}&activity=${activity}`)
+        // Update activity history in profile context.
+        setProfile(prev => {
+          let cur = [...prev.activities];
+          while (cur.length >= 3) {
+            cur.shift();
+          }
+          cur.push(activity)
+          console.log(cur)
+          return { ...prev, 
+            activities: cur }
+        })
 
       } catch (error) {
         console.log(error)

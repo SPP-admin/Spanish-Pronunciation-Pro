@@ -121,12 +121,14 @@ const lessonCategories = [
 // Check if every possible combination in a category is complete
 
 function LessonsPage({isFetching}) {
-    //if(isFetching) return null;
 
     const { profile } = useProfile()
 
     const isCategoryFullyComplete = (category, selections, index) => {
         /*
+        Implementation of category checking without endpoints.
+
+
         const progress = selections[category.id];
         if (!progress || !progress.completedCombinations) return false;
         

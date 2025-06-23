@@ -28,28 +28,16 @@ function SignupPage() {
 
 
   const handleSignupClick = async () => {
-    // TODO: Implement Firebase signup logic here (validate inputs, call Firebase auth)
-    console.log("Signup clicked (Not Implemented)");
-    console.log(cred);
 
     try {
-
+      // Firebase api call to create the user using their email and password.
       const account = await createUserWithEmailAndPassword(auth, cred.email, cred.password)
-
-      console.log(account.user.uid)
-
+      // Adds the display name to the user (No explicit function to use email, password, and displayName exists for firebase yet.)
       await updateProfile(account.user, {
         displayName: cred.displayName
       })
 
-            console.log(account.user.uid)
-
-      /*  
-      await api.post('/setUserStatistics', {id: account.user.uid})
-      await api.post('/setAchievements', {id: account.user.uid})
-      await api.post('/setLessonProgress', {id: account.user.uid})
-      */
-
+      // Alert just for testing.
       alert('Account Created!')
       navigate('/login');
 

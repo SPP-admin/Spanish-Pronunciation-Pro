@@ -39,11 +39,7 @@ function LoginPage({user, isFetching}) {
       alert(error.message)
       return;
     }
-    /*
-    await api.post('/setUserStatistics', {id: user.uid}).catch(() => {})
-    await api.post('/setAchievements', {id: user.uid}).catch(() => {})
-    await api.post('/setLessonProgress', {id: user.uid}).catch(() => {})
-      */
+
     alert('Success!')
     navigate('/dashboard');
   }

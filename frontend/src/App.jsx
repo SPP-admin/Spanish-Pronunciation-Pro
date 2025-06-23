@@ -24,15 +24,12 @@ import { useProfile } from './profileContext.jsx';
 
 function AppContent() {
   const navigate = useNavigate('')
-  const [user ] = useAuthState(auth);
+  const [ user ] = useAuthState(auth);
   const [isFetching, setIsFetching] = useState(true);
   const [fetchingData, setFetchingData] = useState(true);
-  const [achievements, setAchievements] = useState([])
-  const [activities, setActivities] = useState([])
-  const [lessons, setLessons] = useState([])
   const { setProfile } = useProfile();
 
-
+// Uses firebase auth state change method to update the user.
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -45,7 +42,7 @@ function AppContent() {
     return () => unsubscribe();
   }, [])
 
-  // This is a mess, fix this later.
+  // Fetches user data immediately as soon as user is found.
   useEffect(() => {
     const getUser = async () => {
       if (user) {
@@ -112,6 +109,7 @@ function AppContent() {
           setLessons(lessons)
           console.log(lessons)
           */
+          localStorage.setItem("profile", JSON.stringify(setProfile))
           setFetchingData(false)
         } catch(error) {
           console.log(error)
@@ -122,6 +120,7 @@ function AppContent() {
 
 }, [user])
 
+  // If user is being fetched don't load page.
   if(isFetching) {
     return <h2>Loading...</h2>
   }

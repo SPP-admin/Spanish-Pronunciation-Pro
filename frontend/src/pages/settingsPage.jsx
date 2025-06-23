@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { verifyBeforeUpdateEmail, updateEmail, updateProfile} from "firebase/auth";
 
 function SettingsPage({user}) {
-  //TODO: Replace with API data fetching logic
+
   const [userData, setUserData] = useState({
     name: user.displayName,
     email: user.email,
@@ -28,8 +28,7 @@ function SettingsPage({user}) {
     }));
   };
 
-  const handleSaveChanges = async () => {
-    // TODO: Make an API call
+  const handleSaveChanges = async () => { // Uses firebase updateProfile method to change the users displayName, alerts are just for testing.
     if(user) {
       try {
         await updateProfile(user, {displayName: userData.name})
@@ -43,7 +42,7 @@ function SettingsPage({user}) {
   
   };
 
-  const handleEmailChanges = async () => {
+  const handleEmailChanges = async () => { // Uses firebase verification and update function to add another email to the user. alerts are just for testing.
     if(user) {
       try {
         await verifyBeforeUpdateEmail(user, userData.email)

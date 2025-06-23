@@ -14,8 +14,7 @@ export const ProfileProvider = ({children}) => {
     activities: [],
     achievements: [],
     lessons: [],
-    
-  }
+  } 
 )
 
   return (
