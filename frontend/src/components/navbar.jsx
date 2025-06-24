@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from "@/lib/utils";
+import { QueryClient } from '@tanstack/react-query';
 
 import {
   NavigationMenu,
@@ -14,7 +15,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import { signOut } from 'firebase/auth';
-import { auth } from '../firebase.js'
+import { auth } from '../firebase.js';
+import { queryClient } from '@/queryClient.jsx';
 
 
 // Re-usable component for list items in the navigation menu, as per shadcn/ui docs
@@ -91,7 +93,12 @@ function Navbar() {
                   <ListItem to="/settings" title="Settings">
                     Manage your account details.
                   </ListItem>
-                  <ListItem onClick={() => signOut(auth)} title="Logout">
+                  <ListItem onClick={() => {
+                    signOut(auth);
+                    localStorage.clear();
+                    queryClient.clear();
+                  }
+                    } title="Logout">
                     Log out of your account.
                   </ListItem>
                 </ul>

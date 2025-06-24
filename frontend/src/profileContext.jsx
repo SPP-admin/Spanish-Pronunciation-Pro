@@ -5,8 +5,6 @@ const ProfileContext = createContext()
 export const ProfileProvider = ({children}) => {
     
     const [profile, setProfile] = useState({
-    name: "N/A",
-    creationDate: "N/A",
     studyStreak: 0,
     lessonsCompleted: 0,
     practiceSessions: 0,

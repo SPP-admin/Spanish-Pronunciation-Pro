@@ -22,12 +22,47 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { ProfileProvider } from './profileContext.jsx';
 import { useProfile } from './profileContext.jsx';
 
+import { queryClient } from './queryClient.jsx';
+import { QueryClientProvider } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query';
+import { fetchData } from './fetchData.js';
+import { persistQueryClient } from '@tanstack/react-query-persist-client';
+import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
+
+const localStoragePersister = createSyncStoragePersister ({
+  storage: window.localStorage,
+});
+
+persistQueryClient({
+  queryClient,
+  persister: localStoragePersister,
+  maxAge: 1000 * 60 * 60 * 24,
+});
+
 function AppContent() {
   const navigate = useNavigate('')
   const [ user ] = useAuthState(auth);
   const [isFetching, setIsFetching] = useState(true);
   const [fetchingData, setFetchingData] = useState(true);
   const { setProfile } = useProfile();
+  
+  const { data, isLoading } = useQuery({
+    queryFn: () => fetchData(user.uid),
+    queryKey: ["profile", user?.uid, setProfile],
+    enabled: !!user?.uid,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    staleTime: 1000 * 60 * 60 * 24,
+  });
+
+  useEffect(() => {
+    if(data) {
+      console.log(data)
+      setProfile(data)
+    }
+  } ,[data, user])
+  
 
 // Uses firebase auth state change method to update the user.
   useEffect(() => {
@@ -42,7 +77,9 @@ function AppContent() {
     return () => unsubscribe();
   }, [])
 
+  
   // Fetches user data immediately as soon as user is found.
+  /*
   useEffect(() => {
     const getUser = async () => {
       if (user) {
@@ -75,10 +112,7 @@ function AppContent() {
             ...prev,
             achievements: fetchedAchievements
           }))
-          /*
-          setAchievements(achievements)
-          console.log(achievements)
-          */
+
         } catch (error) {
           console.log(error)
         }
@@ -90,11 +124,7 @@ function AppContent() {
             ...prev,
             activities: fetchedData.data.activity_history
           }))
-          /*
-          let activities = fetchedData.data.activity_history
-          setActivities(activities)
-          console.log(activities)
-          */
+
         } catch (error) {
           console.log(error)
         }
@@ -105,11 +135,7 @@ function AppContent() {
             ...prev,
             lessons: fetchedData.data.lesson_data
           }))
-          /*
-          setLessons(lessons)
-          console.log(lessons)
-          */
-          localStorage.setItem("profile", JSON.stringify(setProfile))
+
           setFetchingData(false)
         } catch(error) {
           console.log(error)
@@ -119,9 +145,10 @@ function AppContent() {
   if(user) getUser();
 
 }, [user])
+*/
 
   // If user is being fetched don't load page.
-  if(isFetching) {
+  if(isFetching || isLoading ) {
     return <h2>Loading...</h2>
   }
 
@@ -154,8 +181,10 @@ function AppContent() {
 }
 export default function App() {
   return (
-    <ProfileProvider>
-      <AppContent/>
-    </ProfileProvider>
+    <QueryClientProvider client={queryClient} >
+      <ProfileProvider>
+        <AppContent/>
+      </ProfileProvider>
+    </QueryClientProvider>
   )
 };
