@@ -48,7 +48,7 @@ function AppContent() {
   
   const { data, isLoading } = useQuery({
     queryFn: () => fetchData(user.uid),
-    queryKey: ["profile", user?.uid, setProfile],
+    queryKey: ["profile", user?.uid],
     enabled: !!user?.uid,
     refetchOnWindowFocus: false,
     refetchOnMount: false,

@@ -8,6 +8,7 @@ import api from '../api.js';
 import { auth } from '@/firebase.js';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useProfile } from '@/profileContext.jsx';
+import { queryClient } from '@/queryClient.jsx';
 
 // --- Sample Lesson Data (no changes here) ---
 
@@ -142,6 +143,8 @@ function LessonsPracticePage() {
     setPracticed(true)
   
     let activity = `Practiced ${topic} lesson ${lesson}, at ${level} difficulty.`;
+    activity = activity.replace(/_/g, " ");
+    
     if(!practiced) {
       console.log(activity)
       try {
@@ -154,11 +157,14 @@ function LessonsPracticePage() {
             cur.shift();
           }
           cur.push(activity)
-          console.log(cur)
+        // Update the local storage to reflect the new activity added.
+          queryClient.setQueryData(['profile', user.uid], (old) => {
+            return {...old, activities: cur};
+          });
+
           return { ...prev, 
             activities: cur }
         })
-
       } catch (error) {
         console.log(error)
       }
