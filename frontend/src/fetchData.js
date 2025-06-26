@@ -45,7 +45,7 @@ export const fetchData = async (uid) => {
             accuracyRate: statsRes.data.user_stats.accuracy_rate ?? profile.accuracyRate,
             activities: activityHistoryRes.data.activity_history ?? profile.activities,
             achievements: achievementsRes.data.achievements.achievements ?? profile.achievements,
-            lessons: lessonProgressRes.data.lessons ?? profile.lessons,
+            lessons: lessonProgressRes.data.lesson_data ?? profile.lessons,
         }
 
         /*

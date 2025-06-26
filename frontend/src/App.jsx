@@ -46,7 +46,7 @@ function AppContent() {
   const [fetchingData, setFetchingData] = useState(true);
   const { setProfile } = useProfile();
   
-  const { data, isLoading } = useQuery({
+    const { data, isLoading } = useQuery({
     queryFn: () => fetchData(user.uid),
     queryKey: ["profile", user?.uid],
     enabled: !!user?.uid,
@@ -54,12 +54,12 @@ function AppContent() {
     refetchOnMount: false,
     refetchOnReconnect: false,
     staleTime: 1000 * 60 * 60 * 24,
+    retry: false,
   });
 
   useEffect(() => {
     if(data) {
-      console.log(data)
-      setProfile(data)
+      setProfile(data, user.uid)
     }
   } ,[data, user])
   

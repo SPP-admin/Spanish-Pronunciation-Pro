@@ -90,7 +90,7 @@ function LessonsPracticePage() {
   const [transcription, setTranscription] = useState("");
 
   const [practiced, setPracticed] = useState(false)
-  const { setProfile } = useProfile()
+  const { profile, setProfile } = useProfile()
 
 
   useEffect(() => {
@@ -146,25 +146,18 @@ function LessonsPracticePage() {
     activity = activity.replace(/_/g, " ");
     
     if(!practiced) {
-      console.log(activity)
       try {
         // Store attempt in activity history.
         await api.patch(`/updateActivityHistory?uid=${user.uid}&activity=${activity}`)
         // Update activity history in profile context.
-        setProfile(prev => {
-          let cur = [...prev.activities];
+        let cur = [...profile.activities]
           while (cur.length >= 3) {
             cur.shift();
           }
-          cur.push(activity)
-        // Update the local storage to reflect the new activity added.
-          queryClient.setQueryData(['profile', user.uid], (old) => {
-            return {...old, activities: cur};
-          });
+        cur.push(activity)
+          const updated = {...profile, activities: cur}
+          setProfile(updated, user.uid)
 
-          return { ...prev, 
-            activities: cur }
-        })
       } catch (error) {
         console.log(error)
       }

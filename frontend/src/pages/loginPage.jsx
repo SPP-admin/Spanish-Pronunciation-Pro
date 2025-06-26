@@ -41,7 +41,7 @@ function LoginPage({user, isFetching}) {
     }
 
     alert('Success!')
-    navigate('/dashboard');
+    //navigate('/dashboard');
   }
 
   const handleChange = (e) => {

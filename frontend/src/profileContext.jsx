@@ -1,10 +1,11 @@
 import { createContext, useContext, useState } from "react";
+import { queryClient } from "./queryClient";
 
 const ProfileContext = createContext()
 
 export const ProfileProvider = ({children}) => {
     
-    const [profile, setProfile] = useState({
+    const [profile, _setProfile] = useState({
     studyStreak: 0,
     lessonsCompleted: 0,
     practiceSessions: 0,
@@ -12,8 +13,15 @@ export const ProfileProvider = ({children}) => {
     activities: [],
     achievements: [],
     lessons: [],
-  } 
+  }
 )
+
+
+  const setProfile = (newProfile, uid) => {
+    _setProfile(newProfile)
+    queryClient.setQueryData(['profile', uid], newProfile)
+    
+  }
 
   return (
     <ProfileContext.Provider value={{ profile, setProfile }}>
