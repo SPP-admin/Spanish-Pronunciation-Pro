@@ -69,7 +69,7 @@ class AudioData(BaseModel):
 
 # openai import
 import openai
-openai.api_key = os.getenv("OPENAI_KEY")
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 @app.post("/sendVoiceNote")
 async def send_voice_note(data: AudioData):
