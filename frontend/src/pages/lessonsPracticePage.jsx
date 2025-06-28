@@ -8,7 +8,9 @@ import api from '../api.js';
 import { auth } from '@/firebase.js';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useProfile } from '@/profileContext.jsx';
-import { queryClient } from '@/queryClient.jsx';
+
+
+import { avalibleTopics } from '@/avalibleTopics.js';
 
 // --- Sample Lesson Data (no changes here) ---
 
@@ -89,8 +91,29 @@ function LessonsPracticePage() {
   const [recordedAudio, setRecordedAudio] = useState(null);
   const [transcription, setTranscription] = useState("");
 
-  const [practiced, setPracticed] = useState(false)
-  const { profile, setProfile } = useProfile()
+  const [practiced, setPracticed] = useState(false);
+  const { profile, setProfile } = useProfile();
+
+  let index = -1;
+
+/*
+  for (const key in avalibleLessons)
+    if (key == topic) {
+      console.log(avalibleLessons[key])
+    }
+
+  console.log(avalibleLessons[topic])
+*/
+  for (const key in avalibleTopics[topic]) {
+    if(avalibleTopics[topic][key] == lesson) {
+      index = Number(key) + 1
+      if(index >= avalibleTopics[topic].length) {
+        index = -1
+      }
+    }
+  }
+
+
 
 
   useEffect(() => {
@@ -147,16 +170,17 @@ function LessonsPracticePage() {
     
     if(!practiced) {
       try {
-        // Store attempt in activity history.
-        await api.patch(`/updateActivityHistory?uid=${user.uid}&activity=${activity}`)
-        // Update activity history in profile context.
-        let cur = [...profile.activities]
-          while (cur.length >= 3) {
+        let cur = [...(profile.activities ?? [])]
+        while (cur.length >= 3) {
             cur.shift();
           }
         cur.push(activity)
-          const updated = {...profile, activities: cur}
-          setProfile(updated, user.uid)
+        const updated = {...profile, activities: cur}
+        setProfile(updated, user.uid)
+
+        // Store attempt in activity history.
+        await api.patch(`/updateActivityHistory?uid=${user.uid}&activity=${activity}`)
+        // Update activity history in profile context.
 
       } catch (error) {
         console.log(error)
@@ -185,7 +209,13 @@ function LessonsPracticePage() {
       };
       localStorage.setItem('lessonSelections', JSON.stringify(updatedSelections));
     }
-    navigate('/lessons');
+    if(index <= -1) {
+      navigate('/lessons');
+    }
+    const practicePath = `/lessonsPractice?topic=${topic}&lesson=${[avalibleTopics[topic][index]]}&level=${level}`;
+    if(index > -1) {
+      navigate(practicePath)
+    }
   };
 
   const handlePrevious = () => {
@@ -245,7 +275,7 @@ function LessonsPracticePage() {
           </Button>
           {/* TEMP: Made next button into the Finish Lesson for testing. */}
           <Button variant="outline" onClick={handleFinishAndNext}>
-            Finish Lesson <FaArrowRight className="ml-2 h-4 w-4" />
+            Next Lesson <FaArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
       </main>

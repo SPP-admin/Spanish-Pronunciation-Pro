@@ -27,7 +27,7 @@ export const fetchData = async (uid) => {
             await api.post('/setLessonProgress', {id: uid}).catch(() => {})
             console.log("Account initialized.") 
             return profile;
-          }
+          } else return profile;
         }
 
         const [statsRes, achievementsRes, activityHistoryRes, lessonProgressRes] = await Promise.all([

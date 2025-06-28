@@ -18,7 +18,7 @@ import {useState, useEffect} from 'react';
 
 
 function LoginPage({user, isFetching}) {
-  console.log(user)
+
   const navigate = useNavigate();
   const [cred, setCred] = useState({
     email: '',
@@ -39,8 +39,6 @@ function LoginPage({user, isFetching}) {
       alert(error.message)
       return;
     }
-
-    alert('Success!')
     //navigate('/dashboard');
   }
 
