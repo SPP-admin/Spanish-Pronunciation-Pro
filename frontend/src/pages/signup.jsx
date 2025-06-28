@@ -44,10 +44,11 @@ function SignupPage() {
 
             console.log(account.user.uid)
 
-            
+      /*  
       await api.post('/setUserStatistics', {id: account.user.uid})
       await api.post('/setAchievements', {id: account.user.uid})
       await api.post('/setLessonProgress', {id: account.user.uid})
+      */
 
       alert('Account Created!')
       navigate('/login');

@@ -10,10 +10,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-label": "^2.1.2",
-    "@radix-ui/react-navigation-menu": "^1.2.5",
+    "@radix-ui/react-navigation-menu": "^1.2.13",
     "@radix-ui/react-progress": "^1.1.7",
-    "@radix-ui/react-slot": "^1.1.2",
+    "@radix-ui/react-select": "^2.2.5",
+    "@radix-ui/react-slot": "^1.2.3",
     "@tailwindcss/vite": "^4.1.1",
     "axios": "^1.9.0",
     "class-variance-authority": "^0.7.1",
@@ -21,6 +23,7 @@
     "firebase": "^11.8.1",
     "lucide-react": "^0.486.0",
     "react": "^19.0.0",
+    "react-confetti": "^6.4.0",
     "react-dom": "^19.0.0",
     "react-firebase-hooks": "^5.1.1",
     "react-google-button": "^0.8.0",
