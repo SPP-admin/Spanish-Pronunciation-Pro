@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
+import Confetti from 'react-confetti';
 import AudioRecorder from '@/components/audioRecorder.jsx';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,7 +14,6 @@ import { useProfile } from '@/profileContext.jsx';
 import { avalibleTopics } from '@/avalibleTopics.js';
 
 // --- Sample Lesson Data (no changes here) ---
-
 const lessonsContent = {
     default: {
       title: "Practice Session",
@@ -77,16 +77,17 @@ function LessonsPracticePage() {
 
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const topic = searchParams.get('topic');
   const lesson = searchParams.get('lesson');
   const level = searchParams.get('level');
-  
+
   const lessonKey = topic && lesson && level ? `${topic}-${lesson}-${level}` : 'default';
   const currentLessonData = lessonsContent[lessonKey] || lessonsContent.default;
   const { title: lessonTitle, estimatedTime, phraseSpanish, phraseEnglish } = currentLessonData;
 
-  // UPDATED: State is now for any selected text, not just a single word
+  // State is now for any selected text, not just a single word
   const [selectedText, setSelectedText] = useState(null);
   const [recordedAudio, setRecordedAudio] = useState(null);
   const [transcription, setTranscription] = useState("");
@@ -120,8 +121,7 @@ function LessonsPracticePage() {
     // Reset selection when the phrase changes
     setSelectedText(null);
   }, [phraseSpanish]);
-  
-  // NEW: This function captures and cleans the user's highlighted text
+
   const handleCaptureSelection = () => {
     const selection = window.getSelection().toString();
     if (selection) {
@@ -130,7 +130,7 @@ function LessonsPracticePage() {
       const cleanedText = selection
         .replace(/[^a-zA-Z0-9\sÁÉÍÓÚáéíóúñÑüÜ]/gi, '')
         .trim();
-      
+
       if (cleanedText) {
         console.log("Captured for practice:", cleanedText);
         setSelectedText(cleanedText);
@@ -189,6 +189,10 @@ function LessonsPracticePage() {
   };
 
   const handleFinishAndNext = () => {
+
+    setShowConfetti(true);
+
+    // Save the current lesson and level to localStorage
     if (topic && lesson && level) {
       const savedSelections = localStorage.getItem('lessonSelections');
       const selections = savedSelections ? JSON.parse(savedSelections) : {};
@@ -199,7 +203,7 @@ function LessonsPracticePage() {
         ...selections,
         [topic]: {
           ...currentTopicProgress,
-          currentLesson: lesson, 
+          currentLesson: lesson,
           currentLevel: level,
           completedCombinations: {
             ...completedCombos,
@@ -210,12 +214,17 @@ function LessonsPracticePage() {
       localStorage.setItem('lessonSelections', JSON.stringify(updatedSelections));
     }
     if(index <= -1) {
+  
+    setTimeout(() => {
+      setShowConfetti(false);
       navigate('/lessons');
+    } , 5000);
+
     }
     const practicePath = `/lessonsPractice?topic=${topic}&lesson=${[avalibleTopics[topic][index]]}&level=${level}`;
     if(index > -1) {
       navigate(practicePath)
-    }
+    } // Confetti length
   };
 
   const handlePrevious = () => {
@@ -224,6 +233,7 @@ function LessonsPracticePage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
+      {showConfetti && <Confetti />}
       <main className="flex-grow container mx-auto p-4 md:p-6 flex flex-col items-center">
         {/* Lesson Header */}
         <div className="w-full max-w-3xl mb-6 text-center md:text-left">
@@ -237,7 +247,6 @@ function LessonsPracticePage() {
         {/* Main Content Card */}
         <Card className="w-full max-w-3xl shadow-lg">
           <CardContent className="p-6 md:p-8 flex flex-col items-center space-y-6">
-            {/* --- Updated Interactive Highlighting Section --- */}
             <div className="text-center w-full">
               {/* This allows free-form text selection */}
               <p className="text-3xl md:text-4xl font-bold text-black mb-3 select-text">
@@ -273,7 +282,7 @@ function LessonsPracticePage() {
           <Button variant="outline" onClick={handlePrevious}>
             <FaArrowLeft className="mr-2 h-4 w-4" /> Previous
           </Button>
-          {/* TEMP: Made next button into the Finish Lesson for testing. */}
+          {/*  Made next button into the Finish Lesson for testing. */}
           <Button variant="outline" onClick={handleFinishAndNext}>
             Next Lesson <FaArrowRight className="ml-2 h-4 w-4" />
           </Button>

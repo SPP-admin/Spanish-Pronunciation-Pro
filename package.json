@@ -12,6 +12,6 @@
     "fs": "^0.0.1-security",
     "node-microphone": "^0.1.6",
     "openai": "^4.87.3",
-    "react-firebase-hooks": "^5.1.1"
+    "react-confetti": "^6.4.0"
   }
 }

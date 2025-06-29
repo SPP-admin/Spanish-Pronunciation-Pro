@@ -173,7 +173,6 @@ function AppContent() {
             <Route path="/settings" element={<SettingsPage user={user}/>} />
           </Route>
         </Route>
-        {/* Routes with the navbar, wrapped by the layout.jsx component.*/}
       </Routes>
       
     </div>
