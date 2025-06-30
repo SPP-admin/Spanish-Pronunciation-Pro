@@ -85,7 +85,7 @@ def delete_incorrect(sentence_mapping, current_ipa, pos):
 			next_mapping.pronounced_correctly = False
 		elif index == len(sentence_mapping.ipa_mapping):
 			prev_mapping.pronounced_correctly = False
-		elif not is_vowel_ipa(prev_mapping.ipa_letter) and string.isalpha(prev_mapping.ortho_letter):
+		elif not is_vowel_ipa(prev_mapping.ipa_letter) and prev_mapping.ortho_letter.isalpha():
 			prev_mapping.pronounced_correctly = False
 		else:
 			next_mapping.pronounced_correctly = False
