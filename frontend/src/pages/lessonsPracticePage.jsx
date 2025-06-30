@@ -95,7 +95,8 @@ function LessonsPracticePage() {
   const [practiced, setPracticed] = useState(false);
   const { profile, setProfile } = useProfile();
 
-  let index = -1;
+  let next = -1;
+  let prev = -1;
 
 /*
   for (const key in avalibleLessons)
@@ -107,14 +108,14 @@ function LessonsPracticePage() {
 */
   for (const key in avalibleTopics[topic]) {
     if(avalibleTopics[topic][key] == lesson) {
-      index = Number(key) + 1
-      if(index >= avalibleTopics[topic].length) {
-        index = -1
+      prev = Number(key) - 1
+      next = Number(key) + 1
+      console.log(prev + " " + next)
+      if(next >= avalibleTopics[topic].length) {
+        next = -1
       }
     }
   }
-
-
 
 
   useEffect(() => {
@@ -213,22 +214,27 @@ function LessonsPracticePage() {
       };
       localStorage.setItem('lessonSelections', JSON.stringify(updatedSelections));
     }
-    if(index <= -1) {
+    if(next <= -1) {
   
     setTimeout(() => {
       setShowConfetti(false);
       navigate('/lessons');
-    } , 5000);
+    } , 10);  // Confetti length
 
     }
-    const practicePath = `/lessonsPractice?topic=${topic}&lesson=${[avalibleTopics[topic][index]]}&level=${level}`;
-    if(index > -1) {
+    const practicePath = `/lessonsPractice?topic=${topic}&lesson=${[avalibleTopics[topic][next]]}&level=${level}`;
+    if(next > -1) {
       navigate(practicePath)
-    } // Confetti length
+    }
   };
 
   const handlePrevious = () => {
-    navigate(-1);
+    if (prev <= -1){
+      navigate('/lessons');
+    } else {
+      const practicePath = `/lessonsPractice?topic=${topic}&lesson=${[avalibleTopics[topic][prev]]}&level=${level}`;
+      navigate(practicePath)
+    }
   };
 
   return (
