@@ -1,9 +1,6 @@
 import React from 'react';
-import api from "../api.js";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrophiesCard } from "@/components/trophies"; 
-import { useEffect } from 'react';
-import { useState } from 'react';
 import { useProfile } from '@/profileContext.jsx';
 
 function ProfilePage({user}) {

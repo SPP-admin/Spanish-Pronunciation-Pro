@@ -1,8 +1,4 @@
 import React from 'react';
-import api from "../api.js";
-import App from '@/App';
-import { useEffect } from 'react';
-import { useState } from 'react';
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";

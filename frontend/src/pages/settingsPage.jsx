@@ -10,7 +10,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { verifyBeforeUpdateEmail, updateEmail, updateProfile} from "firebase/auth";
+import { verifyBeforeUpdateEmail, updateProfile} from "firebase/auth";
 
 function SettingsPage({user}) {
 

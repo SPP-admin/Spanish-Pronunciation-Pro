@@ -1,7 +1,4 @@
-import { APIConnectionTimeoutError } from "openai";
 import api from "./api.js"
-import { useState } from "react"
-
 
 
 export const fetchData = async (uid) => {

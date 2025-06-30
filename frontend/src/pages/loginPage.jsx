@@ -13,7 +13,6 @@ import { auth, googleProvider } from '../firebase.js';
 
 import loginImage from '@/assets/images/login2.png';
 
-import api from "../api.js";
 import {useState, useEffect} from 'react';
 
 

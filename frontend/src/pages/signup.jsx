@@ -9,7 +9,7 @@ import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 
 import { auth } from '../firebase.js';
 
-import api from "../api.js";
+
 import {useState} from 'react';
 
 function SignupPage() {
