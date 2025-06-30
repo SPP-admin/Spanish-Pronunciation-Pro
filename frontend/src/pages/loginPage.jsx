@@ -23,6 +23,8 @@ function LoginPage({user, isFetching}) {
     email: '',
     password: '',
   });
+  
+  const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
     if(!isFetching && user) {
@@ -35,7 +37,7 @@ function LoginPage({user, isFetching}) {
       const result = await signInWithPopup(auth, googleProvider)
       user = result.user
     } catch(error) {
-      alert(error.message)
+      console.log(error.code)
       return;
     }
     //navigate('/dashboard');
@@ -49,13 +51,32 @@ function LoginPage({user, isFetching}) {
   }
 
   const handleLoginClick = async () => {
+    setErrorMessage('')
 
     try {
       const userCredential = await signInWithEmailAndPassword(auth, cred.email, cred.password)
       navigate('/dashboard');
 
       } catch(error) {
-        console.log(error)
+        const code = error.code
+        console.log(code)
+
+        switch(String(code)) {
+          case "auth/invalid-email":
+            setErrorMessage("Invalid Email, please try again.");
+            break;
+          case "auth/invalid-credential":
+            setErrorMessage("Invalid Email/Password combination. Please try again.");
+            break;
+          case "auth/missing-email":
+            setErrorMessage("Please enter a valid email. Email field is empty.")
+            break;
+          case "auth/missing-password":
+            setErrorMessage("Please enter a password. Password field is empty.");
+            break;
+          default:
+            setErrorMessage("Error logging in, please try again later.")
+        } 
       }
   };
 
@@ -94,6 +115,7 @@ function LoginPage({user, isFetching}) {
                    </Link>
                  </div>
                  <Input id="password" type="password" placeholder="" name ="password" value = {cred.password} onChange = {handleChange} required />
+                  {errorMessage && (<div className="text-sm">{errorMessage}</div>)}
                </div>
              </CardContent>
              <CardFooter className="flex flex-col space-y-3 pt-6">

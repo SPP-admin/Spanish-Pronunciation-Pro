@@ -19,6 +19,7 @@ function SignupPage() {
     password: '',
     displayName: '',
   });
+  const [errorMessage, setErrorMessage] = useState('')
 
   const handleChange = (e) => {
     setCred({...cred,
@@ -30,19 +31,37 @@ function SignupPage() {
   const handleSignupClick = async () => {
 
     try {
+      setErrorMessage("")
       // Firebase api call to create the user using their email and password.
       const account = await createUserWithEmailAndPassword(auth, cred.email, cred.password)
       // Adds the display name to the user (No explicit function to use email, password, and displayName exists for firebase yet.)
       await updateProfile(account.user, {
         displayName: cred.displayName
       })
+      setErrorMessage("Account created!");
 
-      // Alert just for testing.
-      alert('Account Created!')
       navigate('/login');
 
       } catch(error) {
-        alert(error)
+        const code = error.code
+
+        switch(String(code)) {
+          case "auth/email-already-in-use":
+            setErrorMessage("Account already exists with this email.");
+            break;
+          case "auth/weak-password":
+            setErrorMessage("Please choose a valid password. Password is too weak.");
+            break;
+          case "auth/missing-email":
+            setErrorMessage("Please enter a valid email. Email field is empty.")
+            break;
+          case "auth/missing-password":
+            setErrorMessage("Please enter a password.");
+            break;
+          default:
+            setErrorMessage("Error creating account, please try again later.")
+        } 
+
       }
   };
 
@@ -66,6 +85,7 @@ function SignupPage() {
             <Label htmlFor="password">Password</Label>
             <Input id="password" name="password" type="password" placeholder="" required value = {cred.password} onChange = {handleChange} />
           </div>
+          {errorMessage && (<div className="text-sm">{errorMessage}</div>)}
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <Button onClick={handleSignupClick} className="text-primary-foreground hover:bg-[#00A3E0]">
