@@ -110,7 +110,6 @@ function LessonsPracticePage() {
     if(avalibleTopics[topic][key] == lesson) {
       prev = Number(key) - 1
       next = Number(key) + 1
-      console.log(prev + " " + next)
       if(next >= avalibleTopics[topic].length) {
         next = -1
       }

@@ -282,7 +282,7 @@ async def updateStudyStreak(uid):
    
 # When a user uses the pronounciation checker, update the value.
 @app.patch("/updateUses")
-async def updateCompletedUses(uid):
+async def updateUses(uid):
     try:
         doc_ref = db.collection('stats')
         query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
@@ -519,7 +519,7 @@ async def getChunkProgress(uid, lesson: int):
 
 # Set a chunk to completed, (Stored as a map as firestore does not allow the storage of 2-d arrays / lists)
 @app.patch("/updateChunkProgress")
-async def updateChunkProgress(uid, chunk: int, lesson: int):
+async def updateChunkProgress(uid, chunk: str, lesson: int, difficulty: str):
     try:
         doc_ref = db.collection('lessons')
 
@@ -532,8 +532,6 @@ async def updateChunkProgress(uid, chunk: int, lesson: int):
 
         if chunks[lesson] is None:
               chunks[lesson] = {}
-
-        chunks[lesson][str(chunk)] = True
 
         doc_ref = db.collection('lessons').document(doc_id).update({"chunks": chunks})
 
