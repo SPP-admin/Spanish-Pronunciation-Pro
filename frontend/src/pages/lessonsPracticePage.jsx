@@ -19,31 +19,45 @@ function LessonsPracticePage() {
       const base64data = reader.result.split(",")[1];
   
       // Build the JSON payload.
-      const payload = { base64_data: base64data };
-      sentence = document.getElementById("generatedSentence").innerText;
+      const generatedSentence = document.getElementById("generatedSentence").innerText;
+      const payload = { base64_data: base64data, sentence: generatedSentence};
+      console.log(payload)
       fetch("http://localhost:8080/checkPronunciation", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: {"sentence": sentence, "audio": JSON.stringify({"title": title, "base64": payload})}
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(payload),
       })
         .then(response => {
           if (!response.ok) {
+            console.log(response.statusText);
             throw new Error("Failed to send voice note");
           }
           return response.text();
         })
         .then(transcript => {
+          let html = "";
           console.log("Transcription:", transcript);
           setTranscription(transcript);
+          console.log("Line 41: ", transcript);
+          let parsedTranscript = decodeURI(JSON.parse(transcript));
+          console.log("Parsed Transcript", parsedTranscript);
+          const arr = parsedTranscript.split(",");
+          for (let i = 0; i < arr.length; i++) {
+            if (arr[i+1] == "true") {
+              html += `<span style="color:green">${arr[i]}</span>`;
+            }
+            else {
+              html += `<span style="color:red">${arr[i]}</span>`;
+            }
+            i++;
+          }
+          console.log(html);
+          document.getElementById("transcriptionBox").innerHTML = html;
         })
         .catch(error => console.error("Error sending audio:", error));
     };
     reader.readAsDataURL(blob);
   };
-  
-
   // This function is passed as callback to the AudioRecorder component.
   const handleAudioRecording = (blob) => {
     console.log("Audio blob captured:", blob);
@@ -81,10 +95,7 @@ function LessonsPracticePage() {
 
             {/* Feedback Field */}
             <div className="mt-4 p-4 bg-muted/50 dark:bg-muted/20 rounded text-center w-full min-h-[50px]">
-              <p className="text-sm text-muted-foreground">
-                {recordedAudio
-                  ? transcription || "[Transcription processing…]"
-                  : "Record your pronunciation using the microphone."}
+              <p className="text-sm text-muted-foreground" id = "transcriptionBox">
               </p>
             </div>
           </CardContent>

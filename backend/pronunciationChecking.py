@@ -3,6 +3,7 @@ import string
 import ipaTransliteration as epi
 from difflib import SequenceMatcher
 import whisperIPAtranscription as stress_tr
+import json
 # Load audio transcription model
 model = read_recognizer()
 
@@ -57,15 +58,17 @@ def compare_strings(sentence, user_ipa, dialect):
 		elif opcode[0] == 'insert' or opcode[0] == 'replace':
 			insert_incorrect(sentence_mapping, user_ipa[opcode[1]:opcode[2]], correct_ipa, opcode[3], opcode[4])
 
-	output_str = ""
+	# Send output as JSON string
+	output_str = []
 
 	for ipa in sentence_mapping.ipa_mapping:
 		if ipa.pronounced_correctly == False:
-			output_str += ">" + ipa.ortho_letter + "<"
+			output_str += [ipa.ortho_letter, "false"]
 		if ipa.stressed_correctly == False:
-			output_str += "!" + ipa.ortho_letter + "!"
+			output_str += '<u>' + ipa.ortho_letter + '</u>'
 		elif ipa.pronounced_correctly == True and ipa.stressed_correctly == True:
-			output_str += ipa.ortho_letter
+			output_str += [ipa.ortho_letter, "true"]
+		
 	return output_str 
 		
 		
