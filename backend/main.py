@@ -19,14 +19,12 @@ from datetime import datetime
 from google.cloud.firestore_v1.base_query import FieldFilter
 from openai import OpenAI
 
-
 import pronunciationChecking
 import ipaTransliteration as epi
 import random
 
 from dotenv import load_dotenv
 load_dotenv()
-
 
 if not firebase_admin._apps:
     #check if file exists
@@ -45,6 +43,9 @@ app = FastAPI(
     title = "SPP API's",
     docs_url= "/"
 )
+
+if __name__ == "__main__":
+      uvicorn.run("main:app", host="0.0.0.0", port=8080, reload=True)
 
 origins = [
     "http://localhost:5173",
@@ -68,7 +69,7 @@ class AudioData(BaseModel):
 
 # openai import
 import openai
-openai.api_key = os.getenv("OPENAI_KEY")
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 @app.post("/sendVoiceNote")
 async def send_voice_note(data: AudioData):
@@ -384,7 +385,7 @@ async def getAchievements(uid):
 
         query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
 
-        return JSONResponse(content={"achievments": query_ref[0].to_dict()},
+        return JSONResponse(content={"achievements": query_ref[0].to_dict()},
                             status_code=201)
     except Exception as e:
                          raise HTTPException(
@@ -398,16 +399,20 @@ async def updateActivityHistory(uid, activity):
     try:
         doc_ref = db.collection('activity_history')
         query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
-        doc_id = query_ref[0].id
-        doc_ref = db.collection('activity_history').document(doc_id).get()
-        activities = doc_ref.to_dict().get('activities', [])
+        if (not query_ref):
+            new_doc = doc_ref.document()
+            new_doc.set({'activities': [activity], 'id': uid})
+        else:
+            doc_id = query_ref[0].id
+            doc_ref = db.collection('activity_history').document(doc_id).get()
+            activities = doc_ref.to_dict().get('activities', [])
 
-        while(len(activities) >= 3):
-            activities.pop(0)
+            while(len(activities) >= 3 and len(activities) > 0):
+                activities.pop(0)
 
-        activities.append(activity)
+            activities.append(activity)
 
-        doc_ref = db.collection('activity_history').document(doc_id).update({"activities": activities})
+            doc_ref = db.collection('activity_history').document(doc_id).update({"activities": activities})
         return JSONResponse(content={"message": f"User's recent activity has been added to their history.'" }, 
                                     status_code = 201)
 
@@ -436,11 +441,11 @@ async def getActivityHistory(uid):
         )
 
 @app.post("/setUser")
-async def setUser(uid):
+async def setUser(request: BaseSchema):
     try:
             doc_ref = db.collection('users')
 
-            query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
+            query_ref = doc_ref.where(filter= FieldFilter("id", "==", request.id)).get()
 
             if(query_ref):
                     raise HTTPException(
@@ -450,7 +455,7 @@ async def setUser(uid):
             else: 
                 doc = doc_ref.document()
                 data = {
-                    'id': uid,
+                    'id': request.id,
                     'initialized': True
                 }
             doc.set(data)

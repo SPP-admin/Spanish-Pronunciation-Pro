@@ -2,7 +2,6 @@ fastapi
 uvicorn
 firebase-admin
 google-cloud-firestore
-
 allosaurus
 python-dotenv
 openai
