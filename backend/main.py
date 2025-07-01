@@ -25,6 +25,9 @@ import pronunciationChecking
 import ipaTransliteration as epi
 import random
 import json
+import numpy as np
+import librosa
+import soundfile as sf
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -65,8 +68,9 @@ app.add_middleware(
 db = firestore.client()
 #firebase = pyrebase.initialize_app(config.firebaseConfig)
 
-class AudioData(BaseModel):
+class TranscriptionData(BaseModel):
     base64_data: str
+    sentence: str
 
 # openai import
 import openai
@@ -595,37 +599,27 @@ async def generateSentence(difficulty: str):
         return current_sentence
 
 @app.post("/checkPronunciation")
-async def checkPronunciation(request):
+async def checkPronunciation(data: TranscriptionData):
       try:
-        event = {'body': json.dumps(request.get_json(force=True))}
-        sentence = request.sentence
-        audio = request.audio
-        audio_bytes = base64.b64decode(audio.base64_data)
+        audio_bytes = base64.b64decode(data.base64_data)
+        sentence = data.sentence
+
         with open("audio.wav", "wb") as f:
               f.write(audio_bytes)
 
-        with open("audio.wav", "rb") as audio_file:
-              output = pronunciationChecking.compare_strings(sentence, "audio.wav", "latam")
-      except Exception as e:
-                print('Error: ', str(e))
-                return {
-                    'statusCode': 200,
-                    'headers': {
-                    'Access-Control-Allow-Headers': '*',
-                    'Access-Control-Allow-Credentials': "true",
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
-                },
-                'body': ''
-            }
+        audio, sampling_rate = librosa.load('audio.wav', sr=16000, mono=True, duration=30.0, dtype=np.int32)
+        sf.write('tmp.wav', audio, 16000)
+        output = pronunciationChecking.correct_pronunciation(sentence, "tmp.wav", 'latam')
 
-      return output
-
-@app.post("/checkStressPronunciation")
-async def checkStressPronunciation(request):
-      try:
-        event = {'body': json.dumps(request.get_json(force=True))}
-        output = pronunciationChecking.lambda_handler(event, [])
+        # Get rid of audio recordings
+        if os.path.exists("audio.wav"):
+            os.remove("audio.wav")
+            print(f"File deleted successfully.")
+        else: print(f"File not found.")
+        if os.path.exists("tmp.wav"):
+            os.remove("tmp.wav")
+            print(f"File deleted successfully.")
+        else: print(f"File not found.")
       except Exception as e:
                 print('Error: ', str(e))
                 return {
