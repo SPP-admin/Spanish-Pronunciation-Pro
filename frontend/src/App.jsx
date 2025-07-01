@@ -165,7 +165,7 @@ function AppContent() {
         <Route element={<ProtectedRoute user={user} />}>
         {/* Routes with the navbar, wrapped by the layout.jsx component.*/}
         
-          <Route element={<Layout />}>
+          <Route element={<Layout user={user}/>}>
             <Route path="/lessonsPractice" element={<LessonsPracticePage/>} />
             <Route path="/lessons" element={<LessonsPage user={user} isFetching={fetchingData}/>} />
             <Route path="/profile" element={<ProfilePage user={user} />} />
