@@ -20,13 +20,13 @@ function LessonsPracticePage() {
   
       // Build the JSON payload.
       const payload = { base64_data: base64data };
-  
-      fetch("http://localhost:8080/sendVoiceNote", {
+      sentence = document.getElementById("generatedSentence").innerText;
+      fetch("http://localhost:8080/checkPronunciation", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload)
+        body: {"sentence": sentence, "audio": JSON.stringify({"title": title, "base64": payload})}
       })
         .then(response => {
           if (!response.ok) {
@@ -72,7 +72,7 @@ function LessonsPracticePage() {
           <CardContent className="p-6 md:p-8 flex flex-col items-center space-y-6">
             {/* Phrases */}
             <div className="text-center">
-              <p className="text-3xl md:text-4xl font-bold text-primary mb-2">{phraseSpanish}</p>
+              <p id="generatedSentence" className="text-3xl md:text-4xl font-bold text-primary mb-2">{phraseSpanish}</p>
               <p className="text-base text-muted-foreground">{phraseEnglish}</p>
             </div>
 

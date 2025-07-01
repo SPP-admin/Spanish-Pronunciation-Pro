@@ -9,3 +9,7 @@ openai
 python-multipart
 pydantic
 
+scipy
+numpy
+transformers
+silabeador
