@@ -1,10 +1,11 @@
 import React from 'react';
 import api from "../api.js";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { TrophiesCard } from "@/components/trophies"; 
 import { useEffect } from 'react';
 import { useState } from 'react';
 
-function ProfilePage({user, profile}) {
+function ProfilePage({user, profile, achievements, activities}) {
 
   const [userData, setUserData] = useState({
     lessonsCompleted: 0,
@@ -13,9 +14,48 @@ function ProfilePage({user, profile}) {
     studyStreak: 0,  
   })
     
-    const achievements = ["Perfect Week", "10 Day Streak", "Level 5"];
-    const [recentActivity, setRecentActivity] = useState(['']);
+// Trying out a mock achievements list
+  const allAchievements = [
+    {
+      id: 1,
+      name: "Perfect Week",
+      description: "Complete a lesson every day for 7 days.",
+      unlocked: achievements[0] ?? false,
+    },
+    {
+      id: 2,
+      name: "14 Day Streak",
+      description: "Maintain a 14-day practice streak.",
+      unlocked: achievements[1] ?? false,
+    },
+    {
+      id: 3,
+      name: "Vowel Virtuoso",
+      description: "Complete all vowel lessons.",
+      unlocked: achievements[2] ?? false,
+    },
+    {
+      id: 4,
+      name: "Consonant Champion",
+      description: "Complete all consonant lessons.",
+      unlocked: achievements[3] ?? false,
+    },
+    {
+      id: 5,
+      name: "Speedy Speaker",
+      description: "Complete a lesson in under 2 minutes",
+      unlocked: achievements[4] ?? false,
+    },
+    {
+      id: 6,
+      name: "Max level",
+      description: "Reach max level in any lesson category.",
+      unlocked: achievements[5] ?? false,
+    },
+  ];
 
+    const [recentActivity, setRecentActivity] = useState(['']);
+    /*
     useEffect(() => {
       const getData = async () => {
         if (!user) return;
@@ -38,7 +78,7 @@ function ProfilePage({user, profile}) {
       }
     
       if(user) getData();
-    }, [user.id]);
+    }, [user]);
 
     useEffect(() => {
         const getActivities = async () => {
@@ -55,65 +95,80 @@ function ProfilePage({user, profile}) {
         }
 
         if(user) getActivities();
-    }, [user.id]);
+    }, [user]);
+        */
 
 
 
-    return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* User Info Card */}
-            <Card className="md:col-span-1">
-                <CardHeader>
-                    <CardTitle>User Information</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p>Name: {user.displayName}</p>
-                    <p>Learning Since: {user.metadata.creationTime}</p>
-                </CardContent>
-            </Card>
+  // Profile Page
+  return (
+    <div className="p-4 md:p-8">
+      <h1 className="text-3xl font-bold mb-6">Profile</h1>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column: User Info and Stats */}
+        <div className="col-span-1 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>{user.displayName}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <p>
+                <span className="font-semibold">Learning Since:</span>{" "}
+                {user.metadata.creationTime}
+              </p>
+              <p>
+                <span className="font-semibold">Study Streak:</span>{" "}
+                {profile.studyStreak}
+              </p>
+            </CardContent>
+          </Card>
 
-            {/* Statistics Card */}
-            <Card className="md:col-span-1">
-                <CardHeader>
-                    <CardTitle>Statistics</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p>Lessons Completed: {userData.lessonsCompleted}</p>
-                    <p>Practice Sessions: {userData.practiceSessions}</p>
-                    <p>Accuracy Rate: {userData.accuracyRate}</p>
-                    <p>Study Streak: {userData.studyStreak}</p>
-                </CardContent>
-            </Card>
-
-            {/* Achievements Card */}
-            <Card className="md:col-span-1">
-                <CardHeader>
-                    <CardTitle>Achievements</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <ul>
-                        {achievements.map((ach, index) => <li key={index}>{ach}</li>)}
-                    </ul>
-                </CardContent>
-            </Card>
-
-            {/* Recent Activity Card */}
-            <Card className="md:col-span-3">
-                <CardHeader>
-                    <CardTitle>Recent Activity</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <ul>
-                        {recentActivity.map((act, index) => (
-                            <li key={index} className="text-sm mb-1">
-                                {act} <span className="text-muted-foreground"></span>
-                            </li>
-                        ))}
-                    </ul>
-                </CardContent>
-            </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Statistics</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <p>
+                <span className="font-semibold">Lessons Completed:</span>{" "}
+                {profile.lessonsCompleted}
+              </p>
+              <p>
+                <span className="font-semibold">Practice Sessions:</span>{" "}
+                {profile.practiceSessions}
+              </p>
+              <p>
+                <span className="font-semibold">Accuracy Rate:</span>{" "}
+                {profile.accuracyRate}
+              </p>
+            </CardContent>
+          </Card>
         </div>
-    );
+
+        {/* Right Column: Achievements and Activity */}
+        <div className="col-span-1 lg:col-span-2 space-y-6">
+          <TrophiesCard trophies={allAchievements} />
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Activity</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3">
+                {activities.map((act, index) => (
+                  <li key={index} className="text-sm">
+                    {activities[index]}
+                    <span className="text-xs text-muted-foreground block">
+                      {act.time}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default ProfilePage;
