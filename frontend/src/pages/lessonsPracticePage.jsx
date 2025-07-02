@@ -158,7 +158,7 @@ function LessonsPracticePage() {
     reader.readAsDataURL(blob);
   };
   // This function is passed as callback to the AudioRecorder component.
-  const handleAudioRecording = (blob) => {
+  const handleAudioRecording = async (blob) => {
     console.log("Audio blob captured:", blob);
     setRecordedAudio(blob);
     sendAudioToServer(blob);
