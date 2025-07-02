@@ -1,7 +1,7 @@
 import os
 import base64
 import uvicorn
-from fastapi import FastAPI, HTTPException, Form
+from fastapi import FastAPI, HTTPException, Form, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -16,20 +16,17 @@ from models import LoginSchema, SignUpSchema, ChunkSchema, BaseSchema
 #import pyrebase
 #import config
 from datetime import datetime
-
 from google.cloud.firestore_v1.base_query import FieldFilter
 from openai import OpenAI
 
 import pronunciationChecking
 import ipaTransliteration as epi
 import random
-import json
-import numpy as np
-import librosa
-import soundfile as sf
 
 from dotenv import load_dotenv
 load_dotenv()
+
+import requests
 
 if not firebase_admin._apps:
     #check if file exists
@@ -69,14 +66,39 @@ app.add_middleware(
 db = firestore.client()
 #firebase = pyrebase.initialize_app(config.firebaseConfig)
 
-class TranscriptionData(BaseModel):
+class AudioData(BaseModel):
     base64_data: str
-    sentence: str
 
 # openai import
 import openai
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+@app.post("/sendVoiceNote")
+async def send_voice_note(data: AudioData):
+    try:
+        # Decode base64 string
+        audio_bytes = base64.b64decode(data.base64_data)
+
+        # Write to disk
+        audio_file_name = "audio.webm"
+        with open(audio_file_name, "wb") as f:
+            f.write(audio_bytes)
+
+        # Transcribe using OpenAI Whisper
+        with open(audio_file_name, "rb") as audio_file:
+            transcript = openai.audio.transcriptions.create(
+                model="whisper-1",
+                file=audio_file,
+                response_format="text",
+                language="es" 
+            )
+
+        return transcript  # returns raw text
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Error processing audio: {str(e)}"
+        )
       
 """
 @app.post("/signup")
@@ -582,60 +604,49 @@ async def setLessonProgress(request: BaseSchema):
         )
     
 @app.post("/generateSentence")
-async def generateSentence(difficulty: str):
+async def generateSentence(chunk: str, lesson: str, difficulty: str):
       client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
       try:
+        prompt = (
+            f"You are a helpful assistant that generates Spanish sentences or words for a pronunciation app. "
+            f"The current lesson chunk is '{chunk}', the specific lesson is '{lesson}', and the difficulty is '{difficulty}'. "
+            f"Generate ONLY the Spanish sentence or word requested, with NO extra text, explanations, or introductions. Do not say anything like 'Here is a sentence:' or 'OK'. Just output the Spanish sentence or word itself. "
+            f"Use the Spanish alphabet and correct accent marks. "
+            f"If the difficulty is or includes 'word', return only a single word."
+        )
+        user_content = (
+            f"Generate a Spanish {difficulty} for the lesson '{lesson}' in the chunk '{chunk}'. "
+            f"ONLY return the Spanish sentence or word, and nothing else."
+        )
         response = client.chat.completions.create(
                 model="gpt-4o",
-                messages=[{"role": "system", "content": "You are a helpful assistant that generates sentences for a Spanish pronunciation app. Make sure to use the spanish alphabet, and make sure to use the correct accent marks."},
-                        {"role": "user", "content": "Generate a sentence that is " + difficulty + " to say."}],
+                messages=[{"role": "system", "content": prompt},
+                        {"role": "user", "content": user_content}],
                 temperature=1
         )
         current_sentence = response.choices[0].message.content
       # if there is an error with OpenAI, use a backup list of sentences
       except:
-            backup_sentences = ["El gato duerme.", "La niña corre.", 
-                                "El perro ladra.", "Hace mucho calor.",
-                                "Llueve afuera.", "El vaso está lleno.",
-                                "La casa es grande.", "El pan está caliente.",
-                                "Hay una flor.", "La cama es cómoda."]
+            backup_sentences = [
+                "El gato duerme.", "La niña corre.", 
+                "El perro ladra.", "Hace mucho calor.",
+                "Llueve afuera.", "El vaso está lleno.",
+                "La casa es grande.", "El pan está caliente.",
+                "Hay una flor.", "La cama es cómoda."
+            ]
             current_sentence = random.choice(backup_sentences)
       finally:
         return current_sentence
 
 @app.post("/checkPronunciation")
-async def checkPronunciation(data: TranscriptionData):
-      try:
-        audio_bytes = base64.b64decode(data.base64_data)
-        sentence = data.sentence
-
-        with open("audio.wav", "wb") as f:
-              f.write(audio_bytes)
-
-        audio, sampling_rate = librosa.load('audio.wav', sr=16000, mono=True, duration=30.0, dtype=np.int32)
-        sf.write('tmp.wav', audio, 16000)
-        output = pronunciationChecking.correct_pronunciation(sentence, "tmp.wav", 'latam')
-
-        # Get rid of audio recordings
-        if os.path.exists("audio.wav"):
-            os.remove("audio.wav")
-            print(f"File deleted successfully.")
-        else: print(f"File not found.")
-        if os.path.exists("tmp.wav"):
-            os.remove("tmp.wav")
-            print(f"File deleted successfully.")
-        else: print(f"File not found.")
-      except Exception as e:
-                print('Error: ', str(e))
-                return {
-                    'statusCode': 200,
-                    'headers': {
-                    'Access-Control-Allow-Headers': '*',
-                    'Access-Control-Allow-Credentials': "true",
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
-                },
-                'body': ''
-            }
-
+async def checkPronunciation(audio_path: str, sentence: str):
+      # Transcribe audio, then compare to correct pronunciation
+      user_ipa = pronunciationChecking.transcribe_audio(audio_path)
+      output = pronunciationChecking.compare_strings(sentence, user_ipa)
       return output
+
+@app.post("/translate")
+async def translate(request: Request):
+    body = await request.json()
+    response = requests.post("https://libretranslate.de/translate", json=body)
+    return response.json()
