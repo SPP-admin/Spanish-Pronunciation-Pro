@@ -206,8 +206,8 @@ for (const key in lessonCategories){
   const handleAudioRecording = async (blob) => {
     setRecordedAudio(blob);
     sendAudioToServer(blob);
-    setPracticed(true)
   
+    console.log(practiced)
     let activity = `Practiced ${topic} lesson ${lesson}, at ${level} difficulty.`;
     activity = activity.replace(/_/g, " ");
     
@@ -221,6 +221,7 @@ for (const key in lessonCategories){
         const updated = {...profile, activities: cur}
         setProfile(updated, user.uid)
 
+        setPracticed(true)
         // Store attempt in activity history.
         await api.patch(`/updateActivityHistory?uid=${user.uid}&activity=${activity}`)
         // Update activity history in profile context.
