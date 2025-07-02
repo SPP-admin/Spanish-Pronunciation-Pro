@@ -99,6 +99,9 @@ class sentenceMapping:
 
 	
 	def transliterate_latam(self):
+		# Down the road, commas are used as delimiters so replace them with something that looks like a comma
+		self.sentence = self.sentence.replace(",", "‚")
+
 		# Preprocess sentence to all lowercase, remove acute accents
 		sentence = self.sentence.lower()
 		accent_remover = sentence.maketrans('áéíóú', 'aeiou')

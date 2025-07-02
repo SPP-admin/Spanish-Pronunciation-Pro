@@ -17,6 +17,7 @@ def generate_speech(sentence: str, dialect: str):
 			processed_sentence = sentence.replace("ci", "thi")
 			processed_sentence = processed_sentence.replace("ce", "the")
 			processed_sentence = processed_sentence.replace("z", "th")
+		# Argentinian/Uruguayan Spanish
 		case "rio":
 			processed_sentence = sentence.replace("ll", "sh")
 
