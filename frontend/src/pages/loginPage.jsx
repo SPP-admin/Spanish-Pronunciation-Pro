@@ -14,6 +14,7 @@ import { auth, googleProvider } from '../firebase.js';
 import loginImage from '@/assets/images/login2.png';
 
 import {useState, useEffect} from 'react';
+import { toast } from 'sonner';
 
 
 function LoginPage({user, isFetching}) {
@@ -37,9 +38,16 @@ function LoginPage({user, isFetching}) {
       const result = await signInWithPopup(auth, googleProvider)
       user = result.user
     } catch(error) {
-      console.log(error.code)
+      const systemMessage = error.message.replace(/^Firebase:\s*/i, "");
+      toast.error("Error logging in with Google: " + systemMessage);
       return;
     }
+    /*
+    await api.post('/setUserStatistics', {id: user.uid}).catch(() => {})
+    await api.post('/setAchievements', {id: user.uid}).catch(() => {})
+    await api.post('/setLessonProgress', {id: user.uid}).catch(() => {})
+      */
+    toast.success('Logged in with Google!')
     //navigate('/dashboard');
   }
 
@@ -58,25 +66,8 @@ function LoginPage({user, isFetching}) {
       navigate('/dashboard');
 
       } catch(error) {
-        const code = error.code
-        console.log(code)
-
-        switch(String(code)) {
-          case "auth/invalid-email":
-            setErrorMessage("Invalid Email, please try again.");
-            break;
-          case "auth/invalid-credential":
-            setErrorMessage("Invalid Email/Password combination. Please try again.");
-            break;
-          case "auth/missing-email":
-            setErrorMessage("Please enter a valid email. Email field is empty.")
-            break;
-          case "auth/missing-password":
-            setErrorMessage("Please enter a password. Password field is empty.");
-            break;
-          default:
-            setErrorMessage("Error logging in, please try again later.")
-        } 
+        const systemMessage = error.message.replace(/^Firebase:\s*/i, "");
+        toast.error("Error: " + systemMessage);
       }
   };
 

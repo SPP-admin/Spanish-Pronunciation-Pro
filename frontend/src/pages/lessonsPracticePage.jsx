@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import Confetti from 'react-confetti';
 import AudioRecorder from '@/components/audioRecorder.jsx';
 import { Button } from "@/components/ui/button";
@@ -119,11 +119,45 @@ for (const key in lessonCategories){
     }
   }
 }
+  const [spanishSentence, setSpanishSentence] = useState("");
+  const [englishTranslation, setEnglishTranslation] = useState("");
+  const [loading, setLoading] = useState(false);
+  const lastParams = useRef({ topic: null, lesson: null, level: null });
 
   useEffect(() => {
     // Reset selection when the phrase changes
     setSelectedText(null);
-  }, [phraseSpanish]);
+  }, []);
+
+  useEffect(() => {
+    if (
+      topic &&
+      lesson &&
+      level &&
+      (topic !== lastParams.current.topic || lesson !== lastParams.current.lesson || level !== lastParams.current.level)
+    ) {
+      const fetchSentenceAndTranslation = async () => {
+        setLoading(true);
+        setSpanishSentence("");
+        setEnglishTranslation("");
+        try {
+          const res = await fetch(
+            `http://localhost:8080/generateSentence?chunk=${topic}&lesson=${lesson}&difficulty=${level}`,
+            { method: "POST" }
+          );
+          let data = await res.text();
+          data = data.replace(/^"|"$/g, "");
+          setSpanishSentence(data);
+        } catch (err) {
+          setSpanishSentence("Error generating sentence.");
+          setEnglishTranslation("");
+        }
+        setLoading(false);
+      };
+      fetchSentenceAndTranslation();
+      lastParams.current = { topic, lesson, level };
+    }
+  }, [topic, lesson, level]);
 
   const handleCaptureSelection = () => {
     const selection = window.getSelection().toString();
@@ -156,7 +190,13 @@ for (const key in lessonCategories){
         return response.text();
       })
       .then(transcript => {
-        setTranscription(transcript);
+        // Remove leading/trailing double quotes and newlines from the transcription
+        const cleanedTranscript = transcript
+          .replace(/^"|"$/g, "") 
+          .replace(/\\n/g, "")
+          .replace(/[\r\n]+/g, " ") 
+          .trim();
+        setTranscription(cleanedTranscript);
       })
       .catch(error => console.error("Error sending audio:", error));
     };
@@ -301,9 +341,11 @@ for (const key in lessonCategories){
             <div className="text-center w-full">
               {/* This allows free-form text selection */}
               <p className="text-3xl md:text-4xl font-bold text-black mb-3 select-text">
-                {phraseSpanish}
+                {loading ? "Loading..." : spanishSentence}
               </p>
-              <p className="text-base text-muted-foreground mb-4">{phraseEnglish}</p>
+              {/* <p className="text-base text-muted-foreground mb-4">
+                {loading ? "" : englishTranslation}
+              </p> */}
 
               {/* Button to capture the highlighted text */}
               <Button onClick={handleCaptureSelection} variant="outline" size="sm">
@@ -331,7 +373,7 @@ for (const key in lessonCategories){
         {/* Bottom Navigation */}
         <div className="w-full max-w-3xl mt-6 flex justify-between">
           <Button variant="outline" onClick={handlePrevious}>
-            <FaArrowLeft className="mr-2 h-4 w-4" /> Previous
+            <FaArrowLeft className="mr-2 h-4 w-4" /> End Practice
           </Button>
           {/*  Made next button into the Finish Lesson for testing. */}
           <Button variant="outline" onClick={handleFinishAndNext}>

@@ -4,6 +4,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from 'sonner';
+
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 
@@ -14,6 +16,7 @@ import {useState} from 'react';
 
 function SignupPage() {
   const navigate = useNavigate(); // For navigation after signup
+  
   const [cred, setCred] = useState({
     email: '',
     password: '',
@@ -38,30 +41,22 @@ function SignupPage() {
       await updateProfile(account.user, {
         displayName: cred.displayName
       })
-      setErrorMessage("Account created!");
 
+            console.log(account.user.uid)
+
+      /*  
+      await api.post('/setUserStatistics', {id: account.user.uid})
+      await api.post('/setAchievements', {id: account.user.uid})
+      await api.post('/setLessonProgress', {id: account.user.uid})
+      */
+
+      toast.success('Account Created!')
       navigate('/login');
 
       } catch(error) {
-        const code = error.code
-
-        switch(String(code)) {
-          case "auth/email-already-in-use":
-            setErrorMessage("Account already exists with this email.");
-            break;
-          case "auth/weak-password":
-            setErrorMessage("Please choose a valid password. Password is too weak.");
-            break;
-          case "auth/missing-email":
-            setErrorMessage("Please enter a valid email. Email field is empty.")
-            break;
-          case "auth/missing-password":
-            setErrorMessage("Please enter a password.");
-            break;
-          default:
-            setErrorMessage("Error creating account, please try again later.")
-        } 
-
+        const systemMessage = error.message.replace(/^Firebase:\s*/i, "");
+        toast.error(systemMessage);
+        console.error("Error creating account:", error);
       }
   };
 
