@@ -1,7 +1,7 @@
 import os
 import base64
 import uvicorn
-from fastapi import FastAPI, HTTPException, Form
+from fastapi import FastAPI, HTTPException, Form, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -25,6 +25,8 @@ import random
 
 from dotenv import load_dotenv
 load_dotenv()
+
+import requests
 
 if not firebase_admin._apps:
     #check if file exists
@@ -606,15 +608,20 @@ async def generateSentence(chunk: str, lesson: str, difficulty: str):
       client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
       try:
         prompt = (
-            f"You are a helpful assistant that generates sentences for a Spanish pronunciation app. "
+            f"You are a helpful assistant that generates Spanish sentences or words for a pronunciation app. "
             f"The current lesson chunk is '{chunk}', the specific lesson is '{lesson}', and the difficulty is '{difficulty}'. "
-            f"Generate a sentence that helps practice the lesson topic. Make sure to use the Spanish alphabet and correct accent marks. "
-            f"The sentence should be appropriate for the lesson chunk and lesson, and match the requested difficulty while also being unique from previous sentences."
+            f"Generate ONLY the Spanish sentence or word requested, with NO extra text, explanations, or introductions. Do not say anything like 'Here is a sentence:' or 'OK'. Just output the Spanish sentence or word itself. "
+            f"Use the Spanish alphabet and correct accent marks. "
+            f"If the difficulty is or includes 'word', return only a single word."
+        )
+        user_content = (
+            f"Generate a Spanish {difficulty} for the lesson '{lesson}' in the chunk '{chunk}'. "
+            f"ONLY return the Spanish sentence or word, and nothing else."
         )
         response = client.chat.completions.create(
                 model="gpt-4o",
                 messages=[{"role": "system", "content": prompt},
-                        {"role": "user", "content": f"Generate a {difficulty} in Spanish for the lesson '{lesson}' in the chunk '{chunk}'. If the difficulty is or includes 'word', generate a single word."}],
+                        {"role": "user", "content": user_content}],
                 temperature=1
         )
         current_sentence = response.choices[0].message.content
@@ -637,3 +644,9 @@ async def checkPronunciation(audio_path: str, sentence: str):
       user_ipa = pronunciationChecking.transcribe_audio(audio_path)
       output = pronunciationChecking.compare_strings(sentence, user_ipa)
       return output
+
+@app.post("/translate")
+async def translate(request: Request):
+    body = await request.json()
+    response = requests.post("https://libretranslate.de/translate", json=body)
+    return response.json()
