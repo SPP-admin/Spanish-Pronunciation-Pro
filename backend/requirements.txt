@@ -7,3 +7,11 @@ python-dotenv
 openai
 python-multipart
 pydantic
+
+scipy
+numpy
+transformers
+silabeador
+librosa
+soundfile
+torch

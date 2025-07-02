@@ -152,7 +152,7 @@ function LessonsPracticePage() {
       const base64data = reader.result.split(",")[1];
   
       // Build the JSON payload.
-      const generatedSentence = document.getElementById("generatedSentence").innerText;
+      const generatedSentence = selectedText ? selectedText: spanishSentence;
       const payload = { base64_data: base64data, sentence: generatedSentence};
       console.log(payload)
       fetch("http://localhost:8080/checkPronunciation", {
@@ -170,15 +170,7 @@ function LessonsPracticePage() {
         .then(transcript => {
           let html = "";
           console.log("Transcription:", transcript);
-          // Remove leading/trailing double quotes and newlines from the transcription
-        const cleanedTranscript = transcript
-          .replace(/^"|"$/g, "") 
-          .replace(/\\n/g, "")
-          .replace(/[\r\n]+/g, " ") 
-          .trim();
-          setTranscription(cleanedTranscript);
-          console.log("Line 41: ", transcript);
-          let parsedTranscript = decodeURI(JSON.parse(cleanedTranscript));
+          let parsedTranscript = decodeURI(JSON.parse(transcript));
           console.log("Parsed Transcript", parsedTranscript);
           const arr = parsedTranscript.split(",");
           for (let i = 0; i < arr.length; i++) {
@@ -265,23 +257,38 @@ function LessonsPracticePage() {
           </div>
         </div>
 
-        {/* Main Content Card */}
+          {/* Main Content Card */}
         <Card className="w-full max-w-3xl shadow-lg">
           <CardContent className="p-6 md:p-8 flex flex-col items-center space-y-6">
-            {/* Phrases */}
-            <div className="text-center">
-              <p id="generatedSentence" className="text-3xl md:text-4xl font-bold text-primary mb-2">{loading ? "Loading..." : spanishSentence}</p>
-              {/* <p className="text-base text-muted-foreground">
+            <div className="text-center w-full">
+              {/* This allows free-form text selection */}
+              <p className="text-3xl md:text-4xl font-bold text-black mb-3 select-text">
+                {loading ? "Loading..." : spanishSentence}
+              </p>
+              {/* <p className="text-base text-muted-foreground mb-4">
                 {loading ? "" : englishTranslation}
               </p> */}
-            </div>
 
+              {/* Button to capture the highlighted text */}
+              <Button onClick={handleCaptureSelection} variant="outline" size="sm">
+                <FaHighlighter className="mr-2 h-4 w-4" />
+                Practice Highlighted Text
+              </Button>
+            </div>
             {/* Recorder */}
             <AudioRecorder onRecordingComplete={handleAudioRecording} />
 
             {/* Feedback Field now uses selectedText */}
             <div className="mt-4 p-4 bg-muted/50 dark:bg-muted/20 rounded text-center w-full min-h-[50px]">
-              <p className="text-sm text-muted-foreground" id = "transcriptionBox">
+              <p className="text-sm text-muted-foreground">
+                {selectedText
+                  ? `Now practicing: "${selectedText}". Record your pronunciation.`
+                  : "Practice this word/sentence, or highlight text and click 'Practice' to begin."}
+              </p>
+            </div>
+			{/* Extra feedback field */}
+			<div className="mt-4 p-4 bg-muted/50 dark:bg-muted/20 rounded text-center w-full min-h-[50px]">
+              <p className="text-sm text-muted-foreground" id="transcriptionBox">
               </p>
             </div>
           </CardContent>
