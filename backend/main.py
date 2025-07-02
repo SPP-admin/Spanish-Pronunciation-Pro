@@ -22,10 +22,6 @@ from openai import OpenAI
 import pronunciationChecking
 import ipaTransliteration as epi
 import random
-import json
-import numpy as np
-import librosa
-import soundfile as sf
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -70,14 +66,39 @@ app.add_middleware(
 db = firestore.client()
 #firebase = pyrebase.initialize_app(config.firebaseConfig)
 
-class TranscriptionData(BaseModel):
+class AudioData(BaseModel):
     base64_data: str
-    sentence: str
 
 # openai import
 import openai
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+@app.post("/sendVoiceNote")
+async def send_voice_note(data: AudioData):
+    try:
+        # Decode base64 string
+        audio_bytes = base64.b64decode(data.base64_data)
+
+        # Write to disk
+        audio_file_name = "audio.webm"
+        with open(audio_file_name, "wb") as f:
+            f.write(audio_bytes)
+
+        # Transcribe using OpenAI Whisper
+        with open(audio_file_name, "rb") as audio_file:
+            transcript = openai.audio.transcriptions.create(
+                model="whisper-1",
+                file=audio_file,
+                response_format="text",
+                language="es" 
+            )
+
+        return transcript  # returns raw text
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Error processing audio: {str(e)}"
+        )
       
 """
 @app.post("/signup")
@@ -618,40 +639,10 @@ async def generateSentence(chunk: str, lesson: str, difficulty: str):
         return current_sentence
 
 @app.post("/checkPronunciation")
-async def checkPronunciation(data: TranscriptionData):
-      try:
-        audio_bytes = base64.b64decode(data.base64_data)
-        sentence = data.sentence
-
-        with open("audio.wav", "wb") as f:
-              f.write(audio_bytes)
-
-        audio, sampling_rate = librosa.load('audio.wav', sr=16000, mono=True, duration=30.0, dtype=np.int32)
-        sf.write('tmp.wav', audio, 16000)
-        output = pronunciationChecking.correct_pronunciation(sentence, "tmp.wav", 'latam')
-
-        # Get rid of audio recordings
-        if os.path.exists("audio.wav"):
-            os.remove("audio.wav")
-            print(f"File deleted successfully.")
-        else: print(f"File not found.")
-        if os.path.exists("tmp.wav"):
-            os.remove("tmp.wav")
-            print(f"File deleted successfully.")
-        else: print(f"File not found.")
-      except Exception as e:
-                print('Error: ', str(e))
-                return {
-                    'statusCode': 200,
-                    'headers': {
-                    'Access-Control-Allow-Headers': '*',
-                    'Access-Control-Allow-Credentials': "true",
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
-                },
-                'body': ''
-            }
-
+async def checkPronunciation(audio_path: str, sentence: str):
+      # Transcribe audio, then compare to correct pronunciation
+      user_ipa = pronunciationChecking.transcribe_audio(audio_path)
+      output = pronunciationChecking.compare_strings(sentence, user_ipa)
       return output
 
 @app.post("/translate")

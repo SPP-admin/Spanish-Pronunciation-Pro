@@ -7,12 +7,3 @@ python-dotenv
 openai
 python-multipart
 pydantic
-
-scipy
-numpy
-transformers
-silabeador
-librosa
-soundfile
-torch
-git+https://github.com/huggingface/parler-tts.git
