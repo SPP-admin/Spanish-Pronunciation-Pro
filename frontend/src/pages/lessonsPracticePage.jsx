@@ -236,11 +236,11 @@ function LessonsPracticePage() {
         {/* Bottom Navigation */}
         <div className="w-full max-w-3xl mt-6 flex justify-between">
           <Button variant="outline" onClick={handlePrevious}>
-            <FaArrowLeft className="mr-2 h-4 w-4" /> Previous
+            <FaArrowLeft className="mr-2 h-4 w-4" /> End Practice
           </Button>
           {/*  Made next button into the Finish Lesson for testing. */}
           <Button variant="outline" onClick={handleFinishAndNext}>
-            Finish Lesson <FaArrowRight className="ml-2 h-4 w-4" />
+            Next Lesson <FaArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
       </main>
