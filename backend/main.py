@@ -602,23 +602,31 @@ async def setLessonProgress(request: BaseSchema):
         )
     
 @app.post("/generateSentence")
-async def generateSentence(difficulty: str):
+async def generateSentence(chunk: str, lesson: str, difficulty: str):
       client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
       try:
+        prompt = (
+            f"You are a helpful assistant that generates sentences for a Spanish pronunciation app. "
+            f"The current lesson chunk is '{chunk}', the specific lesson is '{lesson}', and the difficulty is '{difficulty}'. "
+            f"Generate a sentence that helps practice the lesson topic. Make sure to use the Spanish alphabet and correct accent marks. "
+            f"The sentence should be appropriate for the lesson chunk and lesson, and match the requested difficulty while also being unique from previous sentences."
+        )
         response = client.chat.completions.create(
                 model="gpt-4o",
-                messages=[{"role": "system", "content": "You are a helpful assistant that generates sentences for a Spanish pronunciation app. Make sure to use the spanish alphabet, and make sure to use the correct accent marks."},
-                        {"role": "user", "content": "Generate a sentence that is " + difficulty + " to say."}],
+                messages=[{"role": "system", "content": prompt},
+                        {"role": "user", "content": f"Generate a {difficulty} in Spanish for the lesson '{lesson}' in the chunk '{chunk}'. If the difficulty is or includes 'word', generate a single word."}],
                 temperature=1
         )
         current_sentence = response.choices[0].message.content
       # if there is an error with OpenAI, use a backup list of sentences
       except:
-            backup_sentences = ["El gato duerme.", "La niña corre.", 
-                                "El perro ladra.", "Hace mucho calor.",
-                                "Llueve afuera.", "El vaso está lleno.",
-                                "La casa es grande.", "El pan está caliente.",
-                                "Hay una flor.", "La cama es cómoda."]
+            backup_sentences = [
+                "El gato duerme.", "La niña corre.", 
+                "El perro ladra.", "Hace mucho calor.",
+                "Llueve afuera.", "El vaso está lleno.",
+                "La casa es grande.", "El pan está caliente.",
+                "Hay una flor.", "La cama es cómoda."
+            ]
             current_sentence = random.choice(backup_sentences)
       finally:
         return current_sentence
