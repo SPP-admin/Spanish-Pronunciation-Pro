@@ -3,7 +3,6 @@ import string
 import ipaTransliteration as epi
 from difflib import SequenceMatcher
 import whisperIPAtranscription as stress_tr
-import json
 # Load audio transcription model
 model = read_recognizer()
 
@@ -17,7 +16,7 @@ stress_translator = str.maketrans('', '', string.whitespace + 'ː' + 'ˑ' + "," 
 
 # Take audio, return IPA transcription without whitespace or punctuation
 def transcribe_audio(audio_path: str) -> str:
-	ipa_transcription = model.recognize(audio_path, 'spa')
+	ipa_transcription = model.recognize(audio_path)
 	ipa_transcription = ipa_transcription.translate(translator)
 	return ipa_transcription
 
@@ -45,8 +44,8 @@ def compare_strings(sentence, user_ipa, dialect):
 		correct_ipa = sentence_mapping.get_ipa()
 	correct_ipa = sentence_mapping.get_ipa()
 	print(correct_ipa)
-	print(user_ipa)
 	user_ipa = preprocess_user_ipa(user_ipa)
+	print(user_ipa)
 	sentence_mapping.set_indices()
 	sequence_matcher = SequenceMatcher(None, user_ipa, correct_ipa)
 	opcode_list = sequence_matcher.get_opcodes()
@@ -58,7 +57,7 @@ def compare_strings(sentence, user_ipa, dialect):
 		elif opcode[0] == 'insert' or opcode[0] == 'replace':
 			insert_incorrect(sentence_mapping, user_ipa[opcode[1]:opcode[2]], correct_ipa, opcode[3], opcode[4])
 
-	# Send output as JSON string
+	# Send output as array of written letter(s) followed by whether those letters were pronounced correctly
 	output_str = []
 
 	for ipa in sentence_mapping.ipa_mapping:
@@ -156,11 +155,9 @@ def is_vowel_ipa(ipa_char):
 # change chars in user_ipa to equivalent chars that transliterate() would generate
 # so users are not penalized for essentially correct pronunciation
 def preprocess_user_ipa(user_ipa):
-	str = user_ipa
-	user_ipa.replace("ɣ", "g")
-	user_ipa.replace("ð̞", "d")
-	user_ipa.replace("β", "b")
-	user_ipa.replace("v", "f")
-	user_ipa.replace("h", "x")
+	str = user_ipa.replace("ɣ", "g")
+	str = str.replace("ð̞", "d")
+	str = str.replace("β", "b")
+	str = str.replace("v", "f")
+	#str = str.replace("h", "x")
 	return str
-
