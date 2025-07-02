@@ -29,6 +29,8 @@ import { fetchData } from './fetchData.js';
 import { persistQueryClient } from '@tanstack/react-query-persist-client';
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
 
+import { MoonLoader } from 'react-spinners';
+
 const localStoragePersister = createSyncStoragePersister ({
   storage: window.localStorage,
 });
@@ -149,7 +151,9 @@ function AppContent() {
 
   // If user is being fetched don't load page.
   if(isFetching || isLoading ) {
-    return <h2>Loading...</h2>
+    return <div className="flex justify-center items-center min-h-screen">
+      <MoonLoader size={50} color="#08b4fc"/>
+      </div>
   }
 
   return (
