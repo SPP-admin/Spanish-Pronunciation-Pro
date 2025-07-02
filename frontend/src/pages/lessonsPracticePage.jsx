@@ -150,31 +150,56 @@ function LessonsPracticePage() {
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64data = reader.result.split(",")[1];
-      const payload = { base64_data: base64data };
-      fetch("http://localhost:8080/sendVoiceNote", {
+  
+      // Build the JSON payload.
+      const generatedSentence = document.getElementById("generatedSentence").innerText;
+      const payload = { base64_data: base64data, sentence: generatedSentence};
+      console.log(payload)
+      fetch("http://localhost:8080/checkPronunciation", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(payload),
       })
-      .then(response => {
-        if (!response.ok) throw new Error("Failed to send voice note");
-        return response.text();
-      })
-      .then(transcript => {
-        // Remove leading/trailing double quotes and newlines from the transcription
+        .then(response => {
+          if (!response.ok) {
+            console.log(response.statusText);
+            throw new Error("Failed to send voice note");
+          }
+          return response.text();
+        })
+        .then(transcript => {
+          let html = "";
+          console.log("Transcription:", transcript);
+          // Remove leading/trailing double quotes and newlines from the transcription
         const cleanedTranscript = transcript
           .replace(/^"|"$/g, "") 
           .replace(/\\n/g, "")
           .replace(/[\r\n]+/g, " ") 
           .trim();
-        setTranscription(cleanedTranscript);
-      })
-      .catch(error => console.error("Error sending audio:", error));
+          setTranscription(cleanedTranscript);
+          console.log("Line 41: ", transcript);
+          let parsedTranscript = decodeURI(JSON.parse(cleanedTranscript));
+          console.log("Parsed Transcript", parsedTranscript);
+          const arr = parsedTranscript.split(",");
+          for (let i = 0; i < arr.length; i++) {
+            if (arr[i+1] == "true") {
+              html += `<span style="color:green">${arr[i]}</span>`;
+            }
+            else {
+              html += `<span style="color:red">${arr[i]}</span>`;
+            }
+            i++;
+          }
+          console.log(html);
+          document.getElementById("transcriptionBox").innerHTML = html;
+        })
+        .catch(error => console.error("Error sending audio:", error));
     };
     reader.readAsDataURL(blob);
   };
-
+  // This function is passed as callback to the AudioRecorder component.
   const handleAudioRecording = async (blob) => {
+    console.log("Audio blob captured:", blob);
     setRecordedAudio(blob);
     sendAudioToServer(blob);
     setPracticed(true)
@@ -243,20 +268,12 @@ function LessonsPracticePage() {
         {/* Main Content Card */}
         <Card className="w-full max-w-3xl shadow-lg">
           <CardContent className="p-6 md:p-8 flex flex-col items-center space-y-6">
-            <div className="text-center w-full">
-              {/* This allows free-form text selection */}
-              <p className="text-3xl md:text-4xl font-bold text-black mb-3 select-text">
-                {loading ? "Loading..." : spanishSentence}
-              </p>
-              {/* <p className="text-base text-muted-foreground mb-4">
+            {/* Phrases */}
+            <div className="text-center">
+              <p id="generatedSentence" className="text-3xl md:text-4xl font-bold text-primary mb-2">{loading ? "Loading..." : spanishSentence}</p>
+              {/* <p className="text-base text-muted-foreground">
                 {loading ? "" : englishTranslation}
               </p> */}
-
-              {/* Button to capture the highlighted text */}
-              <Button onClick={handleCaptureSelection} variant="outline" size="sm">
-                <FaHighlighter className="mr-2 h-4 w-4" />
-                Practice Highlighted Text
-              </Button>
             </div>
 
             {/* Recorder */}
@@ -264,12 +281,7 @@ function LessonsPracticePage() {
 
             {/* Feedback Field now uses selectedText */}
             <div className="mt-4 p-4 bg-muted/50 dark:bg-muted/20 rounded text-center w-full min-h-[50px]">
-              <p className="text-sm text-muted-foreground">
-                {selectedText
-                  ? `Now practicing: "${selectedText}". Record your pronunciation.`
-                  : recordedAudio
-                    ? transcription || "[Transcription processing...]"
-                    : "Highlight text and click 'Practice' to begin."}
+              <p className="text-sm text-muted-foreground" id = "transcriptionBox">
               </p>
             </div>
           </CardContent>

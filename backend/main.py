@@ -22,6 +22,9 @@ from openai import OpenAI
 import pronunciationChecking
 import ipaTransliteration as epi
 import random
+import librosa
+import soundfile as sf
+import numpy as np
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -69,6 +72,9 @@ db = firestore.client()
 class AudioData(BaseModel):
     base64_data: str
 
+class TranscriptionData(BaseModel):
+     sentence: str
+     base64_data: str
 # openai import
 import openai
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -639,12 +645,41 @@ async def generateSentence(chunk: str, lesson: str, difficulty: str):
         return current_sentence
 
 @app.post("/checkPronunciation")
-async def checkPronunciation(audio_path: str, sentence: str):
-      # Transcribe audio, then compare to correct pronunciation
-      user_ipa = pronunciationChecking.transcribe_audio(audio_path)
-      output = pronunciationChecking.compare_strings(sentence, user_ipa)
-      return output
+async def checkPronunciation(data: TranscriptionData):
+      try:
+        audio_bytes = base64.b64decode(data.base64_data)
+        sentence = data.sentence
 
+        with open("audio.wav", "wb") as f:
+              f.write(audio_bytes)
+
+        audio, sampling_rate = librosa.load('audio.wav', sr=16000, mono=True, duration=30.0, dtype=np.int32)
+        sf.write('tmp.wav', audio, 16000)
+        output = pronunciationChecking.correct_pronunciation(sentence, "tmp.wav", 'latam')
+
+        # Get rid of audio recordings
+        if os.path.exists("audio.wav"):
+            os.remove("audio.wav")
+            print(f"File deleted successfully.")
+        else: print(f"File not found.")
+        if os.path.exists("tmp.wav"):
+            os.remove("tmp.wav")
+            print(f"File deleted successfully.")
+        else: print(f"File not found.")
+      except Exception as e:
+                print('Error: ', str(e))
+                return {
+                    'statusCode': 200,
+                    'headers': {
+                    'Access-Control-Allow-Headers': '*',
+                    'Access-Control-Allow-Credentials': "true",
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
+                },
+                'body': ''
+            }
+
+      return output
 @app.post("/translate")
 async def translate(request: Request):
     body = await request.json()
