@@ -44,7 +44,7 @@ function AppContent() {
   const [ user ] = useAuthState(auth);
   const [isFetching, setIsFetching] = useState(true);
   const [fetchingData, setFetchingData] = useState(true);
-  const { setProfile } = useProfile();
+  const { setProfile, profile } = useProfile();
   
     const { data, isLoading } = useQuery({
     queryFn: () => fetchData(user.uid),

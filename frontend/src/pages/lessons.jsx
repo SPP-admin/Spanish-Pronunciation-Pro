@@ -180,7 +180,8 @@ function LessonsPage({isFetching}) {
 
           // Check 1: Is the currently selected combination complete?
           const comboKey = `${currentLesson}-${currentLevel}`;
-          const isComboComplete = currentProgress.completedCombinations?.[comboKey] || false;
+          const isComboComplete = profile.chunks?.[index]?.[comboKey] || false;
+          //const isComboComplete = currentProgress.completedCombinations?.[comboKey] || false;
 
           // Check 2: Is the entire category complete?
           const isCategoryComplete = isCategoryFullyComplete(category, selections, index);

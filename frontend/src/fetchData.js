@@ -11,6 +11,7 @@ export const fetchData = async (uid) => {
             activities: [],
             achievements: [],
             lessons: [],
+            chunks: [],
          };
 
         try {
@@ -42,7 +43,8 @@ export const fetchData = async (uid) => {
             accuracyRate: statsRes.data.user_stats.accuracy_rate ?? profile.accuracyRate,
             activities: activityHistoryRes.data.activity_history ?? profile.activities,
             achievements: achievementsRes.data.achievements.achievements ?? profile.achievements,
-            lessons: lessonProgressRes.data.lesson_data ?? profile.lessons,
+            lessons: lessonProgressRes.data.lessons.lesson_data ?? profile.lessons,
+            chunks: lessonProgressRes.data.lessons.chunks ?? profile.chunks
         }
 
         /*

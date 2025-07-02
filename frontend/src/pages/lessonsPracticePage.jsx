@@ -97,6 +97,7 @@ function LessonsPracticePage() {
 
   let next = -1;
   let prev = -1;
+  let index = -1;
 
 /*
   for (const key in avalibleLessons)
@@ -107,9 +108,11 @@ function LessonsPracticePage() {
   console.log(avalibleLessons[topic])
 */
   for (const key in avalibleTopics[topic]) {
+
     if(avalibleTopics[topic][key] == lesson) {
       prev = Number(key) - 1
       next = Number(key) + 1
+      index = Number(key)
       if(next >= avalibleTopics[topic].length) {
         next = -1
       }
@@ -188,9 +191,10 @@ function LessonsPracticePage() {
   }
   };
 
-  const handleFinishAndNext = () => {
+  const handleFinishAndNext = async () => {
+    
 
-    setShowConfetti(true);
+    //setShowConfetti(true);
 
     // Save the current lesson and level to localStorage
     if (topic && lesson && level) {
@@ -213,6 +217,8 @@ function LessonsPracticePage() {
       };
       localStorage.setItem('lessonSelections', JSON.stringify(updatedSelections));
     }
+    
+
     if(next <= -1) {
   
     setTimeout(() => {
@@ -222,8 +228,36 @@ function LessonsPracticePage() {
 
     }
     const practicePath = `/lessonsPractice?topic=${topic}&lesson=${[avalibleTopics[topic][next]]}&level=${level}`;
+    
+    /*
+    console.log(user.uid + " " + lesson + " " + topic + " " + level)
+    await api.patch(`/updateChunkProgress?uid=${user.uid}&chunk=${lesson}&lesson=${cur}&difficulty=${level}`);
+    */
+    completeLesson(index);
+
     if(next > -1) {
       navigate(practicePath)
+    }
+  };
+
+  const completeLesson = async (index) => {
+    try {
+      const completedLesson = lesson + "-" + level
+
+      let cur = [...(profile.lessons ?? [])]
+
+      if(Array.isArray(cur[index])) {
+        cur[index].push({ [completedLesson]: true});
+      } else {
+        cur[index] = {[completedLesson]: true}
+      }
+
+      const updated = { ...profile, lessons: cur}
+      setProfile(updated, user.uid)
+      console.log(profile)
+
+    } catch (error) {
+      console.log(error);
     }
   };
 

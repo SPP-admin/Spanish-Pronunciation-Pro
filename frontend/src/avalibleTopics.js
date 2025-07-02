@@ -1,7 +1,7 @@
 export const avalibleTopics = 
     {
-        consonants: ['soft', 'hard', 'combos'],
         vowels: ['a', 'e', 'i', 'o', 'u'],
+        consonants: ['soft', 'hard', 'combos'],
         unique_sounds: ['n', 'rr', 'll', 'ch', 'qu'],
         special_vowels: ['ai', 'ue', 'eu', 'au', 'ei', 'ia', 'io', 'oi', 'ui', 'ie'],
         accent_marks: ['no_accent'],

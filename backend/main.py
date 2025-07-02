@@ -308,7 +308,7 @@ async def getLessonProgress(uid):
 
         print(data)
 
-        return JSONResponse(content={"lesson_data": data["lesson_data"]},
+        return JSONResponse(content={"lessons": data},
                             status_code=201)
     except Exception as e:
                 raise HTTPException(
@@ -532,6 +532,9 @@ async def updateChunkProgress(uid, chunk: str, lesson: int, difficulty: str):
 
         if chunks[lesson] is None:
               chunks[lesson] = {}
+
+        chunks[lesson][chunk+"-"+difficulty] = [True]
+        print(chunks)
 
         doc_ref = db.collection('lessons').document(doc_id).update({"chunks": chunks})
 

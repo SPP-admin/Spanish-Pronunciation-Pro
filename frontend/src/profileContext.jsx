@@ -13,11 +13,13 @@ export const ProfileProvider = ({children}) => {
     activities: [],
     achievements: [],
     lessons: [],
+    chunks: [],
   }
 )
 
 
   const setProfile = (newProfile, uid) => {
+    console.log(profile)
     _setProfile(newProfile)
     queryClient.setQueryData(['profile', uid], newProfile)
     
