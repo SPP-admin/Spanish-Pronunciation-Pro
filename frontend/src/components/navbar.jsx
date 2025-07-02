@@ -61,7 +61,6 @@ function Navbar({user}) {
         const file = e.target.files[0]
         if (!file) return;
 
-        console.log(storage)
         const storageRef = ref(storage, `users/${user.uid}/profile.jpg`);
 
         await uploadBytes(storageRef, file);

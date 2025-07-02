@@ -11,7 +11,7 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { useProfile } from '@/profileContext.jsx';
 
 
-import { avalibleTopics } from '@/avalibleTopics.js';
+import { lessonCategories } from '@/lessonCategories.js';
 
 // --- Sample Lesson Data (no changes here) ---
 const lessonsContent = {
@@ -95,30 +95,30 @@ function LessonsPracticePage() {
   const [practiced, setPracticed] = useState(false);
   const { profile, setProfile } = useProfile();
 
-  let next = -1;
-  let prev = -1;
-  let index = -1;
+  let nextPage = -1;
+  let prevPage = -1;
+  let topicIndex = -1;
+  let avalibleLessons = [];
 
-/*
-  for (const key in avalibleLessons)
-    if (key == topic) {
-      console.log(avalibleLessons[key])
-    }
 
-  console.log(avalibleLessons[topic])
-*/
-  for (const key in avalibleTopics[topic]) {
+for (const key in lessonCategories){
+  if(lessonCategories[key].id == topic) {
+    avalibleLessons = lessonCategories[key].lessons
+    topicIndex = key
 
-    if(avalibleTopics[topic][key] == lesson) {
-      prev = Number(key) - 1
-      next = Number(key) + 1
-      index = Number(key)
-      if(next >= avalibleTopics[topic].length) {
-        next = -1
+    for (const idx in avalibleLessons) {
+      if(avalibleLessons[idx]["value"] == lesson)  {
+        nextPage = Number(idx) + 1
+        prevPage = Number(idx) - 1
+
+        if(nextPage >= avalibleLessons.length) {
+          nextPage = -1
+        }
+
       }
     }
   }
-
+}
 
   useEffect(() => {
     // Reset selection when the phrase changes
@@ -217,55 +217,67 @@ function LessonsPracticePage() {
       };
       localStorage.setItem('lessonSelections', JSON.stringify(updatedSelections));
     }
-    
 
-    if(next <= -1) {
-  
+    if(topicIndex >= 0) {
+      completeTopic();
+    }
+
+    if(nextPage <= -1) {
     setTimeout(() => {
       setShowConfetti(false);
       navigate('/lessons');
     } , 10);  // Confetti length
 
     }
-    const practicePath = `/lessonsPractice?topic=${topic}&lesson=${[avalibleTopics[topic][next]]}&level=${level}`;
+    const practicePath = `/lessonsPractice?topic=${topic}&lesson=${[avalibleLessons[nextPage]["value"]]}&level=${level}`;
     
-    /*
-    console.log(user.uid + " " + lesson + " " + topic + " " + level)
-    await api.patch(`/updateChunkProgress?uid=${user.uid}&chunk=${lesson}&lesson=${cur}&difficulty=${level}`);
-    */
-    completeLesson(index);
+    //await api.patch(`/updateChunkProgress?uid=${user.uid}&chunk=${lesson}&lesson=${topicIndex}&difficulty=${level}`);
 
-    if(next > -1) {
+    if(nextPage > -1) {
       navigate(practicePath)
     }
   };
 
-  const completeLesson = async (index) => {
+  // Function to complete a topic.
+  const completeTopic = () => {
     try {
-      const completedLesson = lesson + "-" + level
+      const completedTopic = lesson + "-" + level
 
-      let cur = [...(profile.lessons ?? [])]
+      let cur = [...(profile.chunks ?? [])]
 
-      if(Array.isArray(cur[index])) {
-        cur[index].push({ [completedLesson]: true});
-      } else {
-        cur[index] = {[completedLesson]: true}
+      // If this lesson hasn't already been completed complete it in the backend.
+      if(!(completedTopic in (cur[topicIndex] ?? {}))) {
+        sendTopic()
       }
 
-      const updated = { ...profile, lessons: cur}
+      cur[topicIndex] = {
+        ...(cur[topicIndex] ?? {}),
+        [completedTopic]: true
+      }
+
+      const updated = { ...profile, chunks: cur}
       setProfile(updated, user.uid)
-      console.log(profile)
+      //console.log(updated.chunks)
 
     } catch (error) {
       console.log(error);
     }
   };
 
+  // Function to mark topic as completed in backend.
+  const sendTopic = async () => {
+    try {
+      await api.patch(`/updateChunkProgress?uid=${user.uid}&chunk=${lesson}&lesson=${topicIndex}&difficulty=${level}`);
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
   const handlePrevious = () => {
-    if (prev <= -1){
+    if (prevPage <= -1){
       navigate('/lessons');
     } else {
-      const practicePath = `/lessonsPractice?topic=${topic}&lesson=${[avalibleTopics[topic][prev]]}&level=${level}`;
+      const practicePath = `/lessonsPractice?topic=${topic}&lesson=${[avalibleLessons[prevPage]["value"]]}&level=${level}`;
       navigate(practicePath)
     }
   };

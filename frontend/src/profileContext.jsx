@@ -19,7 +19,6 @@ export const ProfileProvider = ({children}) => {
 
 
   const setProfile = (newProfile, uid) => {
-    console.log(profile)
     _setProfile(newProfile)
     queryClient.setQueryData(['profile', uid], newProfile)
     
