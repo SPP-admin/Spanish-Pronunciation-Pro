@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import Confetti from 'react-confetti';
 import AudioRecorder from '@/components/audioRecorder.jsx';
@@ -90,11 +90,45 @@ function LessonsPracticePage() {
 
   const [practiced, setPracticed] = useState(false)
 
+  const [spanishSentence, setSpanishSentence] = useState("");
+  const [englishTranslation, setEnglishTranslation] = useState("");
+  const [loading, setLoading] = useState(false);
+  const lastParams = useRef({ topic: null, lesson: null, level: null });
 
   useEffect(() => {
     // Reset selection when the phrase changes
     setSelectedText(null);
-  }, [phraseSpanish]);
+  }, []);
+
+  useEffect(() => {
+    if (
+      topic &&
+      lesson &&
+      level &&
+      (topic !== lastParams.current.topic || lesson !== lastParams.current.lesson || level !== lastParams.current.level)
+    ) {
+      const fetchSentenceAndTranslation = async () => {
+        setLoading(true);
+        setSpanishSentence("");
+        setEnglishTranslation("");
+        try {
+          const res = await fetch(
+            `http://localhost:8080/generateSentence?chunk=${topic}&lesson=${lesson}&difficulty=${level}`,
+            { method: "POST" }
+          );
+          let data = await res.text();
+          data = data.replace(/^"|"$/g, "");
+          setSpanishSentence(data);
+        } catch (err) {
+          setSpanishSentence("Error generating sentence.");
+          setEnglishTranslation("");
+        }
+        setLoading(false);
+      };
+      fetchSentenceAndTranslation();
+      lastParams.current = { topic, lesson, level };
+    }
+  }, [topic, lesson, level]);
 
   const handleCaptureSelection = () => {
     const selection = window.getSelection().toString();
@@ -136,9 +170,15 @@ function LessonsPracticePage() {
         .then(transcript => {
           let html = "";
           console.log("Transcription:", transcript);
-          setTranscription(transcript);
+          // Remove leading/trailing double quotes and newlines from the transcription
+        const cleanedTranscript = transcript
+          .replace(/^"|"$/g, "") 
+          .replace(/\\n/g, "")
+          .replace(/[\r\n]+/g, " ") 
+          .trim();
+          setTranscription(cleanedTranscript);
           console.log("Line 41: ", transcript);
-          let parsedTranscript = decodeURI(JSON.parse(transcript));
+          let parsedTranscript = decodeURI(JSON.parse(cleanedTranscript));
           console.log("Parsed Transcript", parsedTranscript);
           const arr = parsedTranscript.split(",");
           for (let i = 0; i < arr.length; i++) {
@@ -230,8 +270,10 @@ function LessonsPracticePage() {
           <CardContent className="p-6 md:p-8 flex flex-col items-center space-y-6">
             {/* Phrases */}
             <div className="text-center">
-              <p id="generatedSentence" className="text-3xl md:text-4xl font-bold text-primary mb-2">{phraseSpanish}</p>
-              <p className="text-base text-muted-foreground">{phraseEnglish}</p>
+              <p id="generatedSentence" className="text-3xl md:text-4xl font-bold text-primary mb-2">{loading ? "Loading..." : spanishSentence}</p>
+              {/* <p className="text-base text-muted-foreground">
+                {loading ? "" : englishTranslation}
+              </p> */}
             </div>
 
             {/* Recorder */}
@@ -248,11 +290,11 @@ function LessonsPracticePage() {
         {/* Bottom Navigation */}
         <div className="w-full max-w-3xl mt-6 flex justify-between">
           <Button variant="outline" onClick={handlePrevious}>
-            <FaArrowLeft className="mr-2 h-4 w-4" /> Previous
+            <FaArrowLeft className="mr-2 h-4 w-4" /> End Practice
           </Button>
           {/*  Made next button into the Finish Lesson for testing. */}
           <Button variant="outline" onClick={handleFinishAndNext}>
-            Finish Lesson <FaArrowRight className="ml-2 h-4 w-4" />
+            Next Lesson <FaArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
       </main>

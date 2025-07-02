@@ -130,6 +130,7 @@ dist
 .pnp.*
 
 audios/
+audio.webm
 
 
 # Firebase Admin SDK key

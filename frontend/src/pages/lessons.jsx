@@ -48,7 +48,7 @@ const lessonCategories = [
     },
     {
         id: "unique_sounds",
-        title: "Unique Sounds (ñ, rr, ll)",
+        title: "Unique Sounds",
         description: "Learn sounds unique to the Spanish language.",
         lessons: [
             { value: "n", label: "Ñ" },
@@ -64,7 +64,7 @@ const lessonCategories = [
     },
     {
         id: "special_vowels",
-        title: "Special Vowel Combinations (diphthongs)",
+        title: "Special Vowel Combinations",
         description: "Master vowel combinations like 'ai', 'ei', 'oi'.",
         lessons: [
             { value: "ai", label: "AI" },
@@ -88,7 +88,7 @@ const lessonCategories = [
         title: "Accent Marks",
         description: "Understand how accent marks affect pronunciation.",
         lessons: [
-            { value: "no_accent", label: "No Marks" },
+            { value: "accent_marks", label: "Accent Marks" },
 
         ],
         levels: [
@@ -105,11 +105,7 @@ const lessonCategories = [
             { value: "spain", label: "Spain" },
             { value: "argentina", label: "Argentina" },
             { value: "colombia", label: "Colombia" },
-            { value: "peru", label: "Peru" },
-            { value: "venezuela", label: "Venezuela" },
-            { value: "chile", label: "Chile" },
-            { value: "cuba", label: "Cuba" },
-            { value: "puerto_rico", label: "Puerto Rico" },
+
         ],
         levels: [
             { value: "regional", label: "Regional Audio" },

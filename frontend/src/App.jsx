@@ -3,6 +3,7 @@ import api from './api.js';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button"; // Import Shadcn Button
 import Layout from './components/layout.jsx';  // Import Layout component
+import { Toaster } from '@/components/ui/sonner'; // Import Toaster component for notifications
 
 import LoginPage from './pages/loginPage.jsx'; // Import LoginPage component
 import LessonsPracticePage from './pages/lessonsPracticePage.jsx'; // Import LessonsPage component
@@ -20,7 +21,6 @@ import SettingsPage from './pages/settingsPage.jsx'; // Import SettingsPage comp
 import { useAuthState } from 'react-firebase-hooks/auth';
 
 function App() {
-  const navigate = useNavigate('')
   const [user ] = useAuthState(auth);
   const [isFetching, setIsFetching] = useState(true);
   const [fetchingData, setFetchingData] = useState(true);
@@ -135,6 +135,7 @@ function App() {
           </Route>
         </Route>
       </Routes>
+      <Toaster richColors position="bottom-right" />
     </div>
   );
 }

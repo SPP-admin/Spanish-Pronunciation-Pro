@@ -1,7 +1,7 @@
 import os
 import base64
 import uvicorn
-from fastapi import FastAPI, HTTPException, Form
+from fastapi import FastAPI, HTTPException, Form, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -16,7 +16,6 @@ from models import LoginSchema, SignUpSchema, ChunkSchema, BaseSchema
 #import pyrebase
 #import config
 from datetime import datetime
-
 from google.cloud.firestore_v1.base_query import FieldFilter
 from openai import OpenAI
 
@@ -30,6 +29,8 @@ import soundfile as sf
 
 from dotenv import load_dotenv
 load_dotenv()
+
+import requests
 
 if not firebase_admin._apps:
     #check if file exists
@@ -582,23 +583,36 @@ async def setLessonProgress(request: BaseSchema):
         )
     
 @app.post("/generateSentence")
-async def generateSentence(difficulty: str):
+async def generateSentence(chunk: str, lesson: str, difficulty: str):
       client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
       try:
+        prompt = (
+            f"You are a helpful assistant that generates Spanish sentences or words for a pronunciation app. "
+            f"The current lesson chunk is '{chunk}', the specific lesson is '{lesson}', and the difficulty is '{difficulty}'. "
+            f"Generate ONLY the Spanish sentence or word requested, with NO extra text, explanations, or introductions. Do not say anything like 'Here is a sentence:' or 'OK'. Just output the Spanish sentence or word itself. "
+            f"Use the Spanish alphabet and correct accent marks. "
+            f"If the difficulty is or includes 'word', return only a single word."
+        )
+        user_content = (
+            f"Generate a Spanish {difficulty} for the lesson '{lesson}' in the chunk '{chunk}'. "
+            f"ONLY return the Spanish sentence or word, and nothing else."
+        )
         response = client.chat.completions.create(
                 model="gpt-4o",
-                messages=[{"role": "system", "content": "You are a helpful assistant that generates sentences for a Spanish pronunciation app. Make sure to use the spanish alphabet, and make sure to use the correct accent marks."},
-                        {"role": "user", "content": "Generate a sentence that is " + difficulty + " to say."}],
+                messages=[{"role": "system", "content": prompt},
+                        {"role": "user", "content": user_content}],
                 temperature=1
         )
         current_sentence = response.choices[0].message.content
       # if there is an error with OpenAI, use a backup list of sentences
       except:
-            backup_sentences = ["El gato duerme.", "La niña corre.", 
-                                "El perro ladra.", "Hace mucho calor.",
-                                "Llueve afuera.", "El vaso está lleno.",
-                                "La casa es grande.", "El pan está caliente.",
-                                "Hay una flor.", "La cama es cómoda."]
+            backup_sentences = [
+                "El gato duerme.", "La niña corre.", 
+                "El perro ladra.", "Hace mucho calor.",
+                "Llueve afuera.", "El vaso está lleno.",
+                "La casa es grande.", "El pan está caliente.",
+                "Hay una flor.", "La cama es cómoda."
+            ]
             current_sentence = random.choice(backup_sentences)
       finally:
         return current_sentence
@@ -639,3 +653,9 @@ async def checkPronunciation(data: TranscriptionData):
             }
 
       return output
+
+@app.post("/translate")
+async def translate(request: Request):
+    body = await request.json()
+    response = requests.post("https://libretranslate.de/translate", json=body)
+    return response.json()
