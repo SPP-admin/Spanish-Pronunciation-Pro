@@ -4,6 +4,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from 'sonner';
+
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 
@@ -14,6 +16,7 @@ import {useState} from 'react';
 
 function SignupPage() {
   const navigate = useNavigate(); // For navigation after signup
+  
   const [cred, setCred] = useState({
     email: '',
     password: '',
@@ -50,11 +53,13 @@ function SignupPage() {
       await api.post('/setLessonProgress', {id: account.user.uid})
       */
 
-      alert('Account Created!')
+      toast.success('Account Created!')
       navigate('/login');
 
       } catch(error) {
-        alert(error)
+        const systemMessage = error.message.replace(/^Firebase:\s*/i, "");
+        toast.error(systemMessage);
+        console.error("Error creating account:", error);
       }
   };
 

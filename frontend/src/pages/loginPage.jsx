@@ -15,6 +15,7 @@ import loginImage from '@/assets/images/login2.png';
 
 import api from "../api.js";
 import {useState, useEffect} from 'react';
+import { toast } from 'sonner';
 
 
 function LoginPage({user, isFetching}) {
@@ -36,7 +37,8 @@ function LoginPage({user, isFetching}) {
       const result = await signInWithPopup(auth, googleProvider)
       user = result.user
     } catch(error) {
-      alert(error.message)
+      const systemMessage = error.message.replace(/^Firebase:\s*/i, "");
+      toast.error("Error logging in with Google: " + systemMessage);
       return;
     }
     /*
@@ -44,7 +46,7 @@ function LoginPage({user, isFetching}) {
     await api.post('/setAchievements', {id: user.uid}).catch(() => {})
     await api.post('/setLessonProgress', {id: user.uid}).catch(() => {})
       */
-    alert('Success!')
+    toast.success('Logged in with Google!')
     navigate('/dashboard');
   }
 
@@ -62,7 +64,8 @@ function LoginPage({user, isFetching}) {
       navigate('/dashboard');
 
       } catch(error) {
-        console.log(error)
+        const systemMessage = error.message.replace(/^Firebase:\s*/i, "");
+        toast.error("Error: " + systemMessage);
       }
   };
 
