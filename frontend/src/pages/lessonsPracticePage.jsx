@@ -67,6 +67,8 @@ const lessonsContent = {
     },
   };
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 function LessonsPracticePage() {
 
   const [user] = useAuthState(auth);
@@ -113,7 +115,7 @@ function LessonsPracticePage() {
         setEnglishTranslation("");
         try {
           const res = await fetch(
-            `http://localhost:8080/generateSentence?chunk=${topic}&lesson=${lesson}&difficulty=${level}`,
+            `${API_URL}/generateSentence?chunk=${topic}&lesson=${lesson}&difficulty=${level}`,
             { method: "POST" }
           );
           let data = await res.text();
@@ -155,7 +157,7 @@ function LessonsPracticePage() {
       const generatedSentence = selectedText ? selectedText: spanishSentence;
       const payload = { base64_data: base64data, sentence: generatedSentence};
       console.log(payload)
-      fetch("http://localhost:8080/checkPronunciation", {
+      fetch(`${API_URL}/checkPronunciation`, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify(payload),
