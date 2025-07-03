@@ -611,7 +611,7 @@ async def generateSentence(chunk: str, lesson: str, difficulty: str):
             f"You are a helpful assistant that generates Spanish sentences or words for a pronunciation app. "
             f"The current lesson chunk is '{chunk}', the specific lesson is '{lesson}', and the difficulty is '{difficulty}'. "
             f"Generate ONLY the Spanish sentence or word requested, with NO extra text, explanations, or introductions. Do not say anything like 'Here is a sentence:' or 'OK'. Just output the Spanish sentence or word itself. "
-            f"Use the Spanish alphabet and correct accent marks. "
+            f"Use the Spanish alphabet, correct accent marks and also make sure the sentences are grammatically correct. "
             f"If the difficulty is or includes 'word', return only a single word."
         )
         user_content = (
