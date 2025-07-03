@@ -667,19 +667,14 @@ async def checkPronunciation(data: TranscriptionData):
             print(f"File deleted successfully.")
         else: print(f"File not found.")
       except Exception as e:
-                print('Error: ', str(e))
-                return {
-                    'statusCode': 200,
-                    'headers': {
-                    'Access-Control-Allow-Headers': '*',
-                    'Access-Control-Allow-Credentials': "true",
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
-                },
-                'body': ''
-            }
+            print('Error: ', str(e))
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error in pronunciation checking: {str(e)}"
+            )
 
       return output
+
 @app.post("/translate")
 async def translate(request: Request):
     body = await request.json()
