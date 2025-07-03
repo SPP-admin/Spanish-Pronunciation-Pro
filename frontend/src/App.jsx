@@ -36,6 +36,10 @@ function App() {
   const [achievements, setAchievements] = useState([])
   const [activities, setActivities] = useState([])
   const [lessons, setLessons] = useState([])
+const [profilePic, setProfilePic] = useState(
+  user?.photoURL ||
+  `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.displayName || "User")}&background=0D8ABC&color=fff`
+);
 
 
   useEffect(() => {
@@ -135,7 +139,7 @@ function App() {
           </Route>
         </Route>
       </Routes>
-      <Toaster richColors position="bottom-right" />
+      <Toaster  />
     </div>
   );
 }

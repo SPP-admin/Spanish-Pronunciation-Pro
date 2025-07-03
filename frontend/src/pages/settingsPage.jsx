@@ -18,7 +18,13 @@ function SettingsPage({user}) {
     name: user.displayName,
     email: user.email,
   });
-
+    const [darkMode, setDarkMode] = useState(
+    document.documentElement.classList.contains("dark")
+  );
+  const handleToggleDarkMode = () => {
+    document.documentElement.classList.toggle("dark");
+    setDarkMode((prev) => !prev);
+  };
   // Handle input changes
   const handleInputChange = (e) => {
     const { id, value } = e.target;
@@ -29,17 +35,16 @@ function SettingsPage({user}) {
   };
 
   const handleSaveChanges = async () => {
-    // TODO: Make an API call
     if(user) {
       try {
         await updateProfile(user, {displayName: userData.name})
       } catch (error) {
-        alert("Error changing credentials.")
+        toast.error("Error changing credentials.")
         return
       }
     }
 
-    alert("Success! Your display name has changed.")
+    toast.success("Success! Your display name has changed.")
   
   };
 
@@ -48,22 +53,33 @@ function SettingsPage({user}) {
       try {
         await verifyBeforeUpdateEmail(user, userData.email)
       } catch (error) {
-        alert("Error sending email change request." + error.message)
+        toast.error("Error sending email change request." + error.message)
         return
       }
     }
 
-    alert("Email request sent! Please check your email for the email change link.")
+    toast.success("Email request sent! Please check your email for the email change link.")
   };
 
   return (
-    <div className="p-4 md:p-8 flex justify-center">
+      <div className="p-4 md:p-8 flex justify-center">
       <Card className="w-full max-w-2xl">
         <CardHeader>
-          <CardTitle>Account Settings</CardTitle>
-          <CardDescription>
-            Manage your account details here.
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Account Settings</CardTitle>
+              <CardDescription>
+                Manage your account details here.
+              </CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              onClick={handleToggleDarkMode}
+              className="ml-4"
+            >
+              {darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">

@@ -37,9 +37,9 @@ const lessonCategories = [
         title: "Consonants",
         description: "Master tricky consonant pronunciations.",
         lessons: [
-            { value: "soft", label: "Soft Consonants" },
-            { value: "hard", label: "Hard Consonants" },
-            { value: "combos", label: "Vowel-Consonant Combos" },
+            { value: "soft consonants", label: "Soft Consonants" },
+            { value: "hard consonants", label: "Hard Consonants" },
+            { value: "consonant combos", label: "Vowel-Consonant Combos" },
         ],
         levels: [
             { value: "words", label: "Words" },
@@ -47,11 +47,11 @@ const lessonCategories = [
         ]
     },
     {
-        id: "unique_sounds",
+        id: "unique sounds",
         title: "Unique Sounds (ñ, rr, ll)",
         description: "Learn sounds unique to the Spanish language.",
         lessons: [
-            { value: "n", label: "Ñ" },
+            { value: "ñ", label: "Ñ" },
             { value: "rr", label: "RR" },
             { value: "ll", label: "LL" },
             { value: "ch", label: "CH" },
@@ -63,7 +63,7 @@ const lessonCategories = [
         ]
     },
     {
-        id: "special_vowels",
+        id: "special vowels",
         title: "Special Vowel Combinations (diphthongs)",
         description: "Master vowel combinations like 'ai', 'ei', 'oi'.",
         lessons: [
@@ -80,24 +80,24 @@ const lessonCategories = [
         ],
         levels: [
             { value: "words", label: "Vowel Sound & Words" },
-            { value: "simple_sentences", label: "Sentences" },
+            { value: "simple sentences", label: "Sentences" },
         ],
     },
     {
-        id: "accent_marks ",
+        id: "accent marks ",
         title: "Accent Marks",
         description: "Understand how accent marks affect pronunciation.",
         lessons: [
-            { value: "no_accent", label: "No Marks" },
+            { value: "no marks", label: "No Marks" },
 
         ],
         levels: [
             { value: "words", label: "Words" },
-            { value: "simple_sentences", label: "Sentences" },
+            { value: "simple sentences", label: "Sentences" },
         ],
     },
     {
-        id: "regional_differences",
+        id: "regional differences",
         title: "Regional Differences",
         description: "Explore pronunciation variations across Spanish-speaking countries.",
         lessons: [

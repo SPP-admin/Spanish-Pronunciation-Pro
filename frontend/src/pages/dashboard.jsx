@@ -79,8 +79,9 @@ function Dashboard({user, profile, activities}) {
             </ul>
           </CardContent>
         </Card>
-        
-        <TrophiesCard trophies={recentAchievements} />
+        <div>
+          <TrophiesCard trophies={recentAchievements} />
+        </div>
       </div>
     </div>
   );

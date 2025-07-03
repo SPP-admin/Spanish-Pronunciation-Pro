@@ -15,9 +15,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase.js'
+import { useAuthState } from 'react-firebase-hooks/auth';
 
-
-// Re-usable component for list items in the navigation menu, as per shadcn/ui docs
 const ListItem = React.forwardRef(({ className, title, to, children, ...props }, ref) => {
   return (
     <li>
@@ -44,6 +43,10 @@ ListItem.displayName = "ListItem"
 
 
 function Navbar() {
+  const [user] = useAuthState(auth);
+  const userDisplayNameInitial = user?.displayName ? user.displayName.charAt(0).toUpperCase() : 'U';
+  const userPhotoURL = user?.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.displayName || "User")}&background=0D8ABC&color=fff`;
+ 
   return (
     <header className="bg-card text-card-foreground shadow-sm border-b sticky top-0 z-50">
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
@@ -76,10 +79,10 @@ function Navbar() {
             {/* Account Hover Menu */}
             <NavigationMenuItem>
               <NavigationMenuTrigger>
-                <Avatar className="h-8 w-8 mr-2">
-                  {/* Dynamic user image here */}
-                  <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-                  <AvatarFallback>U</AvatarFallback>
+                <Avatar className="h-8.5 w-8.5 mr-2">
+                  {/* Dynamic image */}
+                  <AvatarImage src={userPhotoURL} alt={user?.displayName || "User"} className="object-cover w-full h-full" />
+                  <AvatarFallback>{userDisplayNameInitial}</AvatarFallback> 
                 </Avatar>
                 Account
               </NavigationMenuTrigger>

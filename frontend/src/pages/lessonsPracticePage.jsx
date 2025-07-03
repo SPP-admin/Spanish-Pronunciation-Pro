@@ -13,58 +13,11 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 const lessonsContent = {
     default: {
       title: "Practice Session",
-      estimatedTime: "3 minutes",
+     
       phraseSpanish: "¡Hola! ¿Cómo estás?",
       phraseEnglish: "Hello! How are you?",
     },
-    'vowels-a-words': {
-      title: 'Lesson: Vowel "A" - Words',
-      estimatedTime: "2 minutes",
-      phraseSpanish: "mapa ",
-      phraseEnglish: "map",
-    },
-    'vowels-a-simple_sentences': {
-      title: 'Lesson: Vowel "A" - Simple Sentences',
-      estimatedTime: "4 minutes",
-      phraseSpanish: "La gata va a la casa.",
-      phraseEnglish: "The cat goes to the house.",
-    },
-    'consonants-soft-words': {
-      title: 'Lesson: Soft Consonants - Words',
-      estimatedTime: "3 minutes",
-      phraseSpanish: "ceci cine zapato",
-      phraseEnglish: "ceci cinema shoe",
-    },
-    'consonants-soft-sentences': {
-      title: 'Lesson: Soft Consonants - Sentences',
-      estimatedTime: "5 minutes",
-      phraseSpanish: "El cielo es azul y el sol brilla.",
-      phraseEnglish: "The sky is blue and the sun shines.",
-    },
-    'consonants-hard-words': {
-      title: 'Lesson: Hard Consonants - Words',
-      estimatedTime: "3 minutes",
-      phraseSpanish: "perro gato zapato",
-      phraseEnglish: "dog cat shoe",
-    },
-    'consonants-hard-sentences': {
-      title: 'Lesson: Hard Consonants - Sentences',
-      estimatedTime: "5 minutes",
-      phraseSpanish: "El perro corre rápido.",
-      phraseEnglish: "The dog runs fast.",
-    },
-    'consonants-combos-words': {
-      title: 'Lesson: Hard Consonants - Vowel-Consonant Combos',
-      estimatedTime: "4 minutes",
-      phraseSpanish: "perro gato zapato",
-      phraseEnglish: "dog cat shoe",
-    },
-    'consonants-combos-sentences': {
-      title: 'Lesson: Hard Consonants - Vowel-Consonant Combos',
-      estimatedTime: "4 minutes",
-      phraseSpanish: "perro gato zapato",
-      phraseEnglish: "dog cat shoe",
-    },
+    
   };
 
 function LessonsPracticePage() {
@@ -79,9 +32,16 @@ function LessonsPracticePage() {
   const lesson = searchParams.get('lesson');
   const level = searchParams.get('level');
 
+  const capitalize = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
+
+  const dynamicLessonTitle = (topic && lesson && level)
+  ? `Lesson: ${capitalize(topic)} practicing ${lesson} with ${level.replace(/_/g, ' ')}`
+  : "Practice Session";
+
   const lessonKey = topic && lesson && level ? `${topic}-${lesson}-${level}` : 'default';
   const currentLessonData = lessonsContent[lessonKey] || lessonsContent.default;
-  const { title: lessonTitle, estimatedTime, phraseSpanish, phraseEnglish } = currentLessonData;
+  const { title, estimatedTime, phraseSpanish, phraseEnglish } = currentLessonData;
+  
 
   // State is now for any selected text, not just a single word
   const [selectedText, setSelectedText] = useState(null);
@@ -193,11 +153,7 @@ function LessonsPracticePage() {
       <main className="flex-grow container mx-auto p-4 md:p-6 flex flex-col items-center">
         {/* Lesson Header */}
         <div className="w-full max-w-3xl mb-6 text-center md:text-left">
-          <h1 className="text-2xl md:text-3xl font-bold mb-2 text-foreground">{lessonTitle}</h1>
-          <div className="flex items-center justify-center md:justify-start text-sm text-muted-foreground">
-            <FaClock className="mr-1.5" />
-            <span>{estimatedTime}</span>
-          </div>
+          <h1 className="text-2xl md:text-3xl font-bold mb-2 text-foreground">{dynamicLessonTitle}</h1>
         </div>
 
         {/* Main Content Card */}
@@ -222,7 +178,7 @@ function LessonsPracticePage() {
 
             {/* Feedback Field now uses selectedText */}
             <div className="mt-4 p-4 bg-muted/50 dark:bg-muted/20 rounded text-center w-full min-h-[50px]">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-md text-muted-foreground">
                 {selectedText
                   ? `Now practicing: "${selectedText}". Record your pronunciation.`
                   : recordedAudio
