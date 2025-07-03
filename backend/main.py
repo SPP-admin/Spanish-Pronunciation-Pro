@@ -30,6 +30,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import requests
+import traceback
 
 if not firebase_admin._apps:
     #check if file exists
@@ -668,6 +669,7 @@ async def checkPronunciation(data: TranscriptionData):
         else: print(f"File not found.")
       except Exception as e:
             print('Error: ', str(e))
+            traceback.print_exc()
             raise HTTPException(
                 status_code=500,
                 detail=f"Error in pronunciation checking: {str(e)}"
