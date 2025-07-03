@@ -1,9 +1,12 @@
 FROM python:3.10-slim-buster
 
-WORKDIR /api
+WORKDIR /app
 
-COPY requirements.txt requirements.txt
-RUN pip3 install -r requirements.txt
+# Install ffmpeg for audio processing
+RUN apt-get update && apt-get install -y ffmpeg
+
+COPY requirements.txt .
+RUN pip install -r requirements.txt
 
 COPY . .
 
