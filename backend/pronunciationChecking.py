@@ -1,24 +1,16 @@
-from allosaurus.app import read_recognizer
 import string
 import ipaTransliteration as epi
 from difflib import SequenceMatcher
 import whisperIPAtranscription as stress_tr
-# Load audio transcription model
-model = read_recognizer()
-
-def correct_pronunciation(sentence, audio_path, dialect):
-	user_ipa = transcribe_audio(audio_path)
-	return compare_strings(sentence, user_ipa, dialect)
 
 # Python translator to remove punctuation & whitespace
-translator = str.maketrans('', '', string.punctuation + string.whitespace + 'ː' + 'ˑ')
+translator = str.maketrans('', '', string.punctuation + string.whitespace + 'ː' + 'ˑ' + "ˈ")
 stress_translator = str.maketrans('', '', string.whitespace + 'ː' + 'ˑ' + "," + "ʼ")
 
-# Take audio, return IPA transcription without whitespace or punctuation
-def transcribe_audio(audio_path: str) -> str:
-	ipa_transcription = model.recognize(audio_path)
-	ipa_transcription = ipa_transcription.translate(translator)
-	return ipa_transcription
+def correct_pronunciation(sentence, audio_path, dialect):
+	user_ipa = stress_tr.transcribe(audio_path)
+	user_ipa = user_ipa.translate(translator)
+	return compare_strings(sentence, user_ipa, dialect)
 
 # Transcribe audio, return IPA without whitespace but retain stress markings
 def transcribe_audio_with_stress(audio_path: str) -> str:
@@ -159,5 +151,5 @@ def preprocess_user_ipa(user_ipa):
 	str = str.replace("ð̞", "d")
 	str = str.replace("β", "b")
 	str = str.replace("v", "f")
-	#str = str.replace("h", "x")
+	str = str.replace("h", "x")
 	return str

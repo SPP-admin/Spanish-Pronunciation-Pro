@@ -205,13 +205,21 @@ class sentenceMapping:
 					case "r":
 						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="ɾ"))
 					case "s" | "z":
-						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="s"))
+						if i < len(sentence) and (sentence[i+1] == "b" or sentence[i+1] == "d" 
+													   or sentence[i+1] == "g"  or sentence[i+1] == "l"  or sentence[i+1] == "m"  
+													   or sentence[i+1] == "n"):
+							mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="z"))
+						else:
+							mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="s"))
 					case "t":
 						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="t"))
 					case "w":
 						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="w"))
 					case "x":
-						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="ks"))
+						if i < len(sentence) and not sentence[i+1] in vowels:
+							mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="s"))
+						else:
+							mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="ks"))
 					case "a":
 						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="a"))
 					case "e":
@@ -232,7 +240,7 @@ class sentenceMapping:
 	def transliterate_eu(self):
 		# Differences from translit_latam: soft c, z -> (th) sound
 		# hu -> (w) sound, ll -> stronger y sound
-
+		vowels = {'a', 'e', 'i', 'o', 'u'}
 		# Preprocess sentence to all lowercase, remove acute accents
 		sentence = self.sentence.lower()
 		accent_remover = sentence.maketrans('áéíóú', 'aeiou')
@@ -296,10 +304,6 @@ class sentenceMapping:
 				mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="w"))
 				mapping.append(ipaMapping(ortho_letter=self.sentence[i+1], ipa_letter = sentence[i+1]))
 				i += 2
-			elif (sentence[i:i+2] == "ze" or sentence[i:i+1] == "zi"):
-				mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="θ"))
-				mapping.append(ortho_letter=self.sentence[i+1], ipa_letter = sentence[i+1])
-				i += 2
 			else:
 				match sentence[i]:
 					case "b" | "v":
@@ -328,14 +332,24 @@ class sentenceMapping:
 						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="p"))
 					case "r":
 						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="ɾ"))
-					case "s" | "z":
-						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="s"))
+					case "s":
+						if i < len(sentence) and (sentence[i+1] == "b" or sentence[i+1] == "d" 
+													   or sentence[i+1] == "g"  or sentence[i+1] == "l"  or sentence[i+1] == "m"  
+													   or sentence[i+1] == "n"):
+							mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="z"))
+						else:
+							mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="s"))
 					case "t":
 						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="t"))
 					case "w":
 						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="w"))
 					case "x":
-						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="ks"))
+						if i < len(sentence) and not sentence[i+1] in vowels:
+							mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="s"))
+						else:
+							mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="ks"))
+					case "z":
+						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="θ"))
 					case "a":
 						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="a"))
 					case "e":
