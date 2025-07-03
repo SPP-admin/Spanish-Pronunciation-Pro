@@ -2,9 +2,15 @@ fastapi
 uvicorn
 firebase-admin
 google-cloud-firestore
-allosaurus
 python-dotenv
 openai
 python-multipart
 pydantic
 
+scipy
+numpy
+transformers
+silabeador
+librosa
+soundfile
+torch

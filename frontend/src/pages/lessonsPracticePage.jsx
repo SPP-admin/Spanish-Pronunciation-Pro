@@ -71,6 +71,8 @@ const lessonsContent = {
     },
   };
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 function LessonsPracticePage() {
 
   const [user] = useAuthState(auth);
@@ -142,7 +144,7 @@ for (const key in lessonCategories){
         setEnglishTranslation("");
         try {
           const res = await fetch(
-            `http://localhost:8080/generateSentence?chunk=${topic}&lesson=${lesson}&difficulty=${level}`,
+            `${API_URL}/generateSentence?chunk=${topic}&lesson=${lesson}&difficulty=${level}`,
             { method: "POST" }
           );
           let data = await res.text();
@@ -179,31 +181,48 @@ for (const key in lessonCategories){
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64data = reader.result.split(",")[1];
-      const payload = { base64_data: base64data };
-      fetch("http://localhost:8080/sendVoiceNote", {
+  
+      // Build the JSON payload.
+      const generatedSentence = selectedText ? selectedText: spanishSentence;
+      const payload = { base64_data: base64data, sentence: generatedSentence};
+      console.log(payload)
+      fetch(`${API_URL}/checkPronunciation`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(payload),
       })
-      .then(response => {
-        if (!response.ok) throw new Error("Failed to send voice note");
-        return response.text();
-      })
-      .then(transcript => {
-        // Remove leading/trailing double quotes and newlines from the transcription
-        const cleanedTranscript = transcript
-          .replace(/^"|"$/g, "") 
-          .replace(/\\n/g, "")
-          .replace(/[\r\n]+/g, " ") 
-          .trim();
-        setTranscription(cleanedTranscript);
-      })
-      .catch(error => console.error("Error sending audio:", error));
+        .then(response => {
+          if (!response.ok) {
+            console.log(response.statusText);
+            throw new Error("Failed to send voice note");
+          }
+          return response.text();
+        })
+        .then(transcript => {
+          let html = "";
+          console.log("Transcription:", transcript);
+          let parsedTranscript = decodeURI(JSON.parse(transcript));
+          console.log("Parsed Transcript", parsedTranscript);
+          const arr = parsedTranscript.split(",");
+          for (let i = 0; i < arr.length; i++) {
+            if (arr[i+1] == "true") {
+              html += `<span style="color:green">${arr[i]}</span>`;
+            }
+            else {
+              html += `<span style="color:red">${arr[i]}</span>`;
+            }
+            i++;
+          }
+          console.log(html);
+          document.getElementById("transcriptionBox").innerHTML = html;
+        })
+        .catch(error => console.error("Error sending audio:", error));
     };
     reader.readAsDataURL(blob);
   };
-
+  // This function is passed as callback to the AudioRecorder component.
   const handleAudioRecording = async (blob) => {
+    console.log("Audio blob captured:", blob);
     setRecordedAudio(blob);
     sendAudioToServer(blob);
   
@@ -336,7 +355,7 @@ for (const key in lessonCategories){
           </div>
         </div>
 
-        {/* Main Content Card */}
+          {/* Main Content Card */}
         <Card className="w-full max-w-3xl shadow-lg">
           <CardContent className="p-6 md:p-8 flex flex-col items-center space-y-6">
             <div className="text-center w-full">
@@ -354,7 +373,6 @@ for (const key in lessonCategories){
                 Practice Highlighted Text
               </Button>
             </div>
-
             {/* Recorder */}
             <AudioRecorder onRecordingComplete={handleAudioRecording} />
 
@@ -363,9 +381,12 @@ for (const key in lessonCategories){
               <p className="text-sm text-muted-foreground">
                 {selectedText
                   ? `Now practicing: "${selectedText}". Record your pronunciation.`
-                  : recordedAudio
-                    ? transcription || "[Transcription processing...]"
-                    : "Highlight text and click 'Practice' to begin."}
+                  : "Practice this word/sentence, or highlight text and click 'Practice' to begin."}
+              </p>
+            </div>
+			{/* Extra feedback field */}
+			<div className="mt-4 p-4 bg-muted/50 dark:bg-muted/20 rounded text-center w-full min-h-[50px]">
+              <p className="text-sm text-muted-foreground" id="transcriptionBox">
               </p>
             </div>
           </CardContent>
