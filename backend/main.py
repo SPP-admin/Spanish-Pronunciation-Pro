@@ -30,6 +30,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import requests
+import traceback
 
 if not firebase_admin._apps:
     #check if file exists
@@ -645,12 +646,14 @@ async def generateSentence(chunk: str, lesson: str, difficulty: str):
 @app.post("/checkPronunciation")
 async def checkPronunciation(data: TranscriptionData):
       try:
+        
         audio_bytes = base64.b64decode(data.base64_data)
         sentence = data.sentence
 
         with open("audio.wav", "wb") as f:
               f.write(audio_bytes)
-
+        
+        print(os.path.isfile('audio.wav'))
         audio, sampling_rate = librosa.load('audio.wav', sr=16000, mono=True, duration=30.0, dtype=np.int32)
         sf.write('tmp.wav', audio, 16000)
         output = pronunciationChecking.correct_pronunciation(sentence, "tmp.wav", 'latam')
@@ -665,19 +668,15 @@ async def checkPronunciation(data: TranscriptionData):
             print(f"File deleted successfully.")
         else: print(f"File not found.")
       except Exception as e:
-                print('Error: ', str(e))
-                return {
-                    'statusCode': 200,
-                    'headers': {
-                    'Access-Control-Allow-Headers': '*',
-                    'Access-Control-Allow-Credentials': "true",
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
-                },
-                'body': ''
-            }
+            print('Error: ', str(e))
+            traceback.print_exc()
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error in pronunciation checking: {str(e)}"
+            )
 
       return output
+
 @app.post("/translate")
 async def translate(request: Request):
     body = await request.json()

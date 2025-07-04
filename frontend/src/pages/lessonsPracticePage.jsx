@@ -12,6 +12,7 @@ import { useProfile } from '@/profileContext.jsx';
 
 
 import { lessonCategories } from '@/lessonCategories.js';
+import { completionRequirements } from '@/lessonCategories.js';
 
 // --- Sample Lesson Data (no changes here) ---
 const lessonsContent = {
@@ -97,35 +98,43 @@ function LessonsPracticePage() {
   const [practiced, setPracticed] = useState(false);
   const { profile, setProfile } = useProfile();
 
+  // Variables to traverse through pages and update completed
   let nextPage = -1;
   let prevPage = -1;
   let topicIndex = -1;
   let avalibleLessons = [];
 
+  // States for marking completion.
+  const [correct, setCorrect] = useState(0);
+  const [currentComplete, setCurrentComplete] = useState(false);
+  const [complete, setComplete] = useState(false);
+  const [amountToComplete, setAmountToComplete] = useState(completionRequirements[level])
+  const [attempts, setAttempts] = useState(0);
 
-for (const key in lessonCategories){
-  if(lessonCategories[key].id == topic) {
-    avalibleLessons = lessonCategories[key].lessons
-    topicIndex = key
-
-    for (const idx in avalibleLessons) {
-      if(avalibleLessons[idx]["value"] == lesson)  {
-        nextPage = Number(idx) + 1
-        prevPage = Number(idx) - 1
-
-        if(nextPage >= avalibleLessons.length) {
-          nextPage = -1
-        }
-
-      }
-    }
-  }
-}
   const [spanishSentence, setSpanishSentence] = useState("");
   const [englishTranslation, setEnglishTranslation] = useState("");
   const [loading, setLoading] = useState(false);
   const lastParams = useRef({ topic: null, lesson: null, level: null });
 
+  // Uses the lessonCategories file to find out what the previous and next lessons are.
+  for (const key in lessonCategories){
+    if(lessonCategories[key].id == topic) {
+      avalibleLessons = lessonCategories[key].lessons
+      topicIndex = key
+
+      for (const idx in avalibleLessons) {
+        if(avalibleLessons[idx]["value"] == lesson)  {
+          nextPage = Number(idx) + 1
+          prevPage = Number(idx) - 1
+
+          if(nextPage >= avalibleLessons.length) {
+            nextPage = -1
+          }
+
+        }
+      }
+    }
+  }
   useEffect(() => {
     // Reset selection when the phrase changes
     setSelectedText(null);
@@ -138,7 +147,21 @@ for (const key in lessonCategories){
       level &&
       (topic !== lastParams.current.topic || lesson !== lastParams.current.lesson || level !== lastParams.current.level)
     ) {
-      const fetchSentenceAndTranslation = async () => {
+
+      fetchSentenceAndTranslation();
+
+      lastParams.current = { topic, lesson, level };
+    }
+  }, [topic, lesson, level]);
+
+  useEffect(() => {
+    // User has completed the lesson, updates local storage and performs api calls.
+    if(amountToComplete == correct) {
+      completeTopic();
+    }
+  }, [correct])
+
+  const fetchSentenceAndTranslation = async () => {
         setLoading(true);
         setSpanishSentence("");
         setEnglishTranslation("");
@@ -156,10 +179,7 @@ for (const key in lessonCategories){
         }
         setLoading(false);
       };
-      fetchSentenceAndTranslation();
-      lastParams.current = { topic, lesson, level };
-    }
-  }, [topic, lesson, level]);
+
 
   const handleCaptureSelection = () => {
     const selection = window.getSelection().toString();
@@ -204,14 +224,25 @@ for (const key in lessonCategories){
           let parsedTranscript = decodeURI(JSON.parse(transcript));
           console.log("Parsed Transcript", parsedTranscript);
           const arr = parsedTranscript.split(",");
+          let amountCorrect = 0;
           for (let i = 0; i < arr.length; i++) {
             if (arr[i+1] == "true") {
               html += `<span style="color:green">${arr[i]}</span>`;
+              amountCorrect += 1
             }
             else {
               html += `<span style="color:red">${arr[i]}</span>`;
             }
             i++;
+          }
+
+          setAttempts(prev => {
+            const newAttempts = prev + 1
+            return newAttempts
+          })
+
+          if((amountCorrect >= generatedSentence.length * .5) && (generatedSentence.length == spanishSentence.length)) {
+            if(!complete && !currentComplete) handleCorrectAnswer();
           }
           console.log(html);
           document.getElementById("transcriptionBox").innerHTML = html;
@@ -225,8 +256,11 @@ for (const key in lessonCategories){
     console.log("Audio blob captured:", blob);
     setRecordedAudio(blob);
     sendAudioToServer(blob);
-  
-    console.log(practiced)
+    handleActivityHistory();
+  };
+
+  const handleActivityHistory = async () => {
+
     let activity = `Practiced ${topic} lesson ${lesson}, at ${level} difficulty.`;
     activity = activity.replace(/_/g, " ");
     
@@ -249,14 +283,36 @@ for (const key in lessonCategories){
         console.log(error)
       }
   }
-  };
+}
 
   const handleFinishAndNext = async () => {
-    
 
-    //setShowConfetti(true);
 
     // Save the current lesson and level to localStorage
+
+    if(nextPage <= -1) {
+      navigate('/lessons');
+    }
+    const practicePath = `/lessonsPractice?topic=${topic}&lesson=${[avalibleLessons[nextPage]["value"]]}&level=${level}`;
+
+    if(nextPage > -1) {
+      setCorrect(0)
+      setComplete(false)
+      setCurrentComplete(false)
+      navigate(practicePath)
+    }
+  };
+
+
+  const completeTopic = () => {
+
+    setShowConfetti(true);
+    setComplete(true);
+    setTimeout(() => {
+          setShowConfetti(false);
+    } , 10000);
+
+    // Locally stores the current lesson.
     if (topic && lesson && level) {
       const savedSelections = localStorage.getItem('lessonSelections');
       const selections = savedSelections ? JSON.parse(savedSelections) : {};
@@ -278,46 +334,24 @@ for (const key in lessonCategories){
       localStorage.setItem('lessonSelections', JSON.stringify(updatedSelections));
     }
 
-    if(topicIndex >= 0) {
-      completeTopic();
-    }
-
-    if(nextPage <= -1) {
-    setTimeout(() => {
-      setShowConfetti(false);
-      navigate('/lessons');
-    } , 10);  // Confetti length
-
-    }
-    const practicePath = `/lessonsPractice?topic=${topic}&lesson=${[avalibleLessons[nextPage]["value"]]}&level=${level}`;
-    
-    //await api.patch(`/updateChunkProgress?uid=${user.uid}&chunk=${lesson}&lesson=${topicIndex}&difficulty=${level}`);
-
-    if(nextPage > -1) {
-      navigate(practicePath)
-    }
-  };
-
-  // Function to complete a topic.
-  const completeTopic = () => {
     try {
       const completedTopic = lesson + "-" + level
-
       let cur = [...(profile.chunks ?? [])]
 
-      // If this lesson hasn't already been completed complete it in the backend.
+      // If this lesson hasn't already been completed complete it in the backend and update the local storage.
       if(!(completedTopic in (cur[topicIndex] ?? {}))) {
         sendTopic()
-      }
 
-      cur[topicIndex] = {
-        ...(cur[topicIndex] ?? {}),
-        [completedTopic]: true
-      }
+        cur[topicIndex] = {
+          ...(cur[topicIndex] ?? {}),
+          [completedTopic]: true
+        }
+        
+        const newLessonsCompleted = profile.lessonsCompleted + 1;
+        const updated = { ...profile, chunks: cur, lessonsCompleted: newLessonsCompleted}
 
-      const updated = { ...profile, chunks: cur}
-      setProfile(updated, user.uid)
-      //console.log(updated.chunks)
+        setProfile(updated, user.uid)
+        }
 
     } catch (error) {
       console.log(error);
@@ -328,19 +362,40 @@ for (const key in lessonCategories){
   const sendTopic = async () => {
     try {
       await api.patch(`/updateChunkProgress?uid=${user.uid}&chunk=${lesson}&lesson=${topicIndex}&difficulty=${level}`);
+      await api.post(`/updateCompletedLessons?uid=${user.uid}`)
     } catch (error) {
       console.log(error)
     }
   }
 
+  // Navigates to the previous page.
   const handlePrevious = () => {
     if (prevPage <= -1){
       navigate('/lessons');
     } else {
       const practicePath = `/lessonsPractice?topic=${topic}&lesson=${[avalibleLessons[prevPage]["value"]]}&level=${level}`;
+      setCorrect(0)
+      setCurrentComplete(false)
       navigate(practicePath)
     }
   };
+
+  // Adds another answer to the amount of correct ones.
+  const handleCorrectAnswer = () => {
+    setCorrect(prev => {
+      setCurrentComplete(true)
+      const updated = prev + 1
+      return updated;
+    })
+  }
+
+  // Resets the current attempts and fetches a new sentence.
+  const handleNextSentence = () => {
+    setAttempts(0);
+    setCurrentComplete(false);
+    fetchSentenceAndTranslation();
+    setSelectedText(false);
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -349,9 +404,12 @@ for (const key in lessonCategories){
         {/* Lesson Header */}
         <div className="w-full max-w-3xl mb-6 text-center md:text-left">
           <h1 className="text-2xl md:text-3xl font-bold mb-2 text-foreground">{lessonTitle}</h1>
-          <div className="flex items-center justify-center md:justify-start text-sm text-muted-foreground">
-            <FaClock className="mr-1.5" />
-            <span>{estimatedTime}</span>
+          <div className="flex items-center justify-center md:justify-between text-sm text-muted-foreground">
+            <div className="flex items-center justify-center">
+              <FaClock className="mr-1.5" />
+              <span>{estimatedTime}</span>
+            </div>
+            <span >{correct}/{amountToComplete}</span>
           </div>
         </div>
 
@@ -372,9 +430,16 @@ for (const key in lessonCategories){
                 <FaHighlighter className="mr-2 h-4 w-4" />
                 Practice Highlighted Text
               </Button>
+
             </div>
             {/* Recorder */}
             <AudioRecorder onRecordingComplete={handleAudioRecording} />
+            
+              { attempts > 5 && !complete && (
+              <Button onClick={handleNextSentence}>
+                Skip?
+              </Button>
+              )}
 
             {/* Feedback Field now uses selectedText */}
             <div className="mt-4 p-4 bg-muted/50 dark:bg-muted/20 rounded text-center w-full min-h-[50px]">
@@ -389,8 +454,14 @@ for (const key in lessonCategories){
               <p className="text-sm text-muted-foreground" id="transcriptionBox">
               </p>
             </div>
+            {currentComplete && !complete && (
+            <Button className={"cursor-pointer"} onClick={handleNextSentence}>
+              Next Sentence
+            </Button>
+            )}
           </CardContent>
         </Card>
+        
 
         {/* Bottom Navigation */}
         <div className="w-full max-w-3xl mt-6 flex justify-between">

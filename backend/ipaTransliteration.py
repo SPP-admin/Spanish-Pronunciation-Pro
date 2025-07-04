@@ -205,7 +205,7 @@ class sentenceMapping:
 					case "r":
 						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="ɾ"))
 					case "s" | "z":
-						if i < len(sentence) and (sentence[i+1] == "b" or sentence[i+1] == "d" 
+						if i < len(sentence) - 1 and (sentence[i+1] == "b" or sentence[i+1] == "d" 
 													   or sentence[i+1] == "g"  or sentence[i+1] == "l"  or sentence[i+1] == "m"  
 													   or sentence[i+1] == "n"):
 							mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="z"))
@@ -216,7 +216,7 @@ class sentenceMapping:
 					case "w":
 						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="w"))
 					case "x":
-						if i < len(sentence) and not sentence[i+1] in vowels:
+						if i < len(sentence) - 1 and not sentence[i+1] in vowels:
 							mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="s"))
 						else:
 							mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="ks"))

@@ -100,3 +100,11 @@ export const lessonCategories = [
         ],
     },
 ];
+
+export const completionRequirements = {
+    "words": 5,
+    "sentences": 4,
+    "simple_sentences": 4,
+    "complex_sentences": 2,
+    "regional": 2
+}
