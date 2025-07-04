@@ -105,9 +105,9 @@ function LessonsPracticePage() {
   let avalibleLessons = [];
 
   // States for marking completion.
-  const [correct, setCorrect] = useState(0);
-  const [currentComplete, setCurrentComplete] = useState(false);
-  const [complete, setComplete] = useState(false);
+  const [correctAmount, setCorrectAmount] = useState(0);
+  const [isCurrentCorrect, setCurrentCorrect] = useState(false);
+  const [isLessonComplete, setLessonComplete] = useState(false);
   const [amountToComplete, setAmountToComplete] = useState(completionRequirements[level])
   const [attempts, setAttempts] = useState(0);
 
@@ -159,10 +159,10 @@ function LessonsPracticePage() {
 
   useEffect(() => {
     // User has completed the lesson, updates local storage and performs api calls.
-    if(amountToComplete == correct) {
+    if(amountToComplete == correctAmount) {
       completeTopic();
     }
-  }, [correct])
+  }, [correctAmount])
 
   const fetchSentenceAndTranslation = async () => {
         setLoading(true);
@@ -245,7 +245,7 @@ function LessonsPracticePage() {
           })
 
           if((amountCorrect >= generatedSentence.length * allowedError) && (generatedSentence.length == spanishSentence.length)) {
-            if(!complete && !currentComplete) handleCorrectAnswer();
+            if(!isLessonComplete && !isCurrentCorrect) handleCorrectAnswer();
           }
           console.log(html);
           document.getElementById("transcriptionBox").innerHTML = html;
@@ -299,18 +299,18 @@ function LessonsPracticePage() {
     const practicePath = `/lessonsPractice?topic=${topic}&lesson=${[avalibleLessons[nextPage]["value"]]}&level=${level}`;
 
     if(nextPage > -1) {
-      setCorrect(0)
-      setComplete(false)
-      setCurrentComplete(false)
+      setCorrectAmount(0)
+      setLessonComplete(false)
+      setCurrentCorrect(false)
       navigate(practicePath)
     }
   };
 
 
-  const completeTopic = () => {
+  const completeTopic = async () => {
 
     setShowConfetti(true);
-    setComplete(true);
+    setLessonComplete(true);
     setTimeout(() => {
           setShowConfetti(false);
     } , 10000);
@@ -338,19 +338,17 @@ function LessonsPracticePage() {
     }
 
     try {
+      const newLessonsCompleted = profile.lessonsCompleted + 1;
       const completedTopic = lesson + "-" + level
       let cur = [...(profile.chunks ?? [])]
 
       // If this lesson hasn't already been completed complete it in the backend and update the local storage.
       if(!(completedTopic in (cur[topicIndex] ?? {}))) {
-        sendTopic()
-
+        await sendTopic();
         cur[topicIndex] = {
           ...(cur[topicIndex] ?? {}),
           [completedTopic]: true
         }
-        
-        const newLessonsCompleted = profile.lessonsCompleted + 1;
         const updated = { ...profile, chunks: cur, lessonsCompleted: newLessonsCompleted}
 
         setProfile(updated, user.uid)
@@ -365,7 +363,7 @@ function LessonsPracticePage() {
   const sendTopic = async () => {
     try {
       await api.patch(`/updateChunkProgress?uid=${user.uid}&chunk=${lesson}&lesson=${topicIndex}&difficulty=${level}`);
-      await api.post(`/updateCompletedLessons?uid=${user.uid}`)
+      await api.patch(`/updateCompletedLessons?uid=${user.uid}`);
     } catch (error) {
       console.log(error)
     }
@@ -377,16 +375,16 @@ function LessonsPracticePage() {
       navigate('/lessons');
     } else {
       const practicePath = `/lessonsPractice?topic=${topic}&lesson=${[avalibleLessons[prevPage]["value"]]}&level=${level}`;
-      setCorrect(0)
-      setCurrentComplete(false)
+      setCorrectAmount(0)
+      setCurrentCorrect(false)
       navigate(practicePath)
     }
   };
 
   // Adds another answer to the amount of correct ones.
   const handleCorrectAnswer = () => {
-    setCorrect(prev => {
-      setCurrentComplete(true)
+    setCorrectAmount(prev => {
+      setCurrentCorrect(true)
       const updated = prev + 1
       return updated;
     })
@@ -395,7 +393,7 @@ function LessonsPracticePage() {
   // Resets the current attempts and fetches a new sentence.
   const handleNextSentence = () => {
     setAttempts(0);
-    setCurrentComplete(false);
+    setCurrentCorrect(false);
     fetchSentenceAndTranslation();
     setSelectedText(false);
   }
@@ -412,7 +410,7 @@ function LessonsPracticePage() {
               <FaClock className="mr-1.5" />
               <span>{estimatedTime}</span>
             </div>
-            <span >{correct}/{amountToComplete}</span>
+            <span >{correctAmount}/{amountToComplete}</span>
           </div>
         </div>
 
@@ -438,7 +436,7 @@ function LessonsPracticePage() {
             {/* Recorder */}
             <AudioRecorder onRecordingComplete={handleAudioRecording} />
             
-              { attempts > 5 && !complete && (
+              { attempts > 5 && !isLessonComplete && (
               <Button onClick={handleNextSentence}>
                 Skip?
               </Button>
@@ -457,7 +455,7 @@ function LessonsPracticePage() {
               <p className="text-sm text-muted-foreground" id="transcriptionBox">
               </p>
             </div>
-            {currentComplete && !complete && (
+            {isCurrentCorrect && !isLessonComplete && (
             <Button className={"cursor-pointer"} onClick={handleNextSentence}>
               Next Sentence
             </Button>
