@@ -116,6 +116,9 @@ function LessonsPracticePage() {
   const [loading, setLoading] = useState(false);
   const lastParams = useRef({ topic: null, lesson: null, level: null });
 
+  // How off is the user allowed to be before moving on to the next sentence.
+  const allowedError = .5;
+
   // Uses the lessonCategories file to find out what the previous and next lessons are.
   for (const key in lessonCategories){
     if(lessonCategories[key].id == topic) {
@@ -241,7 +244,7 @@ function LessonsPracticePage() {
             return newAttempts
           })
 
-          if((amountCorrect >= generatedSentence.length * .5) && (generatedSentence.length == spanishSentence.length)) {
+          if((amountCorrect >= generatedSentence.length * allowedError) && (generatedSentence.length == spanishSentence.length)) {
             if(!complete && !currentComplete) handleCorrectAnswer();
           }
           console.log(html);
