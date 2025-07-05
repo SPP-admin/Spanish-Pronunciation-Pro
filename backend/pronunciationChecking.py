@@ -10,7 +10,8 @@ stress_translator = str.maketrans('', '', string.whitespace + 'ː' + 'ˑ' + "," 
 
 def correct_pronunciation(sentence, audio_path, dialect):
 	user_ipa = stress_tr.transcribe(audio_path)
-	user_ipa = preprocess_user_ipa(user_ipa.translate(translator))
+	user_ipa = user_ipa.translate(translator)
+	user_ipa = preprocess_user_ipa(user_ipa)
 	return compare_strings(sentence, user_ipa, dialect)
 
 # Transcribe audio, return IPA without whitespace but retain stress markings
@@ -37,7 +38,6 @@ def compare_strings(sentence, user_ipa, dialect):
 		correct_ipa = sentence_mapping.get_ipa()
 	correct_ipa = sentence_mapping.get_ipa()
 	print(correct_ipa)
-	user_ipa = preprocess_user_ipa(user_ipa)
 	print(user_ipa)
 	sentence_mapping.set_indices()
 	sequence_matcher = SequenceMatcher(None, user_ipa, correct_ipa)
@@ -157,9 +157,8 @@ def preprocess_user_ipa(user_ipa):
 	str = str.replace("ʎ", "ʝ")
 
 	for i in range(len(str)):
-		if i < len(str) - 2 and str[i] == "i" and is_vowel_ipa(str[i+1]):
+		if i < len(str) - 1 and str[i] == "i" and is_vowel_ipa(str[i+1]):
 			str = str[:i] + "j" + str[i+1:]
-		if i < len(str) - 2 and str[i] == "u" and is_vowel_ipa(str[i+1]):
+		if i < len(str) - 1 and str[i] == "u" and is_vowel_ipa(str[i+1]):
 			str = str[:i] + "w" + str[i+1:]
-		
 	return str
