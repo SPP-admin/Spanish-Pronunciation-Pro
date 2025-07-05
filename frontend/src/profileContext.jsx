@@ -11,7 +11,7 @@ export const ProfileProvider = ({children}) => {
     practiceSessions: 0,
     accuracyRate: 0,
     activities: [],
-    achievements: [],
+    achievements: {},
     lessons: [],
     chunks: [],
   }

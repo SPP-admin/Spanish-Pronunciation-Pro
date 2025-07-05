@@ -340,7 +340,7 @@ async def setAchievements(request: BaseSchema):
             doc = doc_ref.document()
             data = {
                  'id': request.id,
-                 'achievements': []
+                 'achievements': {}
             }
             doc.set(data)
 
@@ -355,8 +355,10 @@ async def setAchievements(request: BaseSchema):
 
 # Set an achievment to true.
 @app.patch("/updateAchievements")
-async def updateAchievements(uid, achievement: int):
+async def updateAchievements(uid, achievement: str):
      try:
+          date = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+
           doc_ref = db.collection('achievements')
 
           query_ref = doc_ref.where(filter=FieldFilter("id", "==", uid)).get()
@@ -365,11 +367,10 @@ async def updateAchievements(uid, achievement: int):
           doc_id = doc.id
           achievements = doc.to_dict().get('achievements', [])
 
-          if (achievement >= len(achievements) and achievement < 30):
-               new_size = achievement - len(achievements) + 1
-               achievements.extend([False] * new_size)
-
-          achievements[achievement] = True
+          achievements[achievement] = {
+               "completed": True,
+               "completion_date": date
+          }
           
           doc_ref = db.collection('achievements').document(doc_id).update({"achievements": achievements})
 
