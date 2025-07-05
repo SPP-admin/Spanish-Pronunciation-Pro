@@ -2,6 +2,7 @@ import string
 import ipaTransliteration as epi
 from difflib import SequenceMatcher
 import whisperIPAtranscription as stress_tr
+import re
 
 # Python translator to remove punctuation & whitespace
 translator = str.maketrans('', '', string.punctuation + string.whitespace + 'ː' + 'ˑ' + "ˈ")
@@ -144,7 +145,7 @@ def is_vowel_ipa(ipa_char):
 	return ipa_char in vowels
 
 # Since some sounds are similar enough that they can be considered correct,
-# change chars in user_ipa to equivalent chars that transliterate() would generate
+# change such sounds in user_ipa to equivalent chars that transliterate() would generate
 # so users are not penalized for essentially correct pronunciation
 def preprocess_user_ipa(user_ipa):
 	str = user_ipa.replace("ɣ", "g")
@@ -152,4 +153,10 @@ def preprocess_user_ipa(user_ipa):
 	str = str.replace("β", "b")
 	str = str.replace("v", "f")
 	str = str.replace("h", "x")
+	str = str.replace("ɲ", "nj")
+
+	for i in range(len(str)):
+		if i < len(str) - 2 and str[i:i+1] == "ni":
+			if is_vowel_ipa(str[i+2]):
+				str = str[:i] + "nj" + str[i+2:]
 	return str
