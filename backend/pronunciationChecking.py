@@ -5,12 +5,12 @@ import whisperIPAtranscription as stress_tr
 import re
 
 # Python translator to remove punctuation & whitespace
-translator = str.maketrans('', '', string.punctuation + string.whitespace + 'ː' + 'ˑ' + "ˈ")
+translator = str.maketrans('', '', string.punctuation + string.whitespace + 'ː' + 'ˑ' + "," + "ʼ" + "ˈ" + "ˌ")
 stress_translator = str.maketrans('', '', string.whitespace + 'ː' + 'ˑ' + "," + "ʼ")
 
 def correct_pronunciation(sentence, audio_path, dialect):
 	user_ipa = stress_tr.transcribe(audio_path)
-	user_ipa = user_ipa.translate(translator)
+	user_ipa = preprocess_user_ipa(user_ipa.translate(translator))
 	return compare_strings(sentence, user_ipa, dialect)
 
 # Transcribe audio, return IPA without whitespace but retain stress markings
@@ -154,9 +154,12 @@ def preprocess_user_ipa(user_ipa):
 	str = str.replace("v", "f")
 	str = str.replace("h", "x")
 	str = str.replace("ɲ", "nj")
+	str = str.replace("ʎ", "ʝ")
 
 	for i in range(len(str)):
-		if i < len(str) - 2 and str[i:i+1] == "ni":
-			if is_vowel_ipa(str[i+2]):
-				str = str[:i] + "nj" + str[i+2:]
+		if i < len(str) - 2 and str[i] == "i" and is_vowel_ipa(str[i+1]):
+			str = str[:i] + "j" + str[i+1:]
+		if i < len(str) - 2 and str[i] == "u" and is_vowel_ipa(str[i+1]):
+			str = str[:i] + "w" + str[i+1:]
+		
 	return str
