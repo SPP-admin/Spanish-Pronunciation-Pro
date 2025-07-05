@@ -10,14 +10,17 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { verifyBeforeUpdateEmail, updateEmail, updateProfile} from "firebase/auth";
+import { verifyBeforeUpdateEmail, updateProfile} from "firebase/auth";
 
 function SettingsPage({user}) {
-  //TODO: Replace with API data fetching logic
+
   const [userData, setUserData] = useState({
     name: user.displayName,
     email: user.email,
   });
+
+  const [nameMessage, setNameMessage] = useState('')
+  const [emailMessage, setEmailMessage] = useState('')
 
   // Handle input changes
   const handleInputChange = (e) => {
@@ -28,32 +31,40 @@ function SettingsPage({user}) {
     }));
   };
 
-  const handleSaveChanges = async () => {
-    // TODO: Make an API call
+  const handleSaveChanges = async () => { // Uses firebase updateProfile method to change the users displayName.
+    setNameMessage('')
     if(user) {
       try {
         await updateProfile(user, {displayName: userData.name})
       } catch (error) {
-        alert("Error changing credentials.")
-        return
+        setNameMessage("Error changing credentials.")
+        return;
       }
     }
 
-    alert("Success! Your display name has changed.")
+    setNameMessage("Success! Your display name has changed.")
   
   };
 
-  const handleEmailChanges = async () => {
+  const handleEmailChanges = async () => { // Uses firebase verification and update function to add another email to the user.
+    setEmailMessage('')
     if(user) {
       try {
         await verifyBeforeUpdateEmail(user, userData.email)
       } catch (error) {
-        alert("Error sending email change request." + error.message)
-        return
+        console.log(error.code)
+        switch(error.code){
+          case ("auth/requires-recent-login"):
+            setEmailMessage("Please log out and sign back in. A recent login is required to send a email reset request.");
+            break;
+          default:
+            setEmailMessage("Error sending email change request.")
+            break;
+        }
+        return;
       }
     }
-
-    alert("Email request sent! Please check your email for the email change link.")
+    setEmailMessage("Email request sent! Please check your email for the email change link.")
   };
 
   return (
@@ -73,6 +84,7 @@ function SettingsPage({user}) {
               value={userData.name}
               onChange={handleInputChange}
             />
+            {nameMessage ?? (<div className="text-sm">{nameMessage}</div>)}
           </div>
           <Button onClick={handleSaveChanges}>Save Changes</Button>
           <div className="space-y-2">
@@ -84,6 +96,7 @@ function SettingsPage({user}) {
               onChange={handleInputChange}
             />
           </div>
+          {emailMessage ?? (<div className="text-sm">{emailMessage}</div>)}
         </CardContent>
         <CardFooter>
           <Button onClick={handleEmailChanges}>Send Email Reset Link</Button>

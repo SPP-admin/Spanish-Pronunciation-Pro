@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from "@/lib/utils";
+import { QueryClient } from '@tanstack/react-query';
 
 import {
   NavigationMenu,
@@ -14,7 +15,14 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import { signOut } from 'firebase/auth';
-import { auth } from '../firebase.js'
+import { auth } from '../firebase.js';
+import { queryClient } from '@/queryClient.jsx';
+
+
+import { storage } from '../firebase.js';
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
+import { updateProfile } from "firebase/auth";
+import { useState } from 'react';
 
 
 // Re-usable component for list items in the navigation menu, as per shadcn/ui docs
@@ -43,7 +51,33 @@ const ListItem = React.forwardRef(({ className, title, to, children, ...props },
 ListItem.displayName = "ListItem"
 
 
-function Navbar() {
+
+function Navbar({user}) {
+  
+  const [image, setImage] = useState(user?.photoURL)
+  
+    const handleProfile = async (e) => {
+      try {
+        const file = e.target.files[0]
+        if (!file) return;
+
+        const storageRef = ref(storage, `users/${user.uid}/profile.jpg`);
+
+        await uploadBytes(storageRef, file);
+
+        const downloadURL = await getDownloadURL(storageRef)
+
+        await updateProfile(user, {
+          photoURL: downloadURL,
+        })
+        
+        setImage(downloadURL)
+    } catch (error) {
+      console.log(error.code)
+    }
+  }
+
+
   return (
     <header className="bg-card text-card-foreground shadow-sm border-b sticky top-0 z-50">
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
@@ -76,11 +110,14 @@ function Navbar() {
             {/* Account Hover Menu */}
             <NavigationMenuItem>
               <NavigationMenuTrigger>
+                <label className="cursor-pointer">
                 <Avatar className="h-8 w-8 mr-2">
                   {/* Dynamic user image here */}
-                  <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+                  <AvatarImage src={image || "https://github.com/shadcn.png"} alt="@shadcn" />
                   <AvatarFallback>U</AvatarFallback>
                 </Avatar>
+                <input className="hidden" type="file" onChange={handleProfile}/>
+                </label>
                 Account
               </NavigationMenuTrigger>
               <NavigationMenuContent>
@@ -91,7 +128,12 @@ function Navbar() {
                   <ListItem to="/settings" title="Settings">
                     Manage your account details.
                   </ListItem>
-                  <ListItem onClick={() => signOut(auth)} title="Logout">
+                  <ListItem onClick={() => {
+                    signOut(auth);
+                    localStorage.clear();
+                    queryClient.clear();
+                  }
+                    } title="Logout">
                     Log out of your account.
                   </ListItem>
                 </ul>
