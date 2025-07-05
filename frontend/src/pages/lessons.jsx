@@ -13,112 +13,20 @@ import { Button } from "@/components/ui/button";
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2 } from 'lucide-react';
-
-const lessonCategories = [
-    {
-        id: "vowels",
-        title: "Vowels",
-        description: "Practice the core Spanish vowel sounds.",
-        lessons: [
-            { value: "a", label: "A" },
-            { value: "e", label: "E" },
-            { value: "i", label: "I" },
-            { value: "o", label: "O" },
-            { value: "u", label: "U" },
-        ],
-        levels: [
-            { value: "words", label: "Vowel Sound & Words" },
-            { value: "simple_sentences", label: "Simple Sentences" },
-            { value: "complex_sentences", label: "Complex Sentences" },
-        ],
-    },
-    {
-        id: "consonants",
-        title: "Consonants",
-        description: "Master tricky consonant pronunciations.",
-        lessons: [
-            { value: "soft", label: "Soft Consonants" },
-            { value: "hard", label: "Hard Consonants" },
-            { value: "combos", label: "Vowel-Consonant Combos" },
-        ],
-        levels: [
-            { value: "words", label: "Words" },
-            { value: "sentences", label: "Sentences" },
-        ]
-    },
-    {
-        id: "unique_sounds",
-        title: "Unique Sounds",
-        description: "Learn sounds unique to the Spanish language.",
-        lessons: [
-            { value: "n", label: "Ñ" },
-            { value: "rr", label: "RR" },
-            { value: "ll", label: "LL" },
-            { value: "ch", label: "CH" },
-            { value: "qu", label: "QU" },
-        ],
-        levels: [
-            { value: "words", label: "Sound & Words" },
-            { value: "sentences", label: "Sentences" },
-        ]
-    },
-    {
-        id: "special_vowels",
-        title: "Special Vowel Combinations",
-        description: "Master vowel combinations like 'ai', 'ei', 'oi'.",
-        lessons: [
-            { value: "ai", label: "AI" },
-            { value: "ue", label: "UE" },
-            { value: "eu", label: "EU" },
-            { value: "au", label: "AU" },
-            { value: "ei", label: "EI" },
-            { value: "ia", label: "IA" },
-            { value: "io", label: "IO" },
-            { value: "oi", label: "OI" },
-            { value: "ui", label: "UI" },
-            { value: "ie", label: "IE" },
-        ],
-        levels: [
-            { value: "words", label: "Vowel Sound & Words" },
-            { value: "simple_sentences", label: "Sentences" },
-        ],
-    },
-    {
-        id: "accent_marks ",
-        title: "Accent Marks",
-        description: "Understand how accent marks affect pronunciation.",
-        lessons: [
-            { value: "accent_marks", label: "Accent Marks" },
-
-        ],
-        levels: [
-            { value: "words", label: "Words" },
-            { value: "simple_sentences", label: "Sentences" },
-        ],
-    },
-    {
-        id: "regional_differences",
-        title: "Regional Differences",
-        description: "Explore pronunciation variations across Spanish-speaking countries.",
-        lessons: [
-            { value: "mexico", label: "Mexico" },
-            { value: "spain", label: "Spain" },
-            { value: "argentina", label: "Argentina" },
-            { value: "colombia", label: "Colombia" },
-
-        ],
-        levels: [
-            { value: "regional", label: "Regional Audio" },
-        ],
-    },
-];
+import { useProfile } from '@/profileContext';
+import { lessonCategories } from '@/lessonCategories';
 
 // Check if every possible combination in a category is complete
 
-function LessonsPage({lessons, isFetching}) {
-    //if(isFetching) return null;
+function LessonsPage() {
+
+    const { profile } = useProfile()
+
     const isCategoryFullyComplete = (category, selections, index) => {
         /*
+        Implementation of category checking without endpoints.
+
+
         const progress = selections[category.id];
         if (!progress || !progress.completedCombinations) return false;
         
@@ -131,7 +39,7 @@ function LessonsPage({lessons, isFetching}) {
             }
         }
             */
-        if(!lessons[index] || !lessons[index].completed || lessons[index].completed == false) {
+        if(!profile.lessons || !profile.lessons[index] || !profile.lessons[index].completed || profile.lessons[index].completed == false) {
             return false
         }
         return true; // All combinations are complete
@@ -170,7 +78,8 @@ function LessonsPage({lessons, isFetching}) {
 
           // Check 1: Is the currently selected combination complete?
           const comboKey = `${currentLesson}-${currentLevel}`;
-          const isComboComplete = currentProgress.completedCombinations?.[comboKey] || false;
+          const isComboComplete = profile.chunks?.[index]?.[comboKey] || false;
+          //const isComboComplete = currentProgress.completedCombinations?.[comboKey] || false;
 
           // Check 2: Is the entire category complete?
           const isCategoryComplete = isCategoryFullyComplete(category, selections, index);

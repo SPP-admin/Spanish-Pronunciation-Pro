@@ -11,7 +11,7 @@ import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 
 import { auth } from '../firebase.js';
 
-import api from "../api.js";
+
 import {useState} from 'react';
 
 function SignupPage() {
@@ -22,6 +22,7 @@ function SignupPage() {
     password: '',
     displayName: '',
   });
+  const [errorMessage, setErrorMessage] = useState('')
 
   const handleChange = (e) => {
     setCred({...cred,
@@ -31,16 +32,12 @@ function SignupPage() {
 
 
   const handleSignupClick = async () => {
-    // TODO: Implement Firebase signup logic here (validate inputs, call Firebase auth)
-    console.log("Signup clicked (Not Implemented)");
-    console.log(cred);
 
     try {
-
+      setErrorMessage("")
+      // Firebase api call to create the user using their email and password.
       const account = await createUserWithEmailAndPassword(auth, cred.email, cred.password)
-
-      console.log(account.user.uid)
-
+      // Adds the display name to the user (No explicit function to use email, password, and displayName exists for firebase yet.)
       await updateProfile(account.user, {
         displayName: cred.displayName
       })
@@ -83,6 +80,7 @@ function SignupPage() {
             <Label htmlFor="password">Password</Label>
             <Input id="password" name="password" type="password" placeholder="" required value = {cred.password} onChange = {handleChange} />
           </div>
+          {errorMessage && (<div className="text-sm">{errorMessage}</div>)}
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <Button onClick={handleSignupClick} className="text-primary-foreground hover:bg-[#00A3E0]">

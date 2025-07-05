@@ -13,20 +13,34 @@ import { auth } from '@/firebase.js';
 function ForgotPasswordPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const handleResetClick = () => {
-    // TODO: Implement Firebase password reset logic here (get email, call Firebase auth)
+  const handleResetClick = async () => {
+    setErrorMessage('')
 
     if(email) {
     try {
-      sendPasswordResetEmail(auth, email)
-      alert("Password Reset Email Sent!")
-      navigate('/login')
+      const response = await sendPasswordResetEmail(auth, email)
+
     } catch (error) {
-      alert(error)
+      const code = error.code
+      setErrorMessage(error.code)
+      switch(error.code) {
+        case "auth/invalid-email":
+          setErrorMessage("Please enter a valid email. Email is not linked to a registered account.")
+          break;
+        default:
+          setErrorMessage("Error sending password reset email. Please try again later.")
+      }
+      return;
     }
-  } else alert("Please enter valid email.")
-    // Maybe navigate back to login or show a success message
+  } else {
+    setErrorMessage("Please enter valid email.")
+    return;
+  }
+  
+  setErrorMessage("Password Reset Email Sent!")
+
   };
 
   return (
@@ -40,6 +54,7 @@ function ForgotPasswordPage() {
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input id="email" type="email" placeholder="" onChange = {(e) => setEmail(e.target.value)}  required /> 
+            {errorMessage && (<div className="text-sm">{errorMessage}</div>)}
           </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">

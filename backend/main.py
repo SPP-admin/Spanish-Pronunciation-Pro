@@ -50,9 +50,6 @@ app = FastAPI(
     docs_url= "/"
 )
 
-if __name__ == "__main__":
-      uvicorn.run("main:app", host="0.0.0.0", port=8080, reload=True)
-
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
@@ -293,7 +290,7 @@ async def updateStudyStreak(uid):
    
 # When a user uses the pronounciation checker, update the value.
 @app.patch("/updateUses")
-async def updateCompletedUses(uid):
+async def updateUses(uid):
     try:
         doc_ref = db.collection('stats')
         query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
@@ -319,7 +316,7 @@ async def getLessonProgress(uid):
 
         print(data)
 
-        return JSONResponse(content={"lesson_data": data["lesson_data"]},
+        return JSONResponse(content={"lessons": data},
                             status_code=201)
     except Exception as e:
                 raise HTTPException(
@@ -530,7 +527,7 @@ async def getChunkProgress(uid, lesson: int):
 
 # Set a chunk to completed, (Stored as a map as firestore does not allow the storage of 2-d arrays / lists)
 @app.patch("/updateChunkProgress")
-async def updateChunkProgress(uid, chunk: int, lesson: int):
+async def updateChunkProgress(uid, chunk: str, lesson: int, difficulty: str):
     try:
         doc_ref = db.collection('lessons')
 
@@ -544,7 +541,8 @@ async def updateChunkProgress(uid, chunk: int, lesson: int):
         if chunks[lesson] is None:
               chunks[lesson] = {}
 
-        chunks[lesson][str(chunk)] = True
+        chunks[lesson][chunk+"-"+difficulty] = True
+        print(chunks)
 
         doc_ref = db.collection('lessons').document(doc_id).update({"chunks": chunks})
 
@@ -567,7 +565,7 @@ async def updateLessonProgress(uid, lesson: int):
           data['lesson_data'][lesson]['completed'] = True
           print(data['lesson_data'])
 
-          doc_ref = db.collection('lessons').document(doc_id).update({"lesson_data": data})
+          doc_ref = db.collection('lessons').document(doc_id).update({"lesson_data": data['lesson_data']})
 
           return JSONResponse(content={"message": "Lesson progress was successfully updated."}, 
                                     status_code = 201)
@@ -648,12 +646,14 @@ async def generateSentence(chunk: str, lesson: str, difficulty: str):
 @app.post("/checkPronunciation")
 async def checkPronunciation(data: TranscriptionData):
       try:
+        
         audio_bytes = base64.b64decode(data.base64_data)
         sentence = data.sentence
 
         with open("audio.wav", "wb") as f:
               f.write(audio_bytes)
-
+        
+        print(os.path.isfile('audio.wav'))
         audio, sampling_rate = librosa.load('audio.wav', sr=16000, mono=True, duration=30.0, dtype=np.int32)
         sf.write('tmp.wav', audio, 16000)
         output = pronunciationChecking.correct_pronunciation(sentence, "tmp.wav", 'latam')
