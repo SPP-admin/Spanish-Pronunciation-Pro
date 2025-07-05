@@ -1,6 +1,5 @@
 import torch
-from parler_tts import ParlerTTSForConditionalGeneration
-from transformers import AutoTokenizer
+from transformers import ParlerTTSForConditionalGeneration, AutoTokenizer
 import soundfile as sf
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"

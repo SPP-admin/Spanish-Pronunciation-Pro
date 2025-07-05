@@ -2,12 +2,21 @@ FROM python:3.10-slim-buster
 
 WORKDIR /app
 
-# Install ffmpeg and git for audio processing and package installation
-RUN apt-get update && apt-get install -y ffmpeg git
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip and install wheel for faster package installation
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
 COPY requirements.txt .
-RUN pip install -r requirements.txt
 
+# Install Python dependencies with optimizations
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
 COPY . .
 
 # Use uvicorn to run the FastAPI app
