@@ -34,38 +34,38 @@ const lessonsContent = {
       phraseSpanish: "La gata va a la casa.",
       phraseEnglish: "The cat goes to the house.",
     },
-    'consonants-soft-words': {
+    'consonants-soft_consonants-words': {
       title: 'Lesson: Soft Consonants - Words',
       estimatedTime: "3 minutes",
       phraseSpanish: "ceci cine zapato",
       phraseEnglish: "ceci cinema shoe",
     },
-    'consonants-soft-sentences': {
+    'consonants-soft_consonants-sentences': {
       title: 'Lesson: Soft Consonants - Sentences',
       estimatedTime: "5 minutes",
       phraseSpanish: "El cielo es azul y el sol brilla.",
       phraseEnglish: "The sky is blue and the sun shines.",
     },
-    'consonants-hard-words': {
+    'consonants-hard_consonants-words': {
       title: 'Lesson: Hard Consonants - Words',
       estimatedTime: "3 minutes",
       phraseSpanish: "perro gato zapato",
       phraseEnglish: "dog cat shoe",
     },
-    'consonants-hard-sentences': {
+    'consonants-hard_consonants-sentences': {
       title: 'Lesson: Hard Consonants - Sentences',
       estimatedTime: "5 minutes",
       phraseSpanish: "El perro corre rápido.",
       phraseEnglish: "The dog runs fast.",
     },
-    'consonants-combos-words': {
-      title: 'Lesson: Hard Consonants - Vowel-Consonant Combos',
+    'consonants-vowel_consonant_combos-words': {
+      title: 'Lesson: Vowel-Consonant Combos - Words',
       estimatedTime: "4 minutes",
       phraseSpanish: "perro gato zapato",
       phraseEnglish: "dog cat shoe",
     },
-    'consonants-combos-sentences': {
-      title: 'Lesson: Hard Consonants - Vowel-Consonant Combos',
+    'consonants-vowel_consonant_combos-sentences': {
+      title: 'Lesson: Vowel-Consonant Combos - Sentences',
       estimatedTime: "4 minutes",
       phraseSpanish: "perro gato zapato",
       phraseEnglish: "dog cat shoe",
@@ -151,7 +151,7 @@ function LessonsPracticePage() {
       (topic !== lastParams.current.topic || lesson !== lastParams.current.lesson || level !== lastParams.current.level)
     ) {
 
-      fetchSentenceAndTranslation();
+      fetchSentence();
 
       lastParams.current = { topic, lesson, level };
     }
@@ -164,7 +164,7 @@ function LessonsPracticePage() {
     }
   }, [correctAmount])
 
-  const fetchSentenceAndTranslation = async () => {
+  const fetchSentence = async () => {
         setLoading(true);
         setSpanishSentence("");
         setEnglishTranslation("");
@@ -394,7 +394,7 @@ function LessonsPracticePage() {
   const handleNextSentence = () => {
     setAttempts(0);
     setCurrentCorrect(false);
-    fetchSentenceAndTranslation();
+    fetchSentence();
     setSelectedText(false);
   }
 
