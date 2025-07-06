@@ -152,8 +152,9 @@ class sentenceMapping:
 				mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="g"))
 				mapping.append(ipaMapping(ortho_letter=self.sentence[i+1], ipa_letter="w"))
 				i += 2
+			# This is technically not correct, but Whisper is bad at detecting [ʝ] so use [j] instead
 			elif (sentence[i:i+2] == "hi" or sentence[i:i+2] == "ll"):
-				mapping.append(ipaMapping(ortho_letter=self.sentence[i:i+2], ipa_letter="ʝ"))
+				mapping.append(ipaMapping(ortho_letter=self.sentence[i:i+2], ipa_letter="j"))
 				i += 2
 			elif (sentence[i:i+2] == "qu"):
 				mapping.append(ipaMapping(ortho_letter=self.sentence[i:i+2], ipa_letter="k"))
@@ -211,7 +212,10 @@ class sentenceMapping:
 					case "p":
 						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="p"))
 					case "r":
-						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="ɾ"))
+						if i == 0 or (not sentence[i-1].isalpha()) or sentence[i-1] in {'l', 'n', 's', 'z'}:
+							mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="r"))
+						else:
+							mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="ɾ"))
 					case "s" | "z":
 						if i < len(sentence) - 1 and (sentence[i+1] == "b" or sentence[i+1] == "d" 
 													   or sentence[i+1] == "g"  or sentence[i+1] == "l"  or sentence[i+1] == "m"  
