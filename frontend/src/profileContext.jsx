@@ -14,6 +14,7 @@ export const ProfileProvider = ({children}) => {
     achievements: {},
     lessons: [],
     chunks: [],
+    lastLogin: 0,
   }
 )
 

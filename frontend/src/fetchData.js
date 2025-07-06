@@ -13,7 +13,7 @@ export const fetchData = async (uid) => {
         }
 
     } catch (error) {
-      console.log(`Could not access endpoints.`)
+      console.log(`Error accessing endpoint.`)
       return null
     }
   }
@@ -27,6 +27,7 @@ export const fetchData = async (uid) => {
             achievements: {},
             lessons: [],
             chunks: [],
+            lastLogin: 0,
          };
 
         /*
@@ -46,7 +47,6 @@ export const fetchData = async (uid) => {
         */
 
         const results = await Promise.allSettled([
-            api.get(`/getUser?uid=${uid}`),
             api.get(`/getUserStatistics?uid=${uid}`),
             api.get(`/getAchievements?uid=${uid}`),
             api.get(`/getActivityHistory?uid=${uid}`),
@@ -54,9 +54,8 @@ export const fetchData = async (uid) => {
         ]);
 
         
-        const [userResult, statsResult, achievementsResult, activityHistoryResult, lessonProgressResult] = results
+        const [statsResult, achievementsResult, activityHistoryResult, lessonProgressResult] = results
 
-        const existing_user = await trySetting(userResult, `/setUser`);
         const stats = await trySetting(statsResult, `/setUserStatistics`);
         const achievements = await trySetting(achievementsResult, `/setAchievements`);
         const activityHistory = await trySetting(activityHistoryResult, `/setActivityHistory`);
@@ -69,12 +68,13 @@ export const fetchData = async (uid) => {
             lessonsCompleted: parseInt(stats?.user_stats.completed_lessons ?? "") || profile.lessonsCompleted,
             practiceSessions: parseInt(stats?.user_stats.practice_sessions ?? "") || profile.practiceSessions,
             accuracyRate: parseInt(stats?.user_stats.accuracy_rate ?? "") || profile.accuracyRate,
+            lastLogin: stats?.user_stats.last_login ?? profile.lastLogin,
             activities: activityHistory?.activity_history ?? profile.activities,
             achievements: achievements?.achievements.achievements ?? profile.achievements,
             lessons: lessonProgress?.lessons.lesson_data ?? profile.lessons,
             chunks: lessonProgress?.lessons.chunks ?? profile.chunks
         }
-        
+
         /*
         try {
           let fetchedData = await api.get(`/getUserStatistics?uid=${uid}`)

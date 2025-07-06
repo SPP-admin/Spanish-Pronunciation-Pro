@@ -15,7 +15,7 @@ from models import LoginSchema, SignUpSchema, ChunkSchema, BaseSchema
 
 #import pyrebase
 #import config
-from datetime import datetime
+from datetime import datetime, timezone
 from google.cloud.firestore_v1.base_query import FieldFilter
 from openai import OpenAI
 
@@ -195,6 +195,8 @@ async def getUserStatistics(uid):
 @app.post("/setUserStatistics")
 async def setUserStatistics(request: BaseSchema):
     try:
+        date = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+        
         doc_ref = db.collection('stats')
 
         data = {
@@ -203,7 +205,8 @@ async def setUserStatistics(request: BaseSchema):
             'completed_lessons': int(0),
             'practice_sessions': int(0),
             'study_streak': int(0),
-            'uses': int(0)
+            'uses': int(0),
+            'last_login': date
         }
 
         query_ref = doc_ref.where(filter= FieldFilter("id", "==", request.id)).get()
@@ -357,7 +360,7 @@ async def setAchievements(request: BaseSchema):
 @app.patch("/updateAchievements")
 async def updateAchievements(uid, achievement: str):
      try:
-          date = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+          date = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
 
           doc_ref = db.collection('achievements')
 
@@ -450,7 +453,7 @@ async def getActivityHistory(uid):
 @app.post("/setUser")
 async def setUser(request: BaseSchema):
     try:
-            date = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+            date = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
             
             doc_ref = db.collection('users')
 
