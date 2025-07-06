@@ -607,7 +607,8 @@ async def setLessonProgress(request: BaseSchema):
             status_code=400,
             detail= f"Error intializing lesson progress {str(e)}."
         )
-    
+
+# Generate a sentence or word for the user to practice.
 @app.post("/generateSentence")
 async def generateSentence(chunk: str, lesson: str, difficulty: str):
       client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -630,6 +631,7 @@ async def generateSentence(chunk: str, lesson: str, difficulty: str):
                 temperature=1
         )
         current_sentence = response.choices[0].message.content
+        
       # if there is an error with OpenAI, use a backup list of sentences
       except:
             backup_sentences = [
@@ -643,6 +645,7 @@ async def generateSentence(chunk: str, lesson: str, difficulty: str):
       finally:
         return current_sentence
 
+# Check the user's pronunciation of a sentence or word.
 @app.post("/checkPronunciation")
 async def checkPronunciation(data: TranscriptionData):
       try:
@@ -677,8 +680,3 @@ async def checkPronunciation(data: TranscriptionData):
 
       return output
 
-@app.post("/translate")
-async def translate(request: Request):
-    body = await request.json()
-    response = requests.post("https://libretranslate.de/translate", json=body)
-    return response.json()
