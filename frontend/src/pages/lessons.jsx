@@ -54,7 +54,6 @@ function LessonsPage({user}) {
         }
 
         lessonAchievementCheck(index)
-        console.log(index)
 
         return true; // All combinations are complete
     };

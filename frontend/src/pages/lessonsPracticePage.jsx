@@ -120,7 +120,6 @@ function LessonsPracticePage() {
 
   // How off is the user allowed to be before moving on to the next sentence.
   const allowedError = .5;
-  console.log( + 1)
 
   // Uses the lessonCategories file to find out what the previous and next lessons are.
   for (const key in lessonCategories){
