@@ -4,7 +4,7 @@ import Confetti from 'react-confetti';
 import AudioRecorder from '@/components/audioRecorder.jsx';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { FaArrowLeft, FaArrowRight, FaClock, FaHighlighter } from 'react-icons/fa'; // Added FaHighlighter
+import { FaArrowLeft, FaArrowRight, FaHighlighter } from 'react-icons/fa'; // Added FaHighlighter
 import api from '../api.js';
 import { auth } from '@/firebase.js';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -14,63 +14,70 @@ import { useProfile } from '@/profileContext.jsx';
 import { lessonCategories } from '@/lessonCategories.js';
 import { completionRequirements } from '@/lessonCategories.js';
 
-// --- Sample Lesson Data (no changes here) ---
-const lessonsContent = {
-    default: {
+// --- Dynamic Lesson Data Generation ---
+const generateLessonData = (topic, lesson, level) => {
+  // Find the category and lesson info
+  const category = lessonCategories.find(cat => cat.id === topic);
+  if (!category) {
+    return {
       title: "Practice Session",
-      estimatedTime: "3 minutes",
       phraseSpanish: "¡Hola! ¿Cómo estás?",
-      phraseEnglish: "Hello! How are you?",
-    },
-    'vowels-a-words': {
-      title: 'Lesson: Vowel "A" - Words',
-      estimatedTime: "2 minutes",
-      phraseSpanish: "mapa ",
-      phraseEnglish: "map",
-    },
-    'vowels-a-simple_sentences': {
-      title: 'Lesson: Vowel "A" - Simple Sentences',
-      estimatedTime: "4 minutes",
-      phraseSpanish: "La gata va a la casa.",
-      phraseEnglish: "The cat goes to the house.",
-    },
-    'consonants-soft_consonants-words': {
-      title: 'Lesson: Soft Consonants - Words',
-      estimatedTime: "3 minutes",
-      phraseSpanish: "ceci cine zapato",
-      phraseEnglish: "ceci cinema shoe",
-    },
-    'consonants-soft_consonants-sentences': {
-      title: 'Lesson: Soft Consonants - Sentences',
-      estimatedTime: "5 minutes",
-      phraseSpanish: "El cielo es azul y el sol brilla.",
-      phraseEnglish: "The sky is blue and the sun shines.",
-    },
-    'consonants-hard_consonants-words': {
-      title: 'Lesson: Hard Consonants - Words',
-      estimatedTime: "3 minutes",
-      phraseSpanish: "perro gato zapato",
-      phraseEnglish: "dog cat shoe",
-    },
-    'consonants-hard_consonants-sentences': {
-      title: 'Lesson: Hard Consonants - Sentences',
-      estimatedTime: "5 minutes",
-      phraseSpanish: "El perro corre rápido.",
-      phraseEnglish: "The dog runs fast.",
-    },
-    'consonants-vowel_consonant_combos-words': {
-      title: 'Lesson: Vowel-Consonant Combos - Words',
-      estimatedTime: "4 minutes",
-      phraseSpanish: "perro gato zapato",
-      phraseEnglish: "dog cat shoe",
-    },
-    'consonants-vowel_consonant_combos-sentences': {
-      title: 'Lesson: Vowel-Consonant Combos - Sentences',
-      estimatedTime: "4 minutes",
-      phraseSpanish: "perro gato zapato",
-      phraseEnglish: "dog cat shoe",
-    },
+    };
+  }
+
+  const lessonInfo = category.lessons.find(l => l.value === lesson);
+  const levelInfo = category.levels.find(l => l.value === level);
+  
+  if (!lessonInfo || !levelInfo) {
+    return {
+      title: "Practice Session",
+      phraseSpanish: "¡Hola! ¿Cómo estás?",
+    };
+  }
+
+  // Generate dynamic title
+  let title = `Lesson: ${lessonInfo.label}`;
+  if (levelInfo.label) {
+    title += ` - ${levelInfo.label}`;
+  }
+
+  // Generate sample phrases based on category and lesson
+  let phraseSpanish = "";
+
+  switch (topic) {
+    case "vowels":
+      phraseSpanish = `Practice the vowel "${lessonInfo.label}"`;
+      break;
+    case "consonants":
+      if (lesson === "soft_consonants") {
+        phraseSpanish = "ceci cine zapato";
+      } else if (lesson === "hard_consonants") {
+        phraseSpanish = "perro gato zapato";
+      } else {
+        phraseSpanish = "Practice consonant combinations";
+      }
+      break;
+    case "unique_sounds":
+      phraseSpanish = `Practice the "${lessonInfo.label}" sound`;
+      break;
+    case "special_vowels":
+      phraseSpanish = `Practice "${lessonInfo.label}" combinations`;
+      break;
+    case "accent_marks":
+      phraseSpanish = "Practice words with accent marks";
+      break;
+    case "regional_differences":
+      phraseSpanish = `Practice ${lessonInfo.label} pronunciation`;
+      break;
+    default:
+      phraseSpanish = "¡Hola! ¿Cómo estás?";
+  }
+
+  return {
+    title,
+    phraseSpanish,
   };
+};
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -87,8 +94,8 @@ function LessonsPracticePage() {
   const level = searchParams.get('level');
 
   const lessonKey = topic && lesson && level ? `${topic}-${lesson}-${level}` : 'default';
-  const currentLessonData = lessonsContent[lessonKey] || lessonsContent.default;
-  const { title: lessonTitle, estimatedTime, phraseSpanish, phraseEnglish } = currentLessonData;
+  const currentLessonData = generateLessonData(topic, lesson, level);
+  const { title: lessonTitle, phraseSpanish } = currentLessonData;
 
   // State is now for any selected text, not just a single word
   const [selectedText, setSelectedText] = useState(null);
@@ -112,7 +119,6 @@ function LessonsPracticePage() {
   const [attempts, setAttempts] = useState(0);
 
   const [spanishSentence, setSpanishSentence] = useState("");
-  const [englishTranslation, setEnglishTranslation] = useState("");
   const [loading, setLoading] = useState(false);
   const lastParams = useRef({ topic: null, lesson: null, level: null });
 
@@ -167,7 +173,6 @@ function LessonsPracticePage() {
   const fetchSentence = async () => {
         setLoading(true);
         setSpanishSentence("");
-        setEnglishTranslation("");
         try {
           const res = await fetch(
             `${API_URL}/generateSentence?chunk=${topic}&lesson=${lesson}&difficulty=${level}`,
@@ -178,7 +183,6 @@ function LessonsPracticePage() {
           setSpanishSentence(data);
         } catch (err) {
           setSpanishSentence("Error generating sentence.");
-          setEnglishTranslation("");
         }
         setLoading(false);
       };
@@ -406,11 +410,7 @@ function LessonsPracticePage() {
         <div className="w-full max-w-3xl mb-6 text-center md:text-left">
           <h1 className="text-2xl md:text-3xl font-bold mb-2 text-foreground">{lessonTitle}</h1>
           <div className="flex items-center justify-center md:justify-between text-sm text-muted-foreground">
-            <div className="flex items-center justify-center">
-              <FaClock className="mr-1.5" />
-              <span>{estimatedTime}</span>
-            </div>
-            <span >{correctAmount}/{amountToComplete}</span>
+            <span>{correctAmount}/{amountToComplete}</span>
           </div>
         </div>
 
@@ -422,10 +422,6 @@ function LessonsPracticePage() {
               <p className="text-3xl md:text-4xl font-bold text-black mb-3 select-text">
                 {loading ? "Loading..." : spanishSentence}
               </p>
-              {/* <p className="text-base text-muted-foreground mb-4">
-                {loading ? "" : englishTranslation}
-              </p> */}
-
               {/* Button to capture the highlighted text */}
               <Button onClick={handleCaptureSelection} variant="outline" size="sm">
                 <FaHighlighter className="mr-2 h-4 w-4" />
