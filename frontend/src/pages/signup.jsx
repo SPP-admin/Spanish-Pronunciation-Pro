@@ -4,21 +4,25 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from 'sonner';
+
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 
 import { auth } from '../firebase.js';
 
-import api from "../api.js";
+
 import {useState} from 'react';
 
 function SignupPage() {
   const navigate = useNavigate(); // For navigation after signup
+  
   const [cred, setCred] = useState({
     email: '',
     password: '',
     displayName: '',
   });
+  const [errorMessage, setErrorMessage] = useState('')
 
   const handleChange = (e) => {
     setCred({...cred,
@@ -28,16 +32,12 @@ function SignupPage() {
 
 
   const handleSignupClick = async () => {
-    // TODO: Implement Firebase signup logic here (validate inputs, call Firebase auth)
-    console.log("Signup clicked (Not Implemented)");
-    console.log(cred);
 
     try {
-
+      setErrorMessage("")
+      // Firebase api call to create the user using their email and password.
       const account = await createUserWithEmailAndPassword(auth, cred.email, cred.password)
-
-      console.log(account.user.uid)
-
+      // Adds the display name to the user (No explicit function to use email, password, and displayName exists for firebase yet.)
       await updateProfile(account.user, {
         displayName: cred.displayName
       })
@@ -50,11 +50,13 @@ function SignupPage() {
       await api.post('/setLessonProgress', {id: account.user.uid})
       */
 
-      alert('Account Created!')
+      toast.success('Account Created!')
       navigate('/login');
 
       } catch(error) {
-        alert(error)
+        const systemMessage = error.message.replace(/^Firebase:\s*/i, "");
+        toast.error(systemMessage);
+        console.error("Error creating account:", error);
       }
   };
 
@@ -78,6 +80,7 @@ function SignupPage() {
             <Label htmlFor="password">Password</Label>
             <Input id="password" name="password" type="password" placeholder="" required value = {cred.password} onChange = {handleChange} />
           </div>
+          {errorMessage && (<div className="text-sm">{errorMessage}</div>)}
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <Button onClick={handleSignupClick} className="text-primary-foreground hover:bg-[#00A3E0]">

@@ -1,8 +1,4 @@
 import React from 'react';
-import api from "../api.js";
-import App from '@/App';
-import { useEffect } from 'react';
-import { useState } from 'react';
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -14,8 +10,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { TrophiesCard } from "@/components/trophies";
+import { useProfile } from '@/profileContext.jsx';
 
-function Dashboard({user, profile, activities}) {
+function Dashboard({user}) {
+
+  const { profile } = useProfile();
+
   const totalLessons = 100;
   const progressValue = (profile.lessonsCompleted / totalLessons) * 100;
 
@@ -71,9 +71,9 @@ function Dashboard({user, profile, activities}) {
           </CardHeader>
           <CardContent>
             <ul className="space-y-2 text-sm text-muted-foreground">
-                {activities.map((act, index) => (
+                {profile.activities.map((activity, index) => (
                   <li key={index} className="text-sm">
-                    {activities[index]}
+                    {activity}
                   </li>
                 ))}
             </ul>

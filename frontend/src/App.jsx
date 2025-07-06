@@ -3,6 +3,7 @@ import api from './api.js';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button"; // Import Shadcn Button
 import Layout from './components/layout.jsx';  // Import Layout component
+import { Toaster } from '@/components/ui/sonner'; // Import Toaster component for notifications
 
 import LoginPage from './pages/loginPage.jsx'; // Import LoginPage component
 import LessonsPracticePage from './pages/lessonsPracticePage.jsx'; // Import LessonsPage component
@@ -19,25 +20,53 @@ import ProfilePage from './pages/profilePage.jsx'; // Import ProfilePage compone
 import SettingsPage from './pages/settingsPage.jsx'; // Import SettingsPage component
 import { useAuthState } from 'react-firebase-hooks/auth';
 
-function App() {
-  const navigate = useNavigate('')
-  const [user ] = useAuthState(auth);
+import { ProfileProvider } from './profileContext.jsx';
+import { useProfile } from './profileContext.jsx';
+
+import { queryClient } from './queryClient.jsx';
+import { QueryClientProvider } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query';
+import { fetchData } from './fetchData.js';
+import { persistQueryClient } from '@tanstack/react-query-persist-client';
+import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
+
+import { MoonLoader } from 'react-spinners';
+
+const localStoragePersister = createSyncStoragePersister ({
+  storage: window.localStorage,
+});
+
+persistQueryClient({
+  queryClient,
+  persister: localStoragePersister,
+  maxAge: 1000 * 60 * 60 * 24,
+});
+
+function AppContent() {
+  const [ user ] = useAuthState(auth);
   const [isFetching, setIsFetching] = useState(true);
   const [fetchingData, setFetchingData] = useState(true);
-  const [profile, setProfile] = useState({
+  const { setProfile, profile } = useProfile();
+  
+    const { data, isLoading } = useQuery({
+    queryFn: () => fetchData(user.uid),
+    queryKey: ["profile", user?.uid],
+    enabled: !!user?.uid,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    staleTime: 1000 * 60 * 60 * 24,
+    retry: false,
+  });
 
-    name: "N/A",
-    creationDate: "N/A",
-    studyStreak: 0,
-    lessonsCompleted: 0,
-    practiceSessions: 0,
-    accuracyRate: 0
-  })
-  const [achievements, setAchievements] = useState([])
-  const [activities, setActivities] = useState([])
-  const [lessons, setLessons] = useState([])
+  useEffect(() => {
+    if(data) {
+      setProfile(data, user.uid)
+    }
+  } ,[data, user])
+  
 
-
+// Uses firebase auth state change method to update the user.
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -50,7 +79,9 @@ function App() {
     return () => unsubscribe();
   }, [])
 
-  // This is a mess, fix this later.
+  
+  // Fetches user data immediately as soon as user is found.
+  /*
   useEffect(() => {
     const getUser = async () => {
       if (user) {
@@ -77,30 +108,37 @@ function App() {
             accuracyRate: userStats.accuracy_rate ?? prev.accuracyRate,
             practiceSessions: userStats.practice_sessions ?? prev.practiceSessions,
             studyStreak: userStats.study_streak ?? prev.studyStreak}));
-          console.log(profile)
           fetchedData = await api.get(`/getAchievements?uid=${user.uid}`)
-          let achievements = fetchedData.data.achievements.achievements
-          setAchievements(achievements)
-          console.log(achievements)
+          let fetchedAchievements = fetchedData.data.achievements.achievements
+          setProfile(prev => ({
+            ...prev,
+            achievements: fetchedAchievements
+          }))
+
         } catch (error) {
           console.log(error)
         }
 
         try {
           const fetchedData = await api.get(`/getActivityHistory?uid=${user.uid}`)
-          let activities = fetchedData.data.activity_history
-          setActivities(activities)
-          console.log(activities)
+
+          setProfile(prev => ({
+            ...prev,
+            activities: fetchedData.data.activity_history
+          }))
+
         } catch (error) {
           console.log(error)
         }
 
         try {
           const fetchedData = await api.get(`/getLessonProgress?uid=${user.uid}`)
-          let lessons = fetchedData.data.lesson_data
-          setLessons(lessons)
+          setProfile(prev => ({
+            ...prev,
+            lessons: fetchedData.data.lesson_data
+          }))
+
           setFetchingData(false)
-          console.log(lessons)
         } catch(error) {
           console.log(error)
         }
@@ -109,9 +147,13 @@ function App() {
   if(user) getUser();
 
 }, [user])
+*/
 
-  if(isFetching) {
-    return <h2>Loading...</h2>
+  // If user is being fetched don't load page.
+  if(isFetching || isLoading ) {
+    return <div className="flex justify-center items-center min-h-screen">
+      <MoonLoader size={50} color="#08b4fc"/>
+      </div>
   }
 
   return (
@@ -126,16 +168,27 @@ function App() {
 
         <Route element={<ProtectedRoute user={user} />}>
         {/* Routes with the navbar, wrapped by the layout.jsx component.*/}
-          <Route element={<Layout />}>
+        
+          <Route element={<Layout user={user}/>}>
             <Route path="/lessonsPractice" element={<LessonsPracticePage/>} />
-            <Route path="/lessons" element={<LessonsPage user={user} lessons={lessons} isFetching={fetchingData}/>} />
-            <Route path="/profile" element={<ProfilePage user={user} profile={profile} achievements={achievements} activities={activities}/>} />
-          <Route path="/dashboard" element={<Dashboard user={user} profile={profile} activities={activities}/>} />
+            <Route path="/lessons" element={<LessonsPage user={user} isFetching={fetchingData}/>} />
+            <Route path="/profile" element={<ProfilePage user={user} />} />
+            <Route path="/dashboard" element={<Dashboard user={user} />} />
             <Route path="/settings" element={<SettingsPage user={user}/>} />
           </Route>
         </Route>
       </Routes>
+      <Toaster richColors position="bottom-right" />
+      
     </div>
   );
 }
-export default App;
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient} >
+      <ProfileProvider>
+        <AppContent/>
+      </ProfileProvider>
+    </QueryClientProvider>
+  )
+};
