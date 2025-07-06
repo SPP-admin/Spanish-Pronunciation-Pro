@@ -65,16 +65,16 @@ export const fetchData = async (uid) => {
         console.log([stats, achievements, activityHistory, lessonProgress])
 
         return {
-            studyStreak: Number(stats?.user_stats.study_streak) ?? profile.studyStreak,
-            lessonsCompleted: Number(stats?.user_stats.completed_lessons) ?? profile.lessonsCompleted,
-            practiceSessions: Number(stats?.user_stats.practice_sessions) ?? profile.practiceSessions,
-            accuracyRate: Number(stats?.user_stats.accuracy_rate) ?? profile.accuracyRate,
+            studyStreak: parseInt(stats?.user_stats.study_streak ?? "") || profile.studyStreak,
+            lessonsCompleted: parseInt(stats?.user_stats.completed_lessons ?? "") || profile.lessonsCompleted,
+            practiceSessions: parseInt(stats?.user_stats.practice_sessions ?? "") || profile.practiceSessions,
+            accuracyRate: parseInt(stats?.user_stats.accuracy_rate ?? "") || profile.accuracyRate,
             activities: activityHistory?.activity_history ?? profile.activities,
             achievements: achievements?.achievements.achievements ?? profile.achievements,
             lessons: lessonProgress?.lessons.lesson_data ?? profile.lessons,
             chunks: lessonProgress?.lessons.chunks ?? profile.chunks
         }
-
+        
         /*
         try {
           let fetchedData = await api.get(`/getUserStatistics?uid=${uid}`)

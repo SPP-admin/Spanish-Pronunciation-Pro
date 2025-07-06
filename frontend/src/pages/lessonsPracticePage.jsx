@@ -360,6 +360,7 @@ function LessonsPracticePage() {
     try {
       const newLessonsCompleted = profile.lessonsCompleted + 1;
       const currentTotalAccuracy = currentAccuracy / amountToComplete * 100;
+      console.log(currentTotalAccuracy)
       const newAccuracy = Math.floor((((profile.accuracyRate * profile.lessonsCompleted) + currentTotalAccuracy) / newLessonsCompleted));
       const completedTopic = lesson + "-" + level
       let cur = [...(profile.chunks ?? [])]
@@ -406,6 +407,8 @@ function LessonsPracticePage() {
 
   // Navigates to the previous page.
   const handlePrevious = () => {
+    navigate('/lessons');
+    /*
     if (prevPage <= -1){
       navigate('/lessons');
     } else {
@@ -417,6 +420,7 @@ function LessonsPracticePage() {
       setCurrentCorrect(false)
       navigate(practicePath)
     }
+    */
   };
 
   // Adds another answer to the amount of correct ones.

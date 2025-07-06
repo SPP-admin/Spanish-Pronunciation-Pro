@@ -18,7 +18,9 @@ function Dashboard({user}) {
   const { profile } = useProfile();
   const totalLessons = 62;
   const progressValue = (profile.lessonsCompleted / totalLessons) * 100;
-  const localAchievements = structuredClone(achievements);
+
+  const cleanAchievments = achievements.map(({condition, ...rest}) => rest);
+  const localAchievements = structuredClone(cleanAchievments);
 
   // Match achievements to database achievements
     for (const key in localAchievements) {
@@ -31,7 +33,7 @@ function Dashboard({user}) {
   // Sort by date and take the first 2 most recent.
   const recentAchievements = Object.values(localAchievements)
   .filter(localAchievement => localAchievement?.unlocked === true)
-  .sort((a,b) => b.completionDate - a.completionDate)
+  .sort((a,b) => new Date(b.completionDate) - new Date(a.completionDate))
   .slice(0,2);
 
 

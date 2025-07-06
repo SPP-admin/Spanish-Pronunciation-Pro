@@ -39,7 +39,7 @@ const localStoragePersister = createSyncStoragePersister ({
 persistQueryClient({
   queryClient,
   persister: localStoragePersister,
-  maxAge: 1000 * 60 * 60 * 24,
+  maxAge: 1000 * 60 * 60 * 1, // If the user data is older then one hour, refresh.
 });
 
 function AppContent() {

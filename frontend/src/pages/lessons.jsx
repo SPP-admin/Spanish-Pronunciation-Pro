@@ -16,6 +16,8 @@ import { CheckCircle2 } from 'lucide-react';
 import { useProfile } from '@/profileContext';
 import { lessonCategories } from '@/lessonCategories';
 import api from '@/api';
+import { achievements, achievementChecker } from '@/achievements';
+import { toast } from 'sonner';
 
 // Check if every possible combination in a category is complete
 
@@ -23,8 +25,18 @@ function LessonsPage({user}) {
 
     const { profile, setProfile } = useProfile()
 
+    // Checks if the user has earned any new achievements.
 
-    const isCategoryFullyComplete = (category, selections, index) => {
+    useEffect(() => {
+        const achievementsToGrant = achievementChecker(profile, achievements)
+        if(achievementsToGrant.length == 0) return;
+        for (const achievement in achievementsToGrant) {
+          completeAchievement(achievementsToGrant[achievement])
+        }
+        toast("New Achievement Complete!, click on your profile page to view your new unlocked achievement!")
+    }, [profile])
+
+    const isCategoryFullyComplete = (category, index) => {
 
         /* Implementation of category checking without endpoints. */
 
@@ -34,11 +46,11 @@ function LessonsPage({user}) {
         //console.log(selections)
 
         //if (!progress || !progress.completedCombinations) return false;
-        
+
         for (const lesson of category.lessons) {
             for (const level of category.levels) {
                 const comboKey = `${lesson.value}-${level.value}`;
-                if (!profile?.chunks[index]?.[comboKey]) {
+                if (!profile.chunks[index]?.[comboKey]) {
                     return false; // Found a combo that is incomplete
                 }
             }
@@ -48,14 +60,11 @@ function LessonsPage({user}) {
             return false
         }
             */
-        
         if (profile?.lessons[index]?.completed == false) {
           completeCategory(index)
         }
-
-        lessonAchievementCheck(index)
-
-        return true; // All combinations are complete
+        
+        return true; 
     };
 
   const [selections, setSelections] = useState(() => {
@@ -93,23 +102,8 @@ function LessonsPage({user}) {
     }
   }
 
-  const lessonAchievementCheck = async (index) => {
-        const vowelAchievement = 2;
-        const vowelLesson = 0;
-        const consonantAchievement = 3;
-        const consonantLesson = 1;
-
-        // If category is completed and the achievement has not been granted yet, grant it.
-        if (index == vowelLesson && profile?.lessons[vowelLesson]?.completed == true && !profile?.achievements[vowelAchievement]?.completed) { 
-          completeAchievement(vowelAchievement);
-        }
-        if (index == consonantLesson && profile?.lessons[consonantLesson]?.completed == true && !profile?.achievements[consonantAchievement]?.completed) {
-          completeAchievement(consonantAchievement);
-        }
-  }
-
-  // Completes a catgory in the backend and profile context.
   const completeAchievement = async (achievement) => {
+
     try {
       await api.patch(`/updateAchievements?uid=${user.uid}&achievement=${achievement}`); 
       const date = new Date().toISOString().replace('T', ' ').slice(0,19);
@@ -140,7 +134,7 @@ function LessonsPage({user}) {
           //const isComboComplete = currentProgress.completedCombinations?.[comboKey] || false;
 
           // Check 2: Is the entire category complete?
-          const isCategoryComplete = isCategoryFullyComplete(category, selections, index);
+          const isCategoryComplete = isCategoryFullyComplete(category, index);
           
           const practicePath = `/lessonsPractice?topic=${category.id}&lesson=${currentLesson}&level=${currentLevel}`;
 

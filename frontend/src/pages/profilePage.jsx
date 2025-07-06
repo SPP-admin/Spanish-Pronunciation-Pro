@@ -7,7 +7,8 @@ import { achievements } from '../achievements.js';
 function ProfilePage({user}) {
 
   const { profile } = useProfile();
-  const localAchievements = structuredClone(achievements);
+  const cleanAchievments = achievements.map(({condition, ...rest}) => rest);
+  const localAchievements = structuredClone(cleanAchievments);
 
   // Match achievements to database achiemvents.
     for (const key in localAchievements) {
