@@ -450,6 +450,7 @@ async def getActivityHistory(uid):
             detail= f"Error fetching activity history. {str(e)}"
         )
 
+'''
 @app.post("/setUser")
 async def setUser(request: BaseSchema):
     try:
@@ -496,6 +497,7 @@ async def getUser(uid):
             status_code=400,
             detail= f"Error fetching user, No user exists. {str(e)}"
         )
+'''
 
 # Fetch the user accuracy
 @app.get("/getUserAccuracy")
