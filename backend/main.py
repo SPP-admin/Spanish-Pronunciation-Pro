@@ -226,13 +226,13 @@ async def setUserStatistics(request: BaseSchema):
 
 # After calculating the users new accuracy, update the accuracy value.
 @app.patch("/updateAccuracy")
-async def updateAccuracy(uid, new_accuracy):
+async def updateAccuracy(uid, new_accuracy: int):
     try:
         doc_ref = db.collection('stats')
         query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
         doc_id = query_ref[0].id
         doc_ref = db.collection('stats').document(doc_id).update({"accuracy_rate": new_accuracy})
-        return JSONResponse(content={"message": f"Accuracy was successfully updated to a value of {int(new_accuracy)}%" }, 
+        return JSONResponse(content={"message": f"Accuracy was successfully updated to a value of {(new_accuracy)}%" }, 
                                     status_code = 201)
     except Exception as e:
         raise HTTPException(
@@ -242,12 +242,12 @@ async def updateAccuracy(uid, new_accuracy):
     
 # When the user completes a practice session, update the value.
 @app.patch("/updatePracticeSessions")
-async def updatePracticeSessions(uid):
+async def updatePracticeSessions(uid, new_session_value):
     try:
         doc_ref = db.collection('stats')
         query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
         doc_id = query_ref[0].id
-        doc_ref = db.collection('stats').document(doc_id).update({"practice_sessions": firestore.Increment(1)})
+        doc_ref = db.collection('stats').document(doc_id).update({"practice_sessions": new_session_value})
         return JSONResponse(content={"message": f"User has successfully completed a practice session." }, 
                                     status_code = 201)
     except Exception as e:
@@ -258,12 +258,12 @@ async def updatePracticeSessions(uid):
 
 # When the user finishes all the chunks present in a lesson, update the amount of lessons they've completed.
 @app.patch("/updateCompletedLessons")
-async def updateCompletedLessons(uid):
+async def updateCompletedLessons(uid, new_lesson_value):
     try:
         doc_ref = db.collection('stats')
         query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
         doc_id = query_ref[0].id
-        doc_ref = db.collection('stats').document(doc_id).update({"completed_lessons": firestore.Increment(1)})
+        doc_ref = db.collection('stats').document(doc_id).update({"completed_lessons": new_lesson_value})
         return JSONResponse(content={"message": f"User has successfully completed a lesson, the amount of lessons they've completed has been incremented." }, 
                                     status_code = 201)
     except Exception as e:
@@ -450,6 +450,8 @@ async def getActivityHistory(uid):
 @app.post("/setUser")
 async def setUser(request: BaseSchema):
     try:
+            date = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+            
             doc_ref = db.collection('users')
 
             query_ref = doc_ref.where(filter= FieldFilter("id", "==", request.id)).get()
@@ -463,7 +465,8 @@ async def setUser(request: BaseSchema):
                 doc = doc_ref.document()
                 data = {
                     'id': request.id,
-                    'initialized': True
+                    'initialized': True,
+                    'last_login': date
                 }
             doc.set(data)
 

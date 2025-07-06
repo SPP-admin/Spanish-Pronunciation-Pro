@@ -29,6 +29,7 @@ export const fetchData = async (uid) => {
             chunks: [],
          };
 
+        /*
         try {
           let response = await api.get(`/getUser?uid=${uid}`)
         } catch (error) {
@@ -42,8 +43,10 @@ export const fetchData = async (uid) => {
             return profile;
           } else return profile;
         }
+        */
 
         const results = await Promise.allSettled([
+            api.get(`/getUser?uid=${uid}`),
             api.get(`/getUserStatistics?uid=${uid}`),
             api.get(`/getAchievements?uid=${uid}`),
             api.get(`/getActivityHistory?uid=${uid}`),
@@ -51,8 +54,9 @@ export const fetchData = async (uid) => {
         ]);
 
         
-        const [statsResult, achievementsResult, activityHistoryResult, lessonProgressResult] = results
+        const [userResult, statsResult, achievementsResult, activityHistoryResult, lessonProgressResult] = results
 
+        const existing_user = await trySetting(userResult, `/setUser`);
         const stats = await trySetting(statsResult, `/setUserStatistics`);
         const achievements = await trySetting(achievementsResult, `/setAchievements`);
         const activityHistory = await trySetting(activityHistoryResult, `/setActivityHistory`);
@@ -61,10 +65,10 @@ export const fetchData = async (uid) => {
         console.log([stats, achievements, activityHistory, lessonProgress])
 
         return {
-            studyStreak: stats?.user_stats.study_streak ?? profile.studyStreak,
-            lessonsCompleted: stats?.user_stats.completed_lessons ?? profile.lessonsCompleted,
-            practiceSessions: stats?.user_stats.practice_sessions ?? profile.practiceSessions,
-            accuracyRate: stats?.user_stats.accuracy_rate ?? profile.accuracyRate,
+            studyStreak: Number(stats?.user_stats.study_streak) ?? profile.studyStreak,
+            lessonsCompleted: Number(stats?.user_stats.completed_lessons) ?? profile.lessonsCompleted,
+            practiceSessions: Number(stats?.user_stats.practice_sessions) ?? profile.practiceSessions,
+            accuracyRate: Number(stats?.user_stats.accuracy_rate) ?? profile.accuracyRate,
             activities: activityHistory?.activity_history ?? profile.activities,
             achievements: achievements?.achievements.achievements ?? profile.achievements,
             lessons: lessonProgress?.lessons.lesson_data ?? profile.lessons,

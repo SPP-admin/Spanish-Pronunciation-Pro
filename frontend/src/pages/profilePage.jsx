@@ -55,7 +55,7 @@ function ProfilePage({user}) {
               </p>
               <p>
                 <span className="font-semibold">Accuracy Rate:</span>{" "}
-                {profile.accuracyRate}
+                {profile.accuracyRate}%
               </p>
             </CardContent>
           </Card>

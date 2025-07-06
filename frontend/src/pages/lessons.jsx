@@ -15,33 +15,47 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle2 } from 'lucide-react';
 import { useProfile } from '@/profileContext';
 import { lessonCategories } from '@/lessonCategories';
+import api from '@/api';
 
 // Check if every possible combination in a category is complete
 
-function LessonsPage() {
+function LessonsPage({user}) {
 
-    const { profile } = useProfile()
+    const { profile, setProfile } = useProfile()
+
 
     const isCategoryFullyComplete = (category, selections, index) => {
-        /*
-        Implementation of category checking without endpoints.
+
+        /* Implementation of category checking without endpoints. */
 
 
-        const progress = selections[category.id];
-        if (!progress || !progress.completedCombinations) return false;
+        //const progress = selections[category.id];
+
+        //console.log(selections)
+
+        //if (!progress || !progress.completedCombinations) return false;
         
         for (const lesson of category.lessons) {
             for (const level of category.levels) {
                 const comboKey = `${lesson.value}-${level.value}`;
-                if (!progress.completedCombinations[comboKey]) {
+                if (!profile?.chunks[index]?.[comboKey]) {
                     return false; // Found a combo that is incomplete
                 }
             }
         }
-            */
+        /*
         if(!profile.lessons || !profile.lessons[index] || !profile.lessons[index].completed || profile.lessons[index].completed == false) {
             return false
         }
+            */
+        
+        if (profile?.lessons[index]?.completed == false) {
+          completeCategory(index)
+        }
+
+        lessonAchievementCheck(index)
+        console.log(index)
+
         return true; // All combinations are complete
     };
 
@@ -66,6 +80,51 @@ function LessonsPage() {
         }
     });
   };
+
+  // Completes a catgory in the backend and profile context.
+  const completeCategory = async (index) => {
+    try {
+      await api.patch(`/updateLessonProgress?uid=${user.uid}&lesson=${index}`);
+      const newCategories = profile.lessons;
+      newCategories[index].completed = true;
+      const updated = {...profile, lessons: newCategories};
+      setProfile(updated, user.uid)  
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const lessonAchievementCheck = async (index) => {
+        const vowelAchievement = 2;
+        const vowelLesson = 0;
+        const consonantAchievement = 3;
+        const consonantLesson = 1;
+
+        // If category is completed and the achievement has not been granted yet, grant it.
+        if (index == vowelLesson && profile?.lessons[vowelLesson]?.completed == true && !profile?.achievements[vowelAchievement]?.completed) { 
+          completeAchievement(vowelAchievement);
+        }
+        if (index == consonantLesson && profile?.lessons[consonantLesson]?.completed == true && !profile?.achievements[consonantAchievement]?.completed) {
+          completeAchievement(consonantAchievement);
+        }
+  }
+
+  // Completes a catgory in the backend and profile context.
+  const completeAchievement = async (achievement) => {
+    try {
+      await api.patch(`/updateAchievements?uid=${user.uid}&achievement=${achievement}`); 
+      const date = new Date().toISOString().replace('T', ' ').slice(0,19);
+      const newAchievements = profile.achievements;
+      newAchievements[achievement] = {
+        completed: true,
+        completion_date: date
+      }
+      const updated = {...profile, achievements: newAchievements};
+      setProfile(updated, user.uid)
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   return (
     <div className="container mx-auto p-4 md:p-6">
