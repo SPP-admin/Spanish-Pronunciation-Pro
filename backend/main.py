@@ -25,6 +25,7 @@ import random
 import librosa
 import soundfile as sf
 import numpy as np
+import string
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -653,22 +654,26 @@ async def checkPronunciation(data: TranscriptionData):
         audio_bytes = base64.b64decode(data.base64_data)
         sentence = data.sentence
 
-        with open("audio.wav", "wb") as f:
+		# Generating random name for the audio files
+        random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=20))
+        random_string = random_string + ".wav"
+        with open(random_string, "wb") as f:
               f.write(audio_bytes)
         
-        print(os.path.isfile('audio.wav'))
-        audio, sampling_rate = librosa.load('audio.wav', sr=16000, mono=True, duration=30.0, dtype=np.int32)
-        sf.write('tmp.wav', audio, 16000)
-        output = pronunciationChecking.correct_pronunciation(sentence, "tmp.wav", 'latam')
+        print(os.path.isfile(random_string))
+        audio, sampling_rate = librosa.load(random_string, sr=16000, mono=True, duration=30.0, dtype=np.int32)
+        random2 = "tmp_" + random_string
+        sf.write(random2, audio, 16000)
+        output = pronunciationChecking.correct_pronunciation(sentence, random2, 'latam')
 
         # Get rid of audio recordings
-        if os.path.exists("audio.wav"):
-            os.remove("audio.wav")
-            print(f"File deleted successfully.")
+        if os.path.exists(random_string):
+            os.remove(random_string)
+            print(random_string + " deleted successfully.")
         else: print(f"File not found.")
-        if os.path.exists("tmp.wav"):
-            os.remove("tmp.wav")
-            print(f"File deleted successfully.")
+        if os.path.exists(random2):
+            os.remove(random2)
+            print(random2 + " deleted successfully.")
         else: print(f"File not found.")
       except Exception as e:
             print('Error: ', str(e))
