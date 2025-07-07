@@ -20,63 +20,28 @@ import ProfilePage from './pages/profilePage.jsx'; // Import ProfilePage compone
 import SettingsPage from './pages/settingsPage.jsx'; // Import SettingsPage component
 import { useAuthState } from 'react-firebase-hooks/auth';
 
-import { ProfileProvider } from './profileContext.jsx';
-import { useProfile } from './profileContext.jsx';
-
-import { queryClient } from './queryClient.jsx';
-import { QueryClientProvider } from '@tanstack/react-query'
-import { useQuery } from '@tanstack/react-query';
-import { fetchData } from './fetchData.js';
-import { persistQueryClient } from '@tanstack/react-query-persist-client';
-import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
-
-import { MoonLoader } from 'react-spinners';
-
-const localStoragePersister = createSyncStoragePersister ({
-  storage: window.localStorage,
-});
-
-persistQueryClient({
-  queryClient,
-  persister: localStoragePersister,
-  maxAge: 1000 * 60 * 60 * 1, // If the user data is older then one hour, refresh.
-});
-
-function AppContent() {
-  const [user] = useAuthState(auth);
+function App() {
+  const [user ] = useAuthState(auth);
   const [isFetching, setIsFetching] = useState(true);
   const [fetchingData, setFetchingData] = useState(true);
+  const [profile, setProfile] = useState({
 
-  const { setProfile, profile } = useProfile();
-
-  const { data, isLoading } = useQuery({
-    queryFn: () => fetchData(user.uid),
-    queryKey: ["profile", user?.uid],
-    enabled: !!user?.uid,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
-    staleTime: 1000 * 60 * 60 * 24,
-    retry: false,
-  }); 
-
-  useEffect(() => {
-    setProfilePic(
-      user?.photoURL ||
-      `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.displayName || "User")}&background=0D8ABC&color=fff`
-    );
-  }, [user]);
+    name: "N/A",
+    creationDate: "N/A",
+    studyStreak: 0,
+    lessonsCompleted: 0,
+    practiceSessions: 0,
+    accuracyRate: 0
+  })
+  const [achievements, setAchievements] = useState([])
+  const [activities, setActivities] = useState([])
+  const [lessons, setLessons] = useState([])
+const [profilePic, setProfilePic] = useState(
+  user?.photoURL ||
+  `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.displayName || "User")}&background=0D8ABC&color=fff`
+);
 
 
-
-  useEffect(() => {
-    if(data) {
-      setProfile(data, user.uid)
-    }
-  } ,[data, user])
-  
-
-// Uses firebase auth state change method to update the user.
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -89,9 +54,7 @@ function AppContent() {
     return () => unsubscribe();
   }, [])
 
-  
-  // Fetches user data immediately as soon as user is found.
-  /*
+  // This is a mess, fix this later.
   useEffect(() => {
     const getUser = async () => {
       if (user) {
@@ -118,37 +81,30 @@ function AppContent() {
             accuracyRate: userStats.accuracy_rate ?? prev.accuracyRate,
             practiceSessions: userStats.practice_sessions ?? prev.practiceSessions,
             studyStreak: userStats.study_streak ?? prev.studyStreak}));
+          console.log(profile)
           fetchedData = await api.get(`/getAchievements?uid=${user.uid}`)
-          let fetchedAchievements = fetchedData.data.achievements.achievements
-          setProfile(prev => ({
-            ...prev,
-            achievements: fetchedAchievements
-          }))
-
+          let achievements = fetchedData.data.achievements.achievements
+          setAchievements(achievements)
+          console.log(achievements)
         } catch (error) {
           console.log(error)
         }
 
         try {
           const fetchedData = await api.get(`/getActivityHistory?uid=${user.uid}`)
-
-          setProfile(prev => ({
-            ...prev,
-            activities: fetchedData.data.activity_history
-          }))
-
+          let activities = fetchedData.data.activity_history
+          setActivities(activities)
+          console.log(activities)
         } catch (error) {
           console.log(error)
         }
 
         try {
           const fetchedData = await api.get(`/getLessonProgress?uid=${user.uid}`)
-          setProfile(prev => ({
-            ...prev,
-            lessons: fetchedData.data.lesson_data
-          }))
-
+          let lessons = fetchedData.data.lesson_data
+          setLessons(lessons)
           setFetchingData(false)
+          console.log(lessons)
         } catch(error) {
           console.log(error)
         }
@@ -157,13 +113,9 @@ function AppContent() {
   if(user) getUser();
 
 }, [user])
-*/
 
-  // If user is being fetched don't load page.
-  if(isFetching || isLoading ) {
-    return <div className="flex justify-center items-center min-h-screen">
-      <MoonLoader size={50} color="#08b4fc"/>
-      </div>
+  if(isFetching) {
+    return <h2>Loading...</h2>
   }
 
   return (
@@ -178,27 +130,17 @@ function AppContent() {
 
         <Route element={<ProtectedRoute user={user} />}>
         {/* Routes with the navbar, wrapped by the layout.jsx component.*/}
-        
-          <Route element={<Layout user={user}/>}>
+          <Route element={<Layout />}>
             <Route path="/lessonsPractice" element={<LessonsPracticePage/>} />
-            <Route path="/lessons" element={<LessonsPage user={user} isFetching={fetchingData}/>} />
-            <Route path="/profile" element={<ProfilePage user={user} />} />
-            <Route path="/dashboard" element={<Dashboard user={user} />} />
+            <Route path="/lessons" element={<LessonsPage user={user} lessons={lessons} isFetching={fetchingData}/>} />
+            <Route path="/profile" element={<ProfilePage user={user} profile={profile} achievements={achievements} activities={activities}/>} />
+          <Route path="/dashboard" element={<Dashboard user={user} profile={profile} activities={activities}/>} />
             <Route path="/settings" element={<SettingsPage user={user}/>} />
           </Route>
         </Route>
       </Routes>
       <Toaster  />
-
     </div>
   );
 }
-export default function App() {
-  return (
-    <QueryClientProvider client={queryClient} >
-      <ProfileProvider>
-        <AppContent/>
-      </ProfileProvider>
-    </QueryClientProvider>
-  )
-};
+export default App;

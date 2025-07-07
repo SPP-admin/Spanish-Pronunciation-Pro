@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from "@/lib/utils";
-import { QueryClient } from '@tanstack/react-query';
 
 import {
   NavigationMenu,
@@ -15,14 +14,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import { signOut } from 'firebase/auth';
-import { auth } from '../firebase.js';
-import { queryClient } from '@/queryClient.jsx';
-import { storage } from '../firebase.js';
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
-import { updateProfile } from "firebase/auth";
-import { useState } from 'react';
+import { auth } from '../firebase.js'
 import { useAuthState } from 'react-firebase-hooks/auth';
-
 
 const ListItem = React.forwardRef(({ className, title, to, children, ...props }, ref) => {
   return (
@@ -91,8 +84,6 @@ function Navbar() {
                   <AvatarImage src={userPhotoURL} alt={user?.displayName || "User"} className="object-cover w-full h-full" />
                   <AvatarFallback>{userDisplayNameInitial}</AvatarFallback> 
                 </Avatar>
-                <input className="hidden" type="file" onChange={handleProfile}/>
-                </label>
                 Account
               </NavigationMenuTrigger>
               <NavigationMenuContent>
@@ -103,12 +94,7 @@ function Navbar() {
                   <ListItem to="/settings" title="Settings">
                     Manage your account details.
                   </ListItem>
-                  <ListItem onClick={() => {
-                    signOut(auth);
-                    localStorage.clear();
-                    queryClient.clear();
-                  }
-                    } title="Logout">
+                  <ListItem onClick={() => signOut(auth)} title="Logout">
                     Log out of your account.
                   </ListItem>
                 </ul>

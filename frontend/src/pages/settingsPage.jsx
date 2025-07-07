@@ -10,15 +10,14 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { verifyBeforeUpdateEmail, updateProfile} from "firebase/auth";
+import { verifyBeforeUpdateEmail, updateEmail, updateProfile} from "firebase/auth";
 
 function SettingsPage({user}) {
-
+  //TODO: Replace with API data fetching logic
   const [userData, setUserData] = useState({
     name: user.displayName,
     email: user.email,
   });
-
     const [darkMode, setDarkMode] = useState(
     document.documentElement.classList.contains("dark")
   );
@@ -26,10 +25,6 @@ function SettingsPage({user}) {
     document.documentElement.classList.toggle("dark");
     setDarkMode((prev) => !prev);
   };
-
-  const [nameMessage, setNameMessage] = useState('')
-  const [emailMessage, setEmailMessage] = useState('')
-
   // Handle input changes
   const handleInputChange = (e) => {
     const { id, value } = e.target;
@@ -39,23 +34,21 @@ function SettingsPage({user}) {
     }));
   };
 
-
-  const handleSaveChanges = async () => { // Uses firebase updateProfile method to change the users displayName.
+  const handleSaveChanges = async () => {
     if(user) {
       try {
         await updateProfile(user, {displayName: userData.name})
       } catch (error) {
-
         toast.error("Error changing credentials.")
         return
       }
     }
+
     toast.success("Success! Your display name has changed.")
   
   };
 
-  const handleEmailChanges = async () => { // Uses firebase verification and update function to add another email to the user.
-    setEmailMessage('')
+  const handleEmailChanges = async () => {
     if(user) {
       try {
         await verifyBeforeUpdateEmail(user, userData.email)
@@ -66,7 +59,6 @@ function SettingsPage({user}) {
     }
 
     toast.success("Email request sent! Please check your email for the email change link.")
-
   };
 
   return (
@@ -97,7 +89,6 @@ function SettingsPage({user}) {
               value={userData.name}
               onChange={handleInputChange}
             />
-            {nameMessage ?? (<div className="text-sm">{nameMessage}</div>)}
           </div>
           <Button onClick={handleSaveChanges}>Save Changes</Button>
           <div className="space-y-2">
@@ -109,7 +100,6 @@ function SettingsPage({user}) {
               onChange={handleInputChange}
             />
           </div>
-          {emailMessage ?? (<div className="text-sm">{emailMessage}</div>)}
         </CardContent>
         <CardFooter>
           <Button onClick={handleEmailChanges}>Send Email Reset Link</Button>

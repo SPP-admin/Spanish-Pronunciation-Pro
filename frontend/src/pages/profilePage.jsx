@@ -2,27 +2,13 @@ import React, { useState, useEffect } from 'react';
 import api from "../api.js";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { TrophiesCard } from "@/components/trophies"; 
-import { useProfile } from '@/profileContext.jsx';
 import { updateProfile } from "firebase/auth";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { auth, storage } from "@/firebase.js"; 
-import { achievements } from '../achievements.js';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 function ProfilePage({user, profile, achievements, activities}) {
 
-  const { profile } = useProfile();
-  const cleanAchievments = achievements.map(({condition, ...rest}) => rest);
-  const localAchievements = structuredClone(cleanAchievments);
-  
-  // Match achievements to database achiemvents.
-    for (const key in localAchievements) {
-      if(profile?.achievements[key]?.completed == true) {
-        localAchievements[key].unlocked = true;
-        localAchievements[key].completionDate = profile.achievements[key].completion_date
-      } else localAchievements[key].unlocked = false;
-    }
-  
   const [userData, setUserData] = useState({
     lessonsCompleted: 0,
     practiceSessions: 0, 
@@ -30,7 +16,91 @@ function ProfilePage({user, profile, achievements, activities}) {
     studyStreak: 0,  
   })
 
-  const [recentActivity, setRecentActivity] = useState(['']);
+  
+    
+// Trying out a mock achievements list
+  const allAchievements = [
+    {
+      id: 1,
+      name: "Perfect Week",
+      description: "Complete a lesson every day for 7 days.",
+      unlocked: achievements[0] ?? false,
+    },
+    {
+      id: 2,
+      name: "14 Day Streak",
+      description: "Maintain a 14-day practice streak.",
+      unlocked: achievements[1] ?? false,
+    },
+    {
+      id: 3,
+      name: "Vowel Virtuoso",
+      description: "Complete all vowel lessons.",
+      unlocked: achievements[2] ?? false,
+    },
+    {
+      id: 4,
+      name: "Consonant Champion",
+      description: "Complete all consonant lessons.",
+      unlocked: achievements[3] ?? false,
+    },
+    {
+      id: 5,
+      name: "Speedy Speaker",
+      description: "Complete a lesson in under 2 minutes",
+      unlocked: achievements[4] ?? false,
+    },
+    {
+      id: 6,
+      name: "Max level",
+      description: "Reach max level in any lesson category.",
+      unlocked: achievements[5] ?? false,
+    },
+  ];
+
+    const [recentActivity, setRecentActivity] = useState(['']);
+    /*
+    useEffect(() => {
+      const getData = async () => {
+        if (!user) return;
+        try {
+          const fetchedData = await api.get(`/getUserStatistics?uid=${user.uid}`)
+          let userStats = fetchedData.data.user_stats
+          setUserData(prev => ({
+            ...prev,
+            lessonsCompleted: userStats.completed_lessons ?? prev.lessonsCompleted,
+            accuracyRate: userStats.accuracy_rate ?? prev.accuracyRate,
+            practiceSessions: userStats.practice_sessions ?? prev.practiceSessions,
+            studyStreak: userStats.study_streak ?? prev.studyStreak
+          }));
+          console.log(fetchedData.data)
+    
+        }
+        catch (error) {
+          console.log(error)
+        }
+      }
+    
+      if(user) getData();
+    }, [user]);
+
+    useEffect(() => {
+        const getActivities = async () => {
+            if(!user) return;
+            try {
+                const fetchedData = await api.get(`/getActivityHistory?uid=${user.uid}`)
+                let activities = fetchedData.data.activity_history
+                console.log(activities)
+                setRecentActivity(activities)
+            }
+            catch (error) {
+             console.log(error)
+            }
+        }
+
+        if(user) getActivities();
+    }, [user]);
+        */
 
   // Profile picture states
   const [profilePic, setProfilePic] = useState(user.photoURL || 
@@ -123,7 +193,7 @@ function ProfilePage({user, profile, achievements, activities}) {
               </p>
               <p>
                 <span className="font-semibold">Accuracy Rate:</span>{" "}
-                {profile.accuracyRate}%
+                {profile.accuracyRate}
               </p>
             </CardContent>
           </Card>
@@ -131,7 +201,7 @@ function ProfilePage({user, profile, achievements, activities}) {
 
         {/* Right Column: Achievements and Activity */}
         <div className="col-span-1 lg:col-span-2 space-y-6">
-          <TrophiesCard trophies={localAchievements} />
+          <TrophiesCard trophies={allAchievements} />
 
           <Card>
             <CardHeader>
@@ -139,9 +209,9 @@ function ProfilePage({user, profile, achievements, activities}) {
             </CardHeader>
             <CardContent>
               <ul className="space-y-3">
-                {profile.activities.map((act, index) => (
+                {activities.map((act, index) => (
                   <li key={index} className="text-sm">
-                    {act}
+                    {activities[index]}
                     <span className="text-xs text-muted-foreground block">
                       {act.time}
                     </span>

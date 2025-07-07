@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom'; 
 import Navbar from './navbar.jsx';
 
-
 function Layout() {
   const [profilePic, setProfilePic] = useState(
     `https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff`

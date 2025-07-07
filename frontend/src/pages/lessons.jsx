@@ -13,58 +13,132 @@ import { Button } from "@/components/ui/button";
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2 } from 'lucide-react';
-import { useProfile } from '@/profileContext';
-import { lessonCategories } from '@/lessonCategories';
-import api from '@/api';
-import { achievements, achievementChecker } from '@/achievements';
-import { toast } from 'sonner';
+
+const lessonCategories = [
+    {
+        id: "vowels",
+        title: "Vowels",
+        description: "Practice the core Spanish vowel sounds.",
+        lessons: [
+            { value: "a", label: "A" },
+            { value: "e", label: "E" },
+            { value: "i", label: "I" },
+            { value: "o", label: "O" },
+            { value: "u", label: "U" },
+        ],
+        levels: [
+            { value: "words", label: "Vowel Sound & Words" },
+            { value: "simple_sentences", label: "Simple Sentences" },
+            { value: "complex_sentences", label: "Complex Sentences" },
+        ],
+    },
+    {
+        id: "consonants",
+        title: "Consonants",
+        description: "Master tricky consonant pronunciations.",
+        lessons: [
+            { value: "soft consonants", label: "Soft Consonants" },
+            { value: "hard consonants", label: "Hard Consonants" },
+            { value: "consonant combos", label: "Vowel-Consonant Combos" },
+        ],
+        levels: [
+            { value: "words", label: "Words" },
+            { value: "sentences", label: "Sentences" },
+        ]
+    },
+    {
+        id: "unique sounds",
+        title: "Unique Sounds (ñ, rr, ll)",
+        description: "Learn sounds unique to the Spanish language.",
+        lessons: [
+            { value: "ñ", label: "Ñ" },
+            { value: "rr", label: "RR" },
+            { value: "ll", label: "LL" },
+            { value: "ch", label: "CH" },
+            { value: "qu", label: "QU" },
+        ],
+        levels: [
+            { value: "words", label: "Sound & Words" },
+            { value: "sentences", label: "Sentences" },
+        ]
+    },
+    {
+        id: "special vowels",
+        title: "Special Vowel Combinations (diphthongs)",
+        description: "Master vowel combinations like 'ai', 'ei', 'oi'.",
+        lessons: [
+            { value: "ai", label: "AI" },
+            { value: "ue", label: "UE" },
+            { value: "eu", label: "EU" },
+            { value: "au", label: "AU" },
+            { value: "ei", label: "EI" },
+            { value: "ia", label: "IA" },
+            { value: "io", label: "IO" },
+            { value: "oi", label: "OI" },
+            { value: "ui", label: "UI" },
+            { value: "ie", label: "IE" },
+        ],
+        levels: [
+            { value: "words", label: "Vowel Sound & Words" },
+            { value: "simple sentences", label: "Sentences" },
+        ],
+    },
+    {
+        id: "accent marks ",
+        title: "Accent Marks",
+        description: "Understand how accent marks affect pronunciation.",
+        lessons: [
+            { value: "no marks", label: "No Marks" },
+
+        ],
+        levels: [
+            { value: "words", label: "Words" },
+            { value: "simple sentences", label: "Sentences" },
+        ],
+    },
+    {
+        id: "regional differences",
+        title: "Regional Differences",
+        description: "Explore pronunciation variations across Spanish-speaking countries.",
+        lessons: [
+            { value: "mexico", label: "Mexico" },
+            { value: "spain", label: "Spain" },
+            { value: "argentina", label: "Argentina" },
+            { value: "colombia", label: "Colombia" },
+            { value: "peru", label: "Peru" },
+            { value: "venezuela", label: "Venezuela" },
+            { value: "chile", label: "Chile" },
+            { value: "cuba", label: "Cuba" },
+            { value: "puerto_rico", label: "Puerto Rico" },
+        ],
+        levels: [
+            { value: "regional", label: "Regional Audio" },
+        ],
+    },
+];
 
 // Check if every possible combination in a category is complete
 
-function LessonsPage({user}) {
-
-    const { profile, setProfile } = useProfile()
-
-    // Checks if the user has earned any new achievements.
-
-    useEffect(() => {
-        const achievementsToGrant = achievementChecker(profile, achievements)
-        if(achievementsToGrant.length == 0) return;
-        for (const achievement in achievementsToGrant) {
-          completeAchievement(achievementsToGrant[achievement])
-        }
-        toast("New Achievement Complete!, click on your profile page to view your new unlocked achievement!")
-    }, [profile])
-
-    const isCategoryFullyComplete = (category, index) => {
-
-        /* Implementation of category checking without endpoints. */
-
-
-        //const progress = selections[category.id];
-
-        //console.log(selections)
-
-        //if (!progress || !progress.completedCombinations) return false;
-
+function LessonsPage({lessons, isFetching}) {
+    //if(isFetching) return null;
+    const isCategoryFullyComplete = (category, selections, index) => {
+        /*
+        const progress = selections[category.id];
+        if (!progress || !progress.completedCombinations) return false;
+        
         for (const lesson of category.lessons) {
             for (const level of category.levels) {
                 const comboKey = `${lesson.value}-${level.value}`;
-                if (!profile.chunks[index]?.[comboKey]) {
+                if (!progress.completedCombinations[comboKey]) {
                     return false; // Found a combo that is incomplete
                 }
             }
         }
-        /*
-        if(!profile.lessons || !profile.lessons[index] || !profile.lessons[index].completed || profile.lessons[index].completed == false) {
+            */
+        if(!lessons[index] || !lessons[index].completed || lessons[index].completed == false) {
             return false
         }
-            */
-        if (profile?.lessons[index]?.completed == false) {
-          completeCategory(index)
-        }
-        
-        return true; 
+        return true; // All combinations are complete
     };
 
   const [selections, setSelections] = useState(() => {
@@ -89,36 +163,6 @@ function LessonsPage({user}) {
     });
   };
 
-  // Completes a catgory in the backend and profile context.
-  const completeCategory = async (index) => {
-    try {
-      await api.patch(`/updateLessonProgress?uid=${user.uid}&lesson=${index}`);
-      const newCategories = profile.lessons;
-      newCategories[index].completed = true;
-      const updated = {...profile, lessons: newCategories};
-      setProfile(updated, user.uid)  
-    } catch (error) {
-      console.log(error)
-    }
-  }
-
-  const completeAchievement = async (achievement) => {
-
-    try {
-      await api.patch(`/updateAchievements?uid=${user.uid}&achievement=${achievement}`); 
-      const date = new Date().toISOString().replace('T', ' ').slice(0,19);
-      const newAchievements = profile.achievements;
-      newAchievements[achievement] = {
-        completed: true,
-        completion_date: date
-      }
-      const updated = {...profile, achievements: newAchievements};
-      setProfile(updated, user.uid)
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
   return (
     <div className="container mx-auto p-4 md:p-6">
       <h2 className="text-3xl font-bold mb-6 text-center">Choose a Lesson</h2>
@@ -130,11 +174,10 @@ function LessonsPage({user}) {
 
           // Check 1: Is the currently selected combination complete?
           const comboKey = `${currentLesson}-${currentLevel}`;
-          const isComboComplete = profile.chunks?.[index]?.[comboKey] || false;
-          //const isComboComplete = currentProgress.completedCombinations?.[comboKey] || false;
+          const isComboComplete = currentProgress.completedCombinations?.[comboKey] || false;
 
           // Check 2: Is the entire category complete?
-          const isCategoryComplete = isCategoryFullyComplete(category, index);
+          const isCategoryComplete = isCategoryFullyComplete(category, selections, index);
           
           const practicePath = `/lessonsPractice?topic=${category.id}&lesson=${currentLesson}&level=${currentLevel}`;
 
