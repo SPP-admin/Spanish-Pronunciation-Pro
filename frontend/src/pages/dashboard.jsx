@@ -1,8 +1,4 @@
 import React from 'react';
-import api from "../api.js";
-import App from '@/App';
-import { useEffect } from 'react';
-import { useState } from 'react';
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -14,26 +10,32 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { TrophiesCard } from "@/components/trophies";
+import { useProfile } from '@/profileContext.jsx';
+import { achievements } from '../achievements.js';
 
-function Dashboard({user, profile, activities}) {
-  const totalLessons = 100;
+function Dashboard({user}) {
+
+  const { profile } = useProfile();
+  const totalLessons = 62;
   const progressValue = (profile.lessonsCompleted / totalLessons) * 100;
 
-  // MOCK achievements for the dashboard
-  const recentAchievements = [
-    {
-      id: 1,
-      name: "Perfect Week",
-      description: "Complete a lesson every day for 7 days.",
-      unlocked: true,
-    },
-    {
-      id: 2,
-      name: "14 Day Streak",
-      description: "Maintain a 14-day practice streak.",
-      unlocked: true,
-    },
-  ];
+  const cleanAchievments = achievements.map(({condition, ...rest}) => rest);
+  const localAchievements = structuredClone(cleanAchievments);
+
+  // Match achievements to database achievements
+    for (const key in localAchievements) {
+      if(profile?.achievements[key]?.completed == true) {
+        localAchievements[key].unlocked = true;
+        localAchievements[key].completionDate = profile.achievements[key].completion_date
+      } else localAchievements[key].unlocked = false;
+    }
+    
+  // Sort by date and take the first 2 most recent.
+  const recentAchievements = Object.values(localAchievements)
+  .filter(localAchievement => localAchievement?.unlocked === true)
+  .sort((a,b) => new Date(b.completionDate) - new Date(a.completionDate))
+  .slice(0,2);
+
 
   return (
     <div className="p-4 md:p-8">
@@ -71,9 +73,9 @@ function Dashboard({user, profile, activities}) {
           </CardHeader>
           <CardContent>
             <ul className="space-y-2 text-sm text-muted-foreground">
-                {activities.map((act, index) => (
+                {profile.activities.map((activity, index) => (
                   <li key={index} className="text-sm">
-                    {activities[index]}
+                    {activity}
                   </li>
                 ))}
             </ul>

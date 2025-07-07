@@ -12,18 +12,19 @@ import { auth, googleProvider } from '../firebase.js';
 
 import loginImage from '@/assets/images/login2.png';
 
-import api from "../api.js";
 import {useState, useEffect} from 'react';
 import { toast } from 'sonner';
 
 
 function LoginPage({user, isFetching}) {
-  console.log(user)
+
   const navigate = useNavigate();
   const [cred, setCred] = useState({
     email: '',
     password: '',
   });
+  
+  const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
     if(!isFetching && user) {
@@ -46,7 +47,7 @@ function LoginPage({user, isFetching}) {
     await api.post('/setLessonProgress', {id: user.uid}).catch(() => {})
       */
     toast.success('Logged in with Google!')
-    navigate('/dashboard');
+    //navigate('/dashboard');
   }
 
   const handleChange = (e) => {
@@ -57,6 +58,7 @@ function LoginPage({user, isFetching}) {
   }
 
   const handleLoginClick = async () => {
+    setErrorMessage('')
 
     try {
       const userCredential = await signInWithEmailAndPassword(auth, cred.email, cred.password)
@@ -103,6 +105,7 @@ function LoginPage({user, isFetching}) {
                    </Link>
                  </div>
                  <Input id="password" type="password" placeholder="" name ="password" value = {cred.password} onChange = {handleChange} required />
+                  {errorMessage && (<div className="text-sm">{errorMessage}</div>)}
                </div>
              </CardContent>
              <CardFooter className="flex flex-col space-y-3 pt-6">

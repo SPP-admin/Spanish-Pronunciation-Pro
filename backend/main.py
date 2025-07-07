@@ -1,7 +1,7 @@
 import os
 import base64
 import uvicorn
-from fastapi import FastAPI, HTTPException, Form
+from fastapi import FastAPI, HTTPException, Form, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -15,7 +15,23 @@ from models import LoginSchema, SignUpSchema, ChunkSchema, BaseSchema
 
 #import pyrebase
 #import config
-from datetime import datetime
+from datetime import datetime, timezone
+from google.cloud.firestore_v1.base_query import FieldFilter
+from openai import OpenAI
+
+import pronunciationChecking
+import ipaTransliteration as epi
+import random
+import librosa
+import soundfile as sf
+import numpy as np
+import string
+
+from dotenv import load_dotenv
+load_dotenv()
+
+import requests
+import traceback
 
 if not firebase_admin._apps:
     #check if file exists
@@ -34,9 +50,6 @@ app = FastAPI(
     title = "SPP API's",
     docs_url= "/"
 )
-
-if __name__ == "__main__":
-      uvicorn.run("main:app", host="0.0.0.0", port=8080, reload=True)
 
 origins = [
     "http://localhost:5173",
@@ -58,9 +71,12 @@ db = firestore.client()
 class AudioData(BaseModel):
     base64_data: str
 
+class TranscriptionData(BaseModel):
+     sentence: str
+     base64_data: str
 # openai import
 import openai
-openai.api_key = os.getenv("OPENAI_KEY")
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 @app.post("/sendVoiceNote")
 async def send_voice_note(data: AudioData):
@@ -180,6 +196,8 @@ async def getUserStatistics(uid):
 @app.post("/setUserStatistics")
 async def setUserStatistics(request: BaseSchema):
     try:
+        date = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+        
         doc_ref = db.collection('stats')
 
         data = {
@@ -188,7 +206,8 @@ async def setUserStatistics(request: BaseSchema):
             'completed_lessons': int(0),
             'practice_sessions': int(0),
             'study_streak': int(0),
-            'uses': int(0)
+            'uses': int(0),
+            'last_login': date
         }
 
         query_ref = doc_ref.where(filter= FieldFilter("id", "==", request.id)).get()
@@ -211,13 +230,13 @@ async def setUserStatistics(request: BaseSchema):
 
 # After calculating the users new accuracy, update the accuracy value.
 @app.patch("/updateAccuracy")
-async def updateAccuracy(uid, new_accuracy):
+async def updateAccuracy(uid, new_accuracy: int):
     try:
         doc_ref = db.collection('stats')
         query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
         doc_id = query_ref[0].id
         doc_ref = db.collection('stats').document(doc_id).update({"accuracy_rate": new_accuracy})
-        return JSONResponse(content={"message": f"Accuracy was successfully updated to a value of {int(new_accuracy)}%" }, 
+        return JSONResponse(content={"message": f"Accuracy was successfully updated to a value of {(new_accuracy)}%" }, 
                                     status_code = 201)
     except Exception as e:
         raise HTTPException(
@@ -227,12 +246,12 @@ async def updateAccuracy(uid, new_accuracy):
     
 # When the user completes a practice session, update the value.
 @app.patch("/updatePracticeSessions")
-async def updatePracticeSessions(uid):
+async def updatePracticeSessions(uid, new_session_value):
     try:
         doc_ref = db.collection('stats')
         query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
         doc_id = query_ref[0].id
-        doc_ref = db.collection('stats').document(doc_id).update({"practice_sessions": firestore.Increment(1)})
+        doc_ref = db.collection('stats').document(doc_id).update({"practice_sessions": new_session_value})
         return JSONResponse(content={"message": f"User has successfully completed a practice session." }, 
                                     status_code = 201)
     except Exception as e:
@@ -243,12 +262,12 @@ async def updatePracticeSessions(uid):
 
 # When the user finishes all the chunks present in a lesson, update the amount of lessons they've completed.
 @app.patch("/updateCompletedLessons")
-async def updateCompletedLessons(uid):
+async def updateCompletedLessons(uid, new_lesson_value):
     try:
         doc_ref = db.collection('stats')
         query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
         doc_id = query_ref[0].id
-        doc_ref = db.collection('stats').document(doc_id).update({"completed_lessons": firestore.Increment(1)})
+        doc_ref = db.collection('stats').document(doc_id).update({"completed_lessons": new_lesson_value})
         return JSONResponse(content={"message": f"User has successfully completed a lesson, the amount of lessons they've completed has been incremented." }, 
                                     status_code = 201)
     except Exception as e:
@@ -275,7 +294,7 @@ async def updateStudyStreak(uid):
    
 # When a user uses the pronounciation checker, update the value.
 @app.patch("/updateUses")
-async def updateCompletedUses(uid):
+async def updateUses(uid):
     try:
         doc_ref = db.collection('stats')
         query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
@@ -301,7 +320,7 @@ async def getLessonProgress(uid):
 
         print(data)
 
-        return JSONResponse(content={"lesson_data": data["lesson_data"]},
+        return JSONResponse(content={"lessons": data},
                             status_code=201)
     except Exception as e:
                 raise HTTPException(
@@ -325,7 +344,7 @@ async def setAchievements(request: BaseSchema):
             doc = doc_ref.document()
             data = {
                  'id': request.id,
-                 'achievements': []
+                 'achievements': {}
             }
             doc.set(data)
 
@@ -340,8 +359,10 @@ async def setAchievements(request: BaseSchema):
 
 # Set an achievment to true.
 @app.patch("/updateAchievements")
-async def updateAchievements(uid, achievement: int):
+async def updateAchievements(uid, achievement: str):
      try:
+          date = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+
           doc_ref = db.collection('achievements')
 
           query_ref = doc_ref.where(filter=FieldFilter("id", "==", uid)).get()
@@ -350,11 +371,10 @@ async def updateAchievements(uid, achievement: int):
           doc_id = doc.id
           achievements = doc.to_dict().get('achievements', [])
 
-          if (achievement >= len(achievements) and achievement < 30):
-               new_size = achievement - len(achievements) + 1
-               achievements.extend([False] * new_size)
-
-          achievements[achievement] = True
+          achievements[achievement] = {
+               "completed": True,
+               "completion_date": date
+          }
           
           doc_ref = db.collection('achievements').document(doc_id).update({"achievements": achievements})
 
@@ -431,9 +451,12 @@ async def getActivityHistory(uid):
             detail= f"Error fetching activity history. {str(e)}"
         )
 
+'''
 @app.post("/setUser")
 async def setUser(request: BaseSchema):
     try:
+            date = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+            
             doc_ref = db.collection('users')
 
             query_ref = doc_ref.where(filter= FieldFilter("id", "==", request.id)).get()
@@ -447,7 +470,8 @@ async def setUser(request: BaseSchema):
                 doc = doc_ref.document()
                 data = {
                     'id': request.id,
-                    'initialized': True
+                    'initialized': True,
+                    'last_login': date
                 }
             doc.set(data)
 
@@ -474,6 +498,7 @@ async def getUser(uid):
             status_code=400,
             detail= f"Error fetching user, No user exists. {str(e)}"
         )
+'''
 
 # Fetch the user accuracy
 @app.get("/getUserAccuracy")
@@ -512,7 +537,7 @@ async def getChunkProgress(uid, lesson: int):
 
 # Set a chunk to completed, (Stored as a map as firestore does not allow the storage of 2-d arrays / lists)
 @app.patch("/updateChunkProgress")
-async def updateChunkProgress(uid, chunk: int, lesson: int):
+async def updateChunkProgress(uid, chunk: str, lesson: int, difficulty: str):
     try:
         doc_ref = db.collection('lessons')
 
@@ -526,7 +551,8 @@ async def updateChunkProgress(uid, chunk: int, lesson: int):
         if chunks[lesson] is None:
               chunks[lesson] = {}
 
-        chunks[lesson][str(chunk)] = True
+        chunks[lesson][chunk+"-"+difficulty] = True
+        print(chunks)
 
         doc_ref = db.collection('lessons').document(doc_id).update({"chunks": chunks})
 
@@ -549,7 +575,7 @@ async def updateLessonProgress(uid, lesson: int):
           data['lesson_data'][lesson]['completed'] = True
           print(data['lesson_data'])
 
-          doc_ref = db.collection('lessons').document(doc_id).update({"lesson_data": data})
+          doc_ref = db.collection('lessons').document(doc_id).update({"lesson_data": data['lesson_data']})
 
           return JSONResponse(content={"message": "Lesson progress was successfully updated."}, 
                                     status_code = 201)
@@ -591,3 +617,79 @@ async def setLessonProgress(request: BaseSchema):
             status_code=400,
             detail= f"Error intializing lesson progress {str(e)}."
         )
+
+# Generate a sentence or word for the user to practice.
+@app.post("/generateSentence")
+async def generateSentence(chunk: str, lesson: str, difficulty: str):
+      client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+      try:
+        prompt = (
+            f"You are a helpful assistant that generates Spanish sentences or words for a pronunciation app. "
+            f"The current lesson chunk is '{chunk}', the specific lesson is '{lesson}', and the difficulty is '{difficulty}'. "
+            f"Generate ONLY the Spanish sentence or word requested, with NO extra text, explanations, or introductions. Do not say anything like 'Here is a sentence:' or 'OK'. Just output the Spanish sentence or word itself. "
+            f"Use the Spanish alphabet, correct accent marks and also make sure the sentences are grammatically correct. "
+            f"If the difficulty is or includes 'word', return only a single word."
+        )
+        user_content = (
+            f"Generate a Spanish {difficulty} for the lesson '{lesson}' in the chunk '{chunk}'. "
+            f"ONLY return the Spanish sentence or word, and nothing else."
+        )
+        response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[{"role": "system", "content": prompt},
+                        {"role": "user", "content": user_content}],
+                temperature=1
+        )
+        current_sentence = response.choices[0].message.content
+        
+      # if there is an error with OpenAI, use a backup list of sentences
+      except:
+            backup_sentences = [
+                "El gato duerme.", "La niña corre.", 
+                "El perro ladra.", "Hace mucho calor.",
+                "Llueve afuera.", "El vaso está lleno.",
+                "La casa es grande.", "El pan está caliente.",
+                "Hay una flor.", "La cama es cómoda."
+            ]
+            current_sentence = random.choice(backup_sentences)
+      finally:
+        return current_sentence
+
+# Check the user's pronunciation of a sentence or word.
+@app.post("/checkPronunciation")
+async def checkPronunciation(data: TranscriptionData):
+      try:
+        
+        audio_bytes = base64.b64decode(data.base64_data)
+        sentence = data.sentence
+
+		# Generating random name for the audio files
+        random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=20))
+        random_string = random_string + ".wav"
+        with open(random_string, "wb") as f:
+              f.write(audio_bytes)
+        
+        print(os.path.isfile(random_string))
+        audio, sampling_rate = librosa.load(random_string, sr=16000, mono=True, duration=30.0, dtype=np.int32)
+        random2 = "tmp_" + random_string
+        sf.write(random2, audio, 16000)
+        output = pronunciationChecking.correct_pronunciation(sentence, random2, 'latam')
+
+        # Get rid of audio recordings
+        if os.path.exists(random_string):
+            os.remove(random_string)
+            print(random_string + " deleted successfully.")
+        else: print(f"File not found.")
+        if os.path.exists(random2):
+            os.remove(random2)
+            print(random2 + " deleted successfully.")
+        else: print(f"File not found.")
+      except Exception as e:
+            print('Error: ', str(e))
+            traceback.print_exc()
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error in pronunciation checking: {str(e)}"
+            )
+
+      return output

@@ -1,10 +1,22 @@
 FROM python:3.10-slim-buster
 
-WORKDIR /api
+WORKDIR /app
 
-COPY requirements.txt requirements.txt
-RUN pip3 install -r requirements.txt
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    git \
+    && rm -rf /var/lib/apt/lists/*
 
+# Upgrade pip and install wheel for faster package installation
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+
+COPY requirements.txt .
+
+# Install Python dependencies with optimizations
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
 COPY . .
 
 # Use uvicorn to run the FastAPI app
