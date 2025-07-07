@@ -118,7 +118,7 @@ class sentenceMapping:
 				i += 3
 			elif (sentence[i:i+2] == "gui"):
 				mapping.append(ipaMapping(ortho_letter=self.sentence[i:i+2], ipa_letter="g"))
-				if sentence[i+2] in vowels:
+				if i < len(sentence) - 2 and sentence[i+2] in vowels:
 					mapping.append(ipaMapping(ortho_letter=self.sentence[i+2], ipa_letter="j"))
 				else:
 					mapping.append(ipaMapping(ortho_letter=self.sentence[i+2], ipa_letter="i"))
@@ -129,7 +129,7 @@ class sentenceMapping:
 				i += 2
 			elif (sentence[i:i+2] == "ci"):
 				mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="s"))
-				if sentence[i+2] in vowels:
+				if i < len(sentence) - 2 and sentence[i+2] in vowels:
 					mapping.append(ipaMapping(ortho_letter=self.sentence[i+1], ipa_letter="j"))
 				else:
 					mapping.append(ipaMapping(ortho_letter=self.sentence[i+1], ipa_letter="i"))
@@ -137,16 +137,24 @@ class sentenceMapping:
 			elif (sentence[i:i+2] == "ch"):
 				mapping.append(ipaMapping(ortho_letter=self.sentence[i:i+2], ipa_letter="tʃ"))
 				i += 2
-			elif (sentence[i:i+2] == "ge" or sentence[i:i+2] == "gi"):
+			elif (sentence[i:i+2] == "ge"):
 				mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="x"))
-				mapping.append(ipaMapping(ortho_letter=self.sentence[i+1], ipa_letter=sentence[i+1]))
+				mapping.append(ipaMapping(ortho_letter=self.sentence[i+1], ipa_letter="e"))
+				i += 2
+			elif (sentence[i:i+2] == "gi"):
+				mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="x"))
+				if i < len(sentence) - 2 and sentence[i+2] in vowels:
+					mapping.append(ipaMapping(ortho_letter=self.sentence[i+1], ipa_letter="j"))
+				else:
+					mapping.append(ipaMapping(ortho_letter=self.sentence[i+1], ipa_letter=sentence[i+1]))
 				i += 2
 			elif (sentence[i:i+2] == "gu" or sentence[i:i+2] == "gü"):
 				mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="g"))
 				mapping.append(ipaMapping(ortho_letter=self.sentence[i+1], ipa_letter="w"))
 				i += 2
+			# This is technically not correct, but Whisper is bad at detecting [ʝ] so use [j] instead
 			elif (sentence[i:i+2] == "hi" or sentence[i:i+2] == "ll"):
-				mapping.append(ipaMapping(ortho_letter=self.sentence[i:i+2], ipa_letter="ʝ"))
+				mapping.append(ipaMapping(ortho_letter=self.sentence[i:i+2], ipa_letter="j"))
 				i += 2
 			elif (sentence[i:i+2] == "qu"):
 				mapping.append(ipaMapping(ortho_letter=self.sentence[i:i+2], ipa_letter="k"))
@@ -198,12 +206,16 @@ class sentenceMapping:
 						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="m"))
 					case "n":
 						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="n"))
+					# Whisper is bad at detecting [ɲ] so use [nj] instead
 					case "ñ":
-						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="ɲ"))
+						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="nj"))
 					case "p":
 						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="p"))
 					case "r":
-						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="ɾ"))
+						if i == 0 or (not sentence[i-1].isalpha()) or sentence[i-1] in {'l', 'n', 's', 'z'}:
+							mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="r"))
+						else:
+							mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="ɾ"))
 					case "s" | "z":
 						if i < len(sentence) - 1 and (sentence[i+1] == "b" or sentence[i+1] == "d" 
 													   or sentence[i+1] == "g"  or sentence[i+1] == "l"  or sentence[i+1] == "m"  
@@ -333,7 +345,7 @@ class sentenceMapping:
 					case "r":
 						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="ɾ"))
 					case "s":
-						if i < len(sentence) and (sentence[i+1] == "b" or sentence[i+1] == "d" 
+						if i < len(sentence) - 1 and (sentence[i+1] == "b" or sentence[i+1] == "d" 
 													   or sentence[i+1] == "g"  or sentence[i+1] == "l"  or sentence[i+1] == "m"  
 													   or sentence[i+1] == "n"):
 							mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="z"))
@@ -344,7 +356,7 @@ class sentenceMapping:
 					case "w":
 						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="w"))
 					case "x":
-						if i < len(sentence) and not sentence[i+1] in vowels:
+						if i < len(sentence) - 1 and not sentence[i+1] in vowels:
 							mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="s"))
 						else:
 							mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="ks"))
