@@ -1,6 +1,10 @@
 
   const vowelLesson = 0;
-  const consonantLesson = 4;
+  const consonantLesson = 1;
+  const uniqueLesson = 2;
+  const speccialLesson = 3;
+  const accentLesson = 4;
+  const regionalLesson = 5;
 
   export const achievements = [
     {
@@ -17,7 +21,7 @@
       description: "Maintain a 14-day practice streak.",
       unlocked: false,
       completionDate: 0,
-      condition: (userStats) => userStats.studyStreak >= 14
+      condition: (userStats) => userStats?.studyStreak >= 14
     },
     {
       id: 2,
@@ -25,7 +29,7 @@
       description: "Complete all vowel lessons.",
       unlocked: false,
       completionDate: 0,
-      condition: (userStats) => userStats.lessons[vowelLesson]?.completed == true
+      condition: (userStats) => userStats?.lessons[vowelLesson]?.completed == true
     },
     {
       id: 3,
@@ -33,23 +37,23 @@
       description: "Complete all consonant lessons.",
       unlocked: false,
       completionDate: 0,
-      condition: (userStats) => userStats.lessons[consonantLesson]?.completed == true
+      condition: (userStats) => userStats?.lessons[consonantLesson]?.completed == true
     },
     {
       id: 4,
-      name: "Speedy Speaker",
-      description: "Complete a lesson in under 2 minutes",
+      name: "Accent Mark Master",
+      description: "Complete all accent mark lessons.",
       unlocked: false,
       completionDate: 0,
-      condition: (userStats) => false
+      condition: (userStats) => userStats?.lessons[accentLesson]?.completed == true
     },
     {
       id: 5,
-      name: "Max level",
-      description: "Reach max level in any lesson category.",
+      name: "Precise Pronunciation",
+      description: "Achieve an accuracy rate of over 90%",
       unlocked: false,
       completionDate: 0,
-      condition: (userStats) => false
+      condition: (userStats) => userStats?.accuracyRate >= 90
     },
   ];
 
