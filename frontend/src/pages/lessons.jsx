@@ -15,34 +15,56 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle2 } from 'lucide-react';
 import { useProfile } from '@/profileContext';
 import { lessonCategories } from '@/lessonCategories';
+import api from '@/api';
+import { achievements, achievementChecker } from '@/achievements';
+import { toast } from 'sonner';
 
 // Check if every possible combination in a category is complete
 
-function LessonsPage() {
+function LessonsPage({user}) {
 
-    const { profile } = useProfile()
+    const { profile, setProfile } = useProfile()
 
-    const isCategoryFullyComplete = (category, selections, index) => {
-        /*
-        Implementation of category checking without endpoints.
+    // Checks if the user has earned any new achievements.
+
+    useEffect(() => {
+        const achievementsToGrant = achievementChecker(profile, achievements)
+        if(achievementsToGrant.length == 0) return;
+        for (const achievement in achievementsToGrant) {
+          completeAchievement(achievementsToGrant[achievement])
+        }
+        toast("New Achievement Complete!, click on your profile page to view your new unlocked achievement!")
+    }, [profile])
+
+    const isCategoryFullyComplete = (category, index) => {
+
+        /* Implementation of category checking without endpoints. */
 
 
-        const progress = selections[category.id];
-        if (!progress || !progress.completedCombinations) return false;
-        
+        //const progress = selections[category.id];
+
+        //console.log(selections)
+
+        //if (!progress || !progress.completedCombinations) return false;
+
         for (const lesson of category.lessons) {
             for (const level of category.levels) {
                 const comboKey = `${lesson.value}-${level.value}`;
-                if (!progress.completedCombinations[comboKey]) {
+                if (!profile.chunks[index]?.[comboKey]) {
                     return false; // Found a combo that is incomplete
                 }
             }
         }
-            */
+        /*
         if(!profile.lessons || !profile.lessons[index] || !profile.lessons[index].completed || profile.lessons[index].completed == false) {
             return false
         }
-        return true; // All combinations are complete
+            */
+        if (profile?.lessons[index]?.completed == false) {
+          completeCategory(index)
+        }
+        
+        return true; 
     };
 
   const [selections, setSelections] = useState(() => {
@@ -67,6 +89,36 @@ function LessonsPage() {
     });
   };
 
+  // Completes a catgory in the backend and profile context.
+  const completeCategory = async (index) => {
+    try {
+      await api.patch(`/updateLessonProgress?uid=${user.uid}&lesson=${index}`);
+      const newCategories = profile.lessons;
+      newCategories[index].completed = true;
+      const updated = {...profile, lessons: newCategories};
+      setProfile(updated, user.uid)  
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const completeAchievement = async (achievement) => {
+
+    try {
+      await api.patch(`/updateAchievements?uid=${user.uid}&achievement=${achievement}`); 
+      const date = new Date().toISOString().replace('T', ' ').slice(0,19);
+      const newAchievements = profile.achievements;
+      newAchievements[achievement] = {
+        completed: true,
+        completion_date: date
+      }
+      const updated = {...profile, achievements: newAchievements};
+      setProfile(updated, user.uid)
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   return (
     <div className="container mx-auto p-4 md:p-6">
       <h2 className="text-3xl font-bold mb-6 text-center">Choose a Lesson</h2>
@@ -82,7 +134,7 @@ function LessonsPage() {
           //const isComboComplete = currentProgress.completedCombinations?.[comboKey] || false;
 
           // Check 2: Is the entire category complete?
-          const isCategoryComplete = isCategoryFullyComplete(category, selections, index);
+          const isCategoryComplete = isCategoryFullyComplete(category, index);
           
           const practicePath = `/lessonsPractice?topic=${category.id}&lesson=${currentLesson}&level=${currentLevel}`;
 

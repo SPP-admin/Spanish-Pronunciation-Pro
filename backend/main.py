@@ -15,7 +15,7 @@ from models import LoginSchema, SignUpSchema, ChunkSchema, BaseSchema
 
 #import pyrebase
 #import config
-from datetime import datetime
+from datetime import datetime, timezone
 from google.cloud.firestore_v1.base_query import FieldFilter
 from openai import OpenAI
 
@@ -195,6 +195,8 @@ async def getUserStatistics(uid):
 @app.post("/setUserStatistics")
 async def setUserStatistics(request: BaseSchema):
     try:
+        date = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+        
         doc_ref = db.collection('stats')
 
         data = {
@@ -203,7 +205,8 @@ async def setUserStatistics(request: BaseSchema):
             'completed_lessons': int(0),
             'practice_sessions': int(0),
             'study_streak': int(0),
-            'uses': int(0)
+            'uses': int(0),
+            'last_login': date
         }
 
         query_ref = doc_ref.where(filter= FieldFilter("id", "==", request.id)).get()
@@ -226,13 +229,13 @@ async def setUserStatistics(request: BaseSchema):
 
 # After calculating the users new accuracy, update the accuracy value.
 @app.patch("/updateAccuracy")
-async def updateAccuracy(uid, new_accuracy):
+async def updateAccuracy(uid, new_accuracy: int):
     try:
         doc_ref = db.collection('stats')
         query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
         doc_id = query_ref[0].id
         doc_ref = db.collection('stats').document(doc_id).update({"accuracy_rate": new_accuracy})
-        return JSONResponse(content={"message": f"Accuracy was successfully updated to a value of {int(new_accuracy)}%" }, 
+        return JSONResponse(content={"message": f"Accuracy was successfully updated to a value of {(new_accuracy)}%" }, 
                                     status_code = 201)
     except Exception as e:
         raise HTTPException(
@@ -242,12 +245,12 @@ async def updateAccuracy(uid, new_accuracy):
     
 # When the user completes a practice session, update the value.
 @app.patch("/updatePracticeSessions")
-async def updatePracticeSessions(uid):
+async def updatePracticeSessions(uid, new_session_value):
     try:
         doc_ref = db.collection('stats')
         query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
         doc_id = query_ref[0].id
-        doc_ref = db.collection('stats').document(doc_id).update({"practice_sessions": firestore.Increment(1)})
+        doc_ref = db.collection('stats').document(doc_id).update({"practice_sessions": new_session_value})
         return JSONResponse(content={"message": f"User has successfully completed a practice session." }, 
                                     status_code = 201)
     except Exception as e:
@@ -258,12 +261,12 @@ async def updatePracticeSessions(uid):
 
 # When the user finishes all the chunks present in a lesson, update the amount of lessons they've completed.
 @app.patch("/updateCompletedLessons")
-async def updateCompletedLessons(uid):
+async def updateCompletedLessons(uid, new_lesson_value):
     try:
         doc_ref = db.collection('stats')
         query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
         doc_id = query_ref[0].id
-        doc_ref = db.collection('stats').document(doc_id).update({"completed_lessons": firestore.Increment(1)})
+        doc_ref = db.collection('stats').document(doc_id).update({"completed_lessons": new_lesson_value})
         return JSONResponse(content={"message": f"User has successfully completed a lesson, the amount of lessons they've completed has been incremented." }, 
                                     status_code = 201)
     except Exception as e:
@@ -340,7 +343,7 @@ async def setAchievements(request: BaseSchema):
             doc = doc_ref.document()
             data = {
                  'id': request.id,
-                 'achievements': []
+                 'achievements': {}
             }
             doc.set(data)
 
@@ -355,8 +358,10 @@ async def setAchievements(request: BaseSchema):
 
 # Set an achievment to true.
 @app.patch("/updateAchievements")
-async def updateAchievements(uid, achievement: int):
+async def updateAchievements(uid, achievement: str):
      try:
+          date = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+
           doc_ref = db.collection('achievements')
 
           query_ref = doc_ref.where(filter=FieldFilter("id", "==", uid)).get()
@@ -365,11 +370,10 @@ async def updateAchievements(uid, achievement: int):
           doc_id = doc.id
           achievements = doc.to_dict().get('achievements', [])
 
-          if (achievement >= len(achievements) and achievement < 30):
-               new_size = achievement - len(achievements) + 1
-               achievements.extend([False] * new_size)
-
-          achievements[achievement] = True
+          achievements[achievement] = {
+               "completed": True,
+               "completion_date": date
+          }
           
           doc_ref = db.collection('achievements').document(doc_id).update({"achievements": achievements})
 
@@ -446,9 +450,12 @@ async def getActivityHistory(uid):
             detail= f"Error fetching activity history. {str(e)}"
         )
 
+'''
 @app.post("/setUser")
 async def setUser(request: BaseSchema):
     try:
+            date = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+            
             doc_ref = db.collection('users')
 
             query_ref = doc_ref.where(filter= FieldFilter("id", "==", request.id)).get()
@@ -462,7 +469,8 @@ async def setUser(request: BaseSchema):
                 doc = doc_ref.document()
                 data = {
                     'id': request.id,
-                    'initialized': True
+                    'initialized': True,
+                    'last_login': date
                 }
             doc.set(data)
 
@@ -489,6 +497,7 @@ async def getUser(uid):
             status_code=400,
             detail= f"Error fetching user, No user exists. {str(e)}"
         )
+'''
 
 # Fetch the user accuracy
 @app.get("/getUserAccuracy")
@@ -679,4 +688,3 @@ async def checkPronunciation(data: TranscriptionData):
             )
 
       return output
-

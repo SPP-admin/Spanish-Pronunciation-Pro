@@ -115,6 +115,8 @@ function LessonsPracticePage() {
   const [englishTranslation, setEnglishTranslation] = useState("");
   const [loading, setLoading] = useState(false);
   const lastParams = useRef({ topic: null, lesson: null, level: null });
+  const [amountToPracticeSession, setAmountToPracticeSession] = useState(3);
+  const [currentAccuracy, setCurrentAccuracy] = useState(0);
 
   // How off is the user allowed to be before moving on to the next sentence.
   const allowedError = .5;
@@ -164,7 +166,17 @@ function LessonsPracticePage() {
     }
   }, [correctAmount])
 
+  useEffect(() => {
+
+    if(amountToPracticeSession == 0) {
+      completePracticeSession();
+      setAmountToPracticeSession(3)
+    }
+  }, [amountToPracticeSession])
+
+
   const fetchSentence = async () => {
+
         setLoading(true);
         setSpanishSentence("");
         setEnglishTranslation("");
@@ -244,6 +256,13 @@ function LessonsPracticePage() {
             return newAttempts
           })
 
+          //console.log(amountCorrect / generatedSentence.length)
+          setCurrentAccuracy(prev => {
+            console.log(prev)
+            return (prev + (amountCorrect / generatedSentence.length))
+          })
+          //console.log(amountCorrect / generatedSentence.length)
+
           if((amountCorrect >= generatedSentence.length * allowedError) && (generatedSentence.length == spanishSentence.length)) {
             if(!isLessonComplete && !isCurrentCorrect) handleCorrectAnswer();
           }
@@ -300,6 +319,9 @@ function LessonsPracticePage() {
 
     if(nextPage > -1) {
       setCorrectAmount(0)
+      if(isLessonComplete == true) {
+        setAmountToPracticeSession(prevCount => prevCount - 1)
+      }
       setLessonComplete(false)
       setCurrentCorrect(false)
       navigate(practicePath)
@@ -339,17 +361,20 @@ function LessonsPracticePage() {
 
     try {
       const newLessonsCompleted = profile.lessonsCompleted + 1;
+      const currentTotalAccuracy = currentAccuracy / amountToComplete * 100;
+      console.log(currentTotalAccuracy)
+      const newAccuracy = Math.floor((((profile.accuracyRate * profile.lessonsCompleted) + currentTotalAccuracy) / newLessonsCompleted));
       const completedTopic = lesson + "-" + level
       let cur = [...(profile.chunks ?? [])]
 
       // If this lesson hasn't already been completed complete it in the backend and update the local storage.
       if(!(completedTopic in (cur[topicIndex] ?? {}))) {
-        await sendTopic();
+        await sendTopic(newLessonsCompleted, newAccuracy);
         cur[topicIndex] = {
           ...(cur[topicIndex] ?? {}),
           [completedTopic]: true
         }
-        const updated = { ...profile, chunks: cur, lessonsCompleted: newLessonsCompleted}
+        const updated = { ...profile, chunks: cur, lessonsCompleted: newLessonsCompleted, accuracyRate: newAccuracy}
 
         setProfile(updated, user.uid)
         }
@@ -359,11 +384,24 @@ function LessonsPracticePage() {
     }
   };
 
+  const completePracticeSession = async () => {
+    try {
+      const sessions = profile.practiceSessions + 1;
+      api.patch(`/updatePracticeSessions?uid=${user.uid}&new_session_value=${sessions}`);
+      const updated = { ...profile, practiceSessions: sessions}
+      setProfile(updated, user.uid)
+
+    } catch (error) {
+      console.log(error)
+    }
+  };
+
   // Function to mark topic as completed in backend.
-  const sendTopic = async () => {
+  const sendTopic = async (newLessonsCompleted, newAccuracy) => {
     try {
       await api.patch(`/updateChunkProgress?uid=${user.uid}&chunk=${lesson}&lesson=${topicIndex}&difficulty=${level}`);
-      await api.patch(`/updateCompletedLessons?uid=${user.uid}`);
+      await api.patch(`/updateCompletedLessons?uid=${user.uid}&new_lesson_value=${newLessonsCompleted}`);
+      await api.patch(`/updateAccuracy?uid=${user.uid}&new_accuracy=${newAccuracy}`);
     } catch (error) {
       console.log(error)
     }
@@ -371,14 +409,20 @@ function LessonsPracticePage() {
 
   // Navigates to the previous page.
   const handlePrevious = () => {
+    navigate('/lessons');
+    /*
     if (prevPage <= -1){
       navigate('/lessons');
     } else {
       const practicePath = `/lessonsPractice?topic=${topic}&lesson=${[avalibleLessons[prevPage]["value"]]}&level=${level}`;
       setCorrectAmount(0)
+      if(isLessonComplete == true) {
+        setAmountToPracticeSession(prevCount => prevCount - 1)
+      }
       setCurrentCorrect(false)
       navigate(practicePath)
     }
+    */
   };
 
   // Adds another answer to the amount of correct ones.
