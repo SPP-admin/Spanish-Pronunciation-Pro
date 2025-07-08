@@ -175,7 +175,11 @@ def preprocess_user_ipa(user_ipa):
 def remove_double_letters(user_ipa):
 	user_ipa = user_ipa.replace("ɾɾ", "r")
 	user_ipa = user_ipa.replace("rr", "r")
+	str = ""
 	for i in range(len(user_ipa) - 1):
 		if user_ipa[i] == user_ipa[i + 1]:
-			user_ipa = user_ipa[:i] + user_ipa[i + 1:]
-	return user_ipa
+			continue
+		str += user_ipa[i]
+
+	str += user_ipa[-1]	
+	return str
