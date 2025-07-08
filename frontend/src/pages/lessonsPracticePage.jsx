@@ -36,7 +36,7 @@ const generateLessonData = (topic, lesson, level) => {
   }
 
   // Generate dynamic title
-  let title = `Lesson: ${lessonInfo.label}`;
+  let title = `${category.title}: ${lessonInfo.label}`;
   if (levelInfo.label) {
     title += ` - ${levelInfo.label}`;
   }
