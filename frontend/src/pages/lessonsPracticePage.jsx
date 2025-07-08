@@ -484,7 +484,7 @@ function LessonsPracticePage() {
 
             {/* Feedback Field now uses selectedText */}
             <div className="mt-4 p-4 bg-muted/50 dark:bg-muted/20 rounded text-center w-full min-h-[50px]">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-md text-muted-foreground">
                 {selectedText
                   ? `Now practicing: "${selectedText}". Record your pronunciation.`
                   : "Practice this word/sentence, or highlight text and click 'Practice' to begin."}
@@ -492,7 +492,7 @@ function LessonsPracticePage() {
             </div>
 			{/* Extra feedback field */}
 			<div className="mt-4 p-4 bg-muted/50 dark:bg-muted/20 rounded text-center w-full min-h-[50px]">
-              <p className="text-sm text-muted-foreground" id="transcriptionBox">
+              <p className="text-md text-muted-foreground" id="transcriptionBox">
               </p>
             </div>
             {isCurrentCorrect && !isLessonComplete && (
