@@ -2,50 +2,21 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrophiesCard } from "@/components/trophies"; 
 import { useProfile } from '@/profileContext.jsx';
+import { achievements } from '../achievements.js';
 
 function ProfilePage({user}) {
 
   const { profile } = useProfile();
-    
-// Trying out a mock achievements list
-  const allAchievements = [
-    {
-      id: 1,
-      name: "Perfect Week",
-      description: "Complete a lesson every day for 7 days.",
-      unlocked: profile.achievements[0] ?? false,
-    },
-    {
-      id: 2,
-      name: "14 Day Streak",
-      description: "Maintain a 14-day practice streak.",
-      unlocked: profile.achievements[1] ?? false,
-    },
-    {
-      id: 3,
-      name: "Vowel Virtuoso",
-      description: "Complete all vowel lessons.",
-      unlocked: profile.achievements[2] ?? false,
-    },
-    {
-      id: 4,
-      name: "Consonant Champion",
-      description: "Complete all consonant lessons.",
-      unlocked: profile.achievements[3] ?? false,
-    },
-    {
-      id: 5,
-      name: "Speedy Speaker",
-      description: "Complete a lesson in under 2 minutes",
-      unlocked: profile.achievements[4] ?? false,
-    },
-    {
-      id: 6,
-      name: "Max level",
-      description: "Reach max level in any lesson category.",
-      unlocked: profile.achievements[5] ?? false,
-    },
-  ];
+  const cleanAchievments = achievements.map(({condition, ...rest}) => rest);
+  const localAchievements = structuredClone(cleanAchievments);
+
+  // Match achievements to database achiemvents.
+    for (const key in localAchievements) {
+      if(profile?.achievements[key]?.completed == true) {
+        localAchievements[key].unlocked = true;
+        localAchievements[key].completionDate = profile.achievements[key].completion_date
+      } else localAchievements[key].unlocked = false;
+    }
 
   // Profile Page
   return (
@@ -85,7 +56,7 @@ function ProfilePage({user}) {
               </p>
               <p>
                 <span className="font-semibold">Accuracy Rate:</span>{" "}
-                {profile.accuracyRate}
+                {profile.accuracyRate}%
               </p>
             </CardContent>
           </Card>
@@ -93,7 +64,7 @@ function ProfilePage({user}) {
 
         {/* Right Column: Achievements and Activity */}
         <div className="col-span-1 lg:col-span-2 space-y-6">
-          <TrophiesCard trophies={allAchievements} />
+          <TrophiesCard trophies={localAchievements} />
 
           <Card>
             <CardHeader>

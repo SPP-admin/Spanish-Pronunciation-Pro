@@ -4,11 +4,14 @@ from difflib import SequenceMatcher
 import whisperIPAtranscription as stress_tr
 
 # Python translator to remove punctuation & whitespace
-translator = str.maketrans('', '', string.punctuation + string.whitespace + 'ː' + 'ˑ' + "ˈ")
+translator = str.maketrans('', '', string.punctuation + string.whitespace + 'ː' + 'ˑ' + "," + "ʼ" + "ˈ" + "ˌ")
 stress_translator = str.maketrans('', '', string.whitespace + 'ː' + 'ˑ' + "," + "ʼ")
 
 def correct_pronunciation(sentence, audio_path, dialect):
 	user_ipa = stress_tr.transcribe(audio_path)
+	print(user_ipa)
+	user_ipa = remove_double_letters(user_ipa)
+	user_ipa = preprocess_user_ipa(user_ipa)
 	user_ipa = user_ipa.translate(translator)
 	return compare_strings(sentence, user_ipa, dialect)
 
@@ -36,7 +39,6 @@ def compare_strings(sentence, user_ipa, dialect):
 		correct_ipa = sentence_mapping.get_ipa()
 	correct_ipa = sentence_mapping.get_ipa()
 	print(correct_ipa)
-	user_ipa = preprocess_user_ipa(user_ipa)
 	print(user_ipa)
 	sentence_mapping.set_indices()
 	sequence_matcher = SequenceMatcher(None, user_ipa, correct_ipa)
@@ -55,9 +57,9 @@ def compare_strings(sentence, user_ipa, dialect):
 	for ipa in sentence_mapping.ipa_mapping:
 		if ipa.pronounced_correctly == False:
 			output_str += [ipa.ortho_letter, "false"]
-		if ipa.stressed_correctly == False:
-			output_str += '<u>' + ipa.ortho_letter + '</u>'
-		elif ipa.pronounced_correctly == True and ipa.stressed_correctly == True:
+		#if ipa.stressed_correctly == False:
+		#	output_str += '<u>' + ipa.ortho_letter + '</u>'
+		elif ipa.pronounced_correctly == True:
 			output_str += [ipa.ortho_letter, "true"]
 		
 	return output_str 
@@ -144,7 +146,7 @@ def is_vowel_ipa(ipa_char):
 	return ipa_char in vowels
 
 # Since some sounds are similar enough that they can be considered correct,
-# change chars in user_ipa to equivalent chars that transliterate() would generate
+# change such sounds in user_ipa to equivalent chars that transliterate() would generate
 # so users are not penalized for essentially correct pronunciation
 def preprocess_user_ipa(user_ipa):
 	str = user_ipa.replace("ɣ", "g")
@@ -152,4 +154,28 @@ def preprocess_user_ipa(user_ipa):
 	str = str.replace("β", "b")
 	str = str.replace("v", "f")
 	str = str.replace("h", "x")
+	str = str.replace("ɾɾ", "r")
+	str = str.replace("rr", "r")
+
+	# These are different sounds, but Whisper is bad at detecting them
+	# If the model is fine-tuned to be able to detect these sounds, you can remove these
+	str = str.replace("ʝ", "j")
+	str = str.replace("ɲ", "nj")
+	str = str.replace("ʎ", "j")
+	str = str.replace("ɔ", "o")
+
+
+	for i in range(len(str)):
+		if i < len(str) - 1 and str[i] == "i" and is_vowel_ipa(str[i+1]):
+			str = str[:i] + "j" + str[i+1:]
+		if i < len(str) - 1 and str[i] == "u" and is_vowel_ipa(str[i+1]):
+			str = str[:i] + "w" + str[i+1:]
 	return str
+
+def remove_double_letters(user_ipa):
+	user_ipa = user_ipa.replace("ɾɾ", "r")
+	user_ipa = user_ipa.replace("rr", "r")
+	for i in range(len(user_ipa) - 1):
+		if user_ipa[i] == user_ipa[i + 1]:
+			user_ipa = user_ipa[:i] + user_ipa[i + 1:]
+	return user_ipa
