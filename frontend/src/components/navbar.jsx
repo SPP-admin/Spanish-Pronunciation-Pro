@@ -12,18 +12,11 @@ import {
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; //
 
 import { signOut } from 'firebase/auth';
-import { auth } from '../firebase.js';
+import { auth } from '../firebase.js'; //
 import { queryClient } from '@/queryClient.jsx';
-
-
-import { storage } from '../firebase.js';
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
-import { updateProfile } from "firebase/auth";
-import { useState } from 'react';
-
 
 // Re-usable component for list items in the navigation menu, as per shadcn/ui docs
 const ListItem = React.forwardRef(({ className, title, to, children, ...props }, ref) => {
@@ -53,29 +46,9 @@ ListItem.displayName = "ListItem"
 
 
 function Navbar({user}) {
-  
-  const [image, setImage] = useState(user?.photoURL)
-  
-    const handleProfile = async (e) => {
-      try {
-        const file = e.target.files[0]
-        if (!file) return;
 
-        const storageRef = ref(storage, `users/${user.uid}/profile.jpg`);
-
-        await uploadBytes(storageRef, file);
-
-        const downloadURL = await getDownloadURL(storageRef)
-
-        await updateProfile(user, {
-          photoURL: downloadURL,
-        })
-        
-        setImage(downloadURL)
-    } catch (error) {
-      console.log(error.code)
-    }
-  }
+  // The useState for 'image' and the 'handleProfile' function are no longer needed here.
+  // The 'user.photoURL' passed from App.jsx will automatically update the AvatarImage source.
 
 
   return (
@@ -110,14 +83,12 @@ function Navbar({user}) {
             {/* Account Hover Menu */}
             <NavigationMenuItem>
               <NavigationMenuTrigger>
-                <label className="cursor-pointer">
+                {/* Avatar is now just for display, not clickable for file input */}
                 <Avatar className="h-8 w-8 mr-2">
-                  {/* Dynamic user image here */}
-                  <AvatarImage src={image || "https://github.com/shadcn.png"} alt="@shadcn" />
+                  {/* Dynamic user image here, directly using user.photoURL */}
+                  <AvatarImage src={user?.photoURL || "https://github.com/shadcn.png"} alt="@shadcn" />
                   <AvatarFallback>U</AvatarFallback>
                 </Avatar>
-                <input className="hidden" type="file" onChange={handleProfile}/>
-                </label>
                 Account
               </NavigationMenuTrigger>
               <NavigationMenuContent>
