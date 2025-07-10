@@ -75,11 +75,11 @@ function LoginPage({user, isFetching}) {
     <div className="flex min-h-screen">
 
       {/* Left Column: Image */}
-      <div className="hidden md:flex md:w-1/2 items-center justify-center bg-gradient-to-br from-amber-400 to-cyan-400 p-8">
+      <div className="hidden md:flex md:w-1/2 items-center justify-center bg-gradient-to-br from-amber-300 to-cyan-300 p-8">
          <img
              src={loginImage} 
              alt="Decorative soundwave graphic"
-             className="max-w-lg h-auto object-contain"
+             className="max-w-lg h-auto object-contain rounded-xl"
          />
       </div>
 
