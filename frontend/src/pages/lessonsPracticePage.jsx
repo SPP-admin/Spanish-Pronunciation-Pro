@@ -13,6 +13,8 @@ import { useProfile } from '@/profileContext.jsx';
 
 import { lessonCategories } from '@/lessonCategories.js';
 import { completionRequirements } from '@/lessonCategories.js';
+import correctFile from '@/assets/sounds/correct.mp3';
+import correctConfetti from 'https://cdn.skypack.dev/canvas-confetti';
 
 // --- Dynamic Lesson Data Generation ---
 const generateLessonData = (topic, lesson, level) => {
@@ -127,6 +129,8 @@ function LessonsPracticePage() {
   // How off is the user allowed to be before moving on to the next sentence.
   const allowedError = .5;
 
+  const correctSFX = new Audio(correctFile);
+
   // Uses the lessonCategories file to find out what the previous and next lessons are.
   for (const key in lessonCategories){
     if(lessonCategories[key].id == topic) {
@@ -181,8 +185,22 @@ function LessonsPracticePage() {
   }, [amountToPracticeSession])
 
 
-  const fetchSentence = async () => {
+  const setTranscriptionBox = (string) => {
+    const message = `<div>${string}</div>`
+    document.getElementById("transcriptionBox").innerHTML = message;
+  }
 
+  const setQuestionStatus = (isCorrect) => {
+    if(isCorrect) {
+      document.getElementById("completionStatus").innerHTML = "<div class= 'motion-preset-confetti'>Correct</div>"
+      correctSFX.play();
+      correctConfetti();
+
+    } else document.getElementById("completionStatus").innerHTML = "<div class= 'motion-preset-pulse motion-duration-2000 '>Try Again</div>"
+  }
+
+
+  const fetchSentence = async () => {
         setLoading(true);
         setSpanishSentence("");
         try {
@@ -217,6 +235,7 @@ function LessonsPracticePage() {
   };
 
   const sendAudioToServer = (blob) => {
+    setTranscriptionBox("Pronunciation Checking Processing...");
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64data = reader.result.split(",")[1];
@@ -233,6 +252,7 @@ function LessonsPracticePage() {
         .then(response => {
           if (!response.ok) {
             console.log(response.statusText);
+            setTranscriptionBox("Error completeing pronunciation checking, please try again.");
             throw new Error("Failed to send voice note");
           }
           return response.text();
@@ -269,7 +289,7 @@ function LessonsPracticePage() {
 
           if((amountCorrect >= generatedSentence.length * allowedError) && (generatedSentence.length == spanishSentence.length)) {
             if(!isLessonComplete && !isCurrentCorrect) handleCorrectAnswer();
-          }
+          } else setQuestionStatus(false)
           console.log(html);
           document.getElementById("transcriptionBox").innerHTML = html;
         })
@@ -279,6 +299,7 @@ function LessonsPracticePage() {
   };
   // This function is passed as callback to the AudioRecorder component.
   const handleAudioRecording = async (blob) => {
+    document.getElementById("completionStatus").innerHTML = ""
     console.log("Audio blob captured:", blob);
     setRecordedAudio(blob);
     sendAudioToServer(blob);
@@ -312,20 +333,19 @@ function LessonsPracticePage() {
 }
 
   const handleFinishAndNext = async () => {
-
-
     // Save the current lesson and level to localStorage
-
     if(nextPage <= -1) {
       navigate('/lessons');
     }
     const practicePath = `/lessonsPractice?topic=${topic}&lesson=${[avalibleLessons[nextPage]["value"]]}&level=${level}`;
 
     if(nextPage > -1) {
+      setTranscriptionBox("");
       setCorrectAmount(0)
       if(isLessonComplete == true) {
         setAmountToPracticeSession(prevCount => prevCount - 1)
       }
+      document.getElementById("completionStatus").innerHTML = ""
       setLessonComplete(false)
       setCurrentCorrect(false)
       navigate(practicePath)
@@ -433,6 +453,7 @@ function LessonsPracticePage() {
   const handleCorrectAnswer = () => {
     setCorrectAmount(prev => {
       setCurrentCorrect(true)
+      setQuestionStatus(true)
       const updated = prev + 1
       return updated;
     })
@@ -442,6 +463,8 @@ function LessonsPracticePage() {
   const handleNextSentence = () => {
     setAttempts(0);
     setCurrentCorrect(false);
+    setTranscriptionBox("");
+    document.getElementById("completionStatus").innerHTML = ""
     fetchSentence();
     setSelectedText(false);
   }
@@ -495,6 +518,10 @@ function LessonsPracticePage() {
               <p className="text-md text-muted-foreground" id="transcriptionBox">
               </p>
             </div>
+                  
+            <span className="" id="completionStatus">
+            </span>
+
             {isCurrentCorrect && !isLessonComplete && (
             <Button className={"cursor-pointer"} onClick={handleNextSentence}>
               Next Sentence

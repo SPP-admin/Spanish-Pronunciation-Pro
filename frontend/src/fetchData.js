@@ -46,6 +46,8 @@ export const fetchData = async (uid) => {
         }
         */
 
+        console.log("Doing stuff")
+
         const results = await Promise.allSettled([
             api.get(`/getUserStatistics?uid=${uid}`),
             api.get(`/getAchievements?uid=${uid}`),
@@ -53,6 +55,7 @@ export const fetchData = async (uid) => {
             api.get(`/getLessonProgress?uid=${uid}`),
         ]);
 
+        console.log("Doing stuff 2")
         
         const [statsResult, achievementsResult, activityHistoryResult, lessonProgressResult] = results
 

@@ -60,7 +60,7 @@ function LessonsPage({user}) {
             return false
         }
             */
-        if (profile?.lessons[index]?.completed == false) {
+        if (!profile?.lessons[index]?.completed) {
           completeCategory(index)
         }
         

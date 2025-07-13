@@ -59,9 +59,11 @@
 
   // Checks the achievement conditions to see if the user is eligible to earn an achievement.
   export const achievementChecker = (userStats, achievements) => {
-    const grantedAchievements = []
+    const grantedAchievements = []  
     
     for (const achievement in achievements) {
+      console.log(userStats)
+      console.log([!userStats?.achievements[achievement], achievements[achievement].condition(userStats)])
       if(achievements[achievement].condition(userStats) == true && !userStats?.achievements[achievement]) {
         grantedAchievements.push(achievement)
       }
