@@ -25,7 +25,7 @@ export const fetchData = async (uid) => {
             accuracyRate: 0,
             activities: [],
             achievements: {},
-            lessons: [],
+            lessons: {},
             chunks: [],
             lastLogin: 0,
          };
@@ -46,8 +46,6 @@ export const fetchData = async (uid) => {
         }
         */
 
-        console.log("Doing stuff")
-
         const results = await Promise.allSettled([
             api.get(`/getUserStatistics?uid=${uid}`),
             api.get(`/getAchievements?uid=${uid}`),
@@ -55,8 +53,6 @@ export const fetchData = async (uid) => {
             api.get(`/getLessonProgress?uid=${uid}`),
         ]);
 
-        console.log("Doing stuff 2")
-        
         const [statsResult, achievementsResult, activityHistoryResult, lessonProgressResult] = results
 
         const stats = await trySetting(statsResult, `/setUserStatistics`);

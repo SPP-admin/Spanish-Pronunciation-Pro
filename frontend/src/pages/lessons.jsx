@@ -60,7 +60,7 @@ function LessonsPage({user}) {
             return false
         }
             */
-        if (!profile?.lessons[index]?.completed) {
+        if (!profile?.lessons[index]) {
           completeCategory(index)
         }
         
@@ -94,7 +94,7 @@ function LessonsPage({user}) {
     try {
       await api.patch(`/updateLessonProgress?uid=${user.uid}&lesson=${index}`);
       const newCategories = profile.lessons;
-      newCategories[index].completed = true;
+      newCategories[index] = true;
       const updated = {...profile, lessons: newCategories};
       setProfile(updated, user.uid)  
     } catch (error) {

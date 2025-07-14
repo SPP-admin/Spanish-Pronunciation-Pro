@@ -568,14 +568,21 @@ async def updateChunkProgress(uid, chunk: str, lesson: int, difficulty: str):
 @app.patch("/updateLessonProgress")
 async def updateLessonProgress(uid, lesson: int):
      try:
+
           doc_ref = db.collection('lessons')
           query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
-          doc_id = query_ref[0].id
-          data = query_ref[0].to_dict()
-          data['lesson_data'][lesson]['completed'] = True
-          print(data['lesson_data'])
 
-          doc_ref = db.collection('lessons').document(doc_id).update({"lesson_data": data['lesson_data']})
+          doc = query_ref[0]
+          doc_id = doc.id
+          lessons = doc.to_dict().get('lesson_data', [])
+
+          print(lessons)
+
+          lessons[str(lesson)] = True
+
+          print(lessons)
+
+          doc_ref = db.collection('lessons').document(doc_id).update({"lesson_data": lessons})
 
           return JSONResponse(content={"message": "Lesson progress was successfully updated."}, 
                                     status_code = 201)
@@ -602,9 +609,7 @@ async def setLessonProgress(request: BaseSchema):
             doc = doc_ref.document()
             data = {
               'id': request.id,
-              'lesson_data': [
-                   {'completed': False, 'completion_date': None} for _ in range(7)
-              ],
+              'lesson_data': {},
               'chunks': [None] * 7
             }
 

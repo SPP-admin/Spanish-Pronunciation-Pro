@@ -119,6 +119,7 @@ function LessonsPracticePage() {
   const [isLessonComplete, setLessonComplete] = useState(false);
   const [amountToComplete, setAmountToComplete] = useState(completionRequirements[level])
   const [attempts, setAttempts] = useState(0);
+  const [uses, setUses] = useState(0);
 
   const [spanishSentence, setSpanishSentence] = useState("");
   const [loading, setLoading] = useState(false);
@@ -192,11 +193,11 @@ function LessonsPracticePage() {
 
   const setQuestionStatus = (isCorrect) => {
     if(isCorrect) {
-      document.getElementById("completionStatus").innerHTML = "<div class= 'motion-preset-confetti'>Correct</div>"
+      document.getElementById("completionStatus").innerHTML = "<div class= 'motion-preset-confetti text-green-500'>Correct</div>"
       correctSFX.play();
       correctConfetti();
 
-    } else document.getElementById("completionStatus").innerHTML = "<div class= 'motion-preset-pulse motion-duration-2000 '>Try Again</div>"
+    } else document.getElementById("completionStatus").innerHTML = "<div class= 'motion-preset-pulse motion-duration-2000 text-red-500'>Try Again</div>"
   }
 
 
@@ -275,6 +276,11 @@ function LessonsPracticePage() {
             i++;
           }
 
+          setUses(prev => {
+            const newUses = prev + 1
+            return newUses
+          })
+
           setAttempts(prev => {
             const newAttempts = prev + 1
             return newAttempts
@@ -282,7 +288,6 @@ function LessonsPracticePage() {
 
           //console.log(amountCorrect / generatedSentence.length)
           setCurrentAccuracy(prev => {
-            console.log(prev)
             return (prev + (amountCorrect / generatedSentence.length))
           })
           //console.log(amountCorrect / generatedSentence.length)
@@ -342,6 +347,7 @@ function LessonsPracticePage() {
     if(nextPage > -1) {
       setTranscriptionBox("");
       setCorrectAmount(0)
+      setUses(0)
       if(isLessonComplete == true) {
         setAmountToPracticeSession(prevCount => prevCount - 1)
       }
@@ -385,9 +391,9 @@ function LessonsPracticePage() {
 
     try {
       const newLessonsCompleted = profile.lessonsCompleted + 1;
-      const currentTotalAccuracy = currentAccuracy / amountToComplete * 100;
-      console.log(currentTotalAccuracy)
+      const currentTotalAccuracy = currentAccuracy / uses * 100;
       const newAccuracy = Math.floor((((profile.accuracyRate * profile.lessonsCompleted) + currentTotalAccuracy) / newLessonsCompleted));
+      console.log(newAccuracy)
       const completedTopic = lesson + "-" + level
       let cur = [...(profile.chunks ?? [])]
 
@@ -461,6 +467,7 @@ function LessonsPracticePage() {
 
   // Resets the current attempts and fetches a new sentence.
   const handleNextSentence = () => {
+    setCurrentAccuracy(0)
     setAttempts(0);
     setCurrentCorrect(false);
     setTranscriptionBox("");

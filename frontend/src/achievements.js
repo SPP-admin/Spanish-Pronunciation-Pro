@@ -29,7 +29,7 @@
       description: "Complete all vowel lessons.",
       unlocked: false,
       completionDate: 0,
-      condition: (userStats) => userStats?.lessons[vowelLesson]?.completed == true
+      condition: (userStats) => userStats?.lessons[vowelLesson] == true
     },
     {
       id: 3,
@@ -37,7 +37,7 @@
       description: "Complete all consonant lessons.",
       unlocked: false,
       completionDate: 0,
-      condition: (userStats) => userStats?.lessons[consonantLesson]?.completed == true
+      condition: (userStats) => userStats?.lessons[consonantLesson] == true
     },
     {
       id: 4,
@@ -45,7 +45,7 @@
       description: "Complete all accent mark lessons.",
       unlocked: false,
       completionDate: 0,
-      condition: (userStats) => userStats?.lessons[accentLesson]?.completed == true
+      condition: (userStats) => userStats?.lessons[accentLesson] == true
     },
     {
       id: 5,
@@ -62,8 +62,6 @@
     const grantedAchievements = []  
     
     for (const achievement in achievements) {
-      console.log(userStats)
-      console.log([!userStats?.achievements[achievement], achievements[achievement].condition(userStats)])
       if(achievements[achievement].condition(userStats) == true && !userStats?.achievements[achievement]) {
         grantedAchievements.push(achievement)
       }
