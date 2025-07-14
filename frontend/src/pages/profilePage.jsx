@@ -90,8 +90,8 @@ function ProfilePage({user}) {
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
               <p>
-                <span className="font-semibold">Lessons Completed:</span>{" "}
-                {profile.lessonsCompleted}
+                <span className="font-semibold">Combos Completed:</span>{" "}
+                {profile.comboCount}
               </p>
               <p>
                 <span className="font-semibold">Practice Sessions:</span>{" "}

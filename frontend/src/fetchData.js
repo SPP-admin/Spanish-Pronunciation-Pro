@@ -19,15 +19,15 @@ export const fetchData = async (uid) => {
   }
 
     const profile = {
-            studyStreak: 0,
-            lessonsCompleted: 0,
-            practiceSessions: 0,
             accuracyRate: 0,
-            activities: [],
-            achievements: {},
-            lessons: {},
-            chunks: [],
+            comboCount: 0,
+            practiceSessions: 0,
+            studyStreak: 0,
             lastLogin: 0,
+            achievements: {},
+            activities: [],
+            completedCombos: [],
+            completedTopics: {},
          };
 
         /*
@@ -46,32 +46,23 @@ export const fetchData = async (uid) => {
         }
         */
 
-        const results = await Promise.allSettled([
-            api.get(`/getUserStatistics?uid=${uid}`),
-            api.get(`/getAchievements?uid=${uid}`),
-            api.get(`/getActivityHistory?uid=${uid}`),
-            api.get(`/getLessonProgress?uid=${uid}`),
-        ]);
 
-        const [statsResult, achievementsResult, activityHistoryResult, lessonProgressResult] = results
+        const result = await api.get(`/getUserStatistics?uid=${uid}`)
+        .then(response => ({ status: 'fulfilled', value: response }))
+        .catch(error => ({ status: 'rejected', reason: error }));
 
-        const stats = await trySetting(statsResult, `/setUserStatistics`);
-        const achievements = await trySetting(achievementsResult, `/setAchievements`);
-        const activityHistory = await trySetting(activityHistoryResult, `/setActivityHistory`);
-        const lessonProgress = await trySetting(lessonProgressResult, `/setLessonProgress`);
-
-        console.log([stats, achievements, activityHistory, lessonProgress])
-
+        const stats = await trySetting(result, `/setUserStatistics`);
+        
         return {
-            studyStreak: parseInt(stats?.user_stats.study_streak ?? "") || profile.studyStreak,
-            lessonsCompleted: parseInt(stats?.user_stats.completed_lessons ?? "") || profile.lessonsCompleted,
-            practiceSessions: parseInt(stats?.user_stats.practice_sessions ?? "") || profile.practiceSessions,
             accuracyRate: parseInt(stats?.user_stats.accuracy_rate ?? "") || profile.accuracyRate,
+            comboCount: parseInt(stats?.user_stats.combo_count ?? "") || profile.comboCount,
+            practiceSessions: parseInt(stats?.user_stats.practice_sessions ?? "") || profile.practiceSessions,
+            studyStreak: parseInt(stats?.user_stats.study_streak ?? "") || profile.studyStreak,
             lastLogin: stats?.user_stats.last_login ?? profile.lastLogin,
-            activities: activityHistory?.activity_history ?? profile.activities,
-            achievements: achievements?.achievements.achievements ?? profile.achievements,
-            lessons: lessonProgress?.lessons.lesson_data ?? profile.lessons,
-            chunks: lessonProgress?.lessons.chunks ?? profile.chunks
+            achievements: stats?.achievements.achievements ?? profile.achievements,
+            activities: stats?.activity_history ?? profile.activities,
+            completedCombos: stats?.lessons.chunks ?? profile.completedCombos,
+            completedTopics: stats?.lessons.lesson_data ?? profile.completedTopics,
         }
 
         /*

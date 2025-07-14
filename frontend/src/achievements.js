@@ -10,7 +10,7 @@
     {
       id: 0,
       name: "Perfect Week",
-      description: "Complete a lesson every day for 7 days.",
+      description: "Complete a combo every day for 7 days.",
       unlocked: false,
       completionDate: 0,
       condition: (userStats) => userStats.studyStreak >= 7
@@ -26,26 +26,26 @@
     {
       id: 2,
       name: "Vowel Virtuoso",
-      description: "Complete all vowel lessons.",
+      description: "Complete all vowel combos.",
       unlocked: false,
       completionDate: 0,
-      condition: (userStats) => userStats?.lessons[vowelLesson] == true
+      condition: (userStats) => userStats?.completedTopics[vowelLesson] == true
     },
     {
       id: 3,
       name: "Consonant Champion",
-      description: "Complete all consonant lessons.",
+      description: "Complete all consonant combos.",
       unlocked: false,
       completionDate: 0,
-      condition: (userStats) => userStats?.lessons[consonantLesson] == true
+      condition: (userStats) => userStats?.completedTopics[consonantLesson] == true
     },
     {
       id: 4,
       name: "Accent Mark Master",
-      description: "Complete all accent mark lessons.",
+      description: "Complete all accent mark combos.",
       unlocked: false,
       completionDate: 0,
-      condition: (userStats) => userStats?.lessons[accentLesson] == true
+      condition: (userStats) => userStats?.completedTopics[accentLesson] == true
     },
     {
       id: 5,

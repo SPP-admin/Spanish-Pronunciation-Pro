@@ -47,7 +47,7 @@ function Dashboard({user}) {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Lessons completed: {profile.lessonsCompleted}/{totalLessons}
+              Lessons completed: {profile.comboCount}/{totalLessons}
             </p>
             <Progress value={progressValue} className="w-[60%] max-w-xs mt-2" />
           </CardContent>

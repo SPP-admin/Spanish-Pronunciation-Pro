@@ -50,7 +50,7 @@ function LessonsPage({user}) {
         for (const lesson of category.lessons) {
             for (const level of category.levels) {
                 const comboKey = `${lesson.value}-${level.value}`;
-                if (!profile.chunks[index]?.[comboKey]) {
+                if (!profile.completedCombos[index]?.[comboKey]) {
                     return false; // Found a combo that is incomplete
                 }
             }
@@ -60,7 +60,7 @@ function LessonsPage({user}) {
             return false
         }
             */
-        if (!profile?.lessons[index]) {
+        if (!profile?.completedTopics[index]) {
           completeCategory(index)
         }
         
@@ -92,10 +92,10 @@ function LessonsPage({user}) {
   // Completes a catgory in the backend and profile context.
   const completeCategory = async (index) => {
     try {
-      await api.patch(`/updateLessonProgress?uid=${user.uid}&lesson=${index}`);
-      const newCategories = profile.lessons;
+      await api.patch(`/updateTopicProgress?uid=${user.uid}&topic=${index}`);
+      const newCategories = profile.completedTopics;
       newCategories[index] = true;
-      const updated = {...profile, lessons: newCategories};
+      const updated = {...profile, completedTopics: newCategories};
       setProfile(updated, user.uid)  
     } catch (error) {
       console.log(error)
@@ -130,7 +130,7 @@ function LessonsPage({user}) {
 
           // Check 1: Is the currently selected combination complete?
           const comboKey = `${currentLesson}-${currentLevel}`;
-          const isComboComplete = profile.chunks?.[index]?.[comboKey] || false;
+          const isComboComplete = profile.completedCombos?.[index]?.[comboKey] || false;
           //const isComboComplete = currentProgress.completedCombinations?.[comboKey] || false;
 
           // Check 2: Is the entire category complete?

@@ -13,6 +13,7 @@ import { useProfile } from '@/profileContext.jsx';
 
 import { lessonCategories } from '@/lessonCategories.js';
 import { completionRequirements } from '@/lessonCategories.js';
+import { toast } from 'sonner';
 import correctFile from '@/assets/sounds/correct.mp3';
 import correctConfetti from 'https://cdn.skypack.dev/canvas-confetti';
 
@@ -278,6 +279,7 @@ function LessonsPracticePage() {
 
           setUses(prev => {
             const newUses = prev + 1
+            console.log("Uses:" + newUses)
             return newUses
           })
 
@@ -287,9 +289,8 @@ function LessonsPracticePage() {
           })
 
           //console.log(amountCorrect / generatedSentence.length)
-          setCurrentAccuracy(prev => {
-            return (prev + (amountCorrect / generatedSentence.length))
-          })
+          console.log(currentAccuracy)
+          setCurrentAccuracy(currentAccuracy + (amountCorrect / generatedSentence.length))
           //console.log(amountCorrect / generatedSentence.length)
 
           if((amountCorrect >= generatedSentence.length * allowedError) && (generatedSentence.length == spanishSentence.length)) {
@@ -341,6 +342,7 @@ function LessonsPracticePage() {
     // Save the current lesson and level to localStorage
     if(nextPage <= -1) {
       navigate('/lessons');
+      return;
     }
     const practicePath = `/lessonsPractice?topic=${topic}&lesson=${[avalibleLessons[nextPage]["value"]]}&level=${level}`;
 
@@ -361,6 +363,7 @@ function LessonsPracticePage() {
 
   const completeTopic = async () => {
 
+    toast("Congratulations! You've completed this topic. To continue hit the 'Next Lesson' button or choose a new topic from the lessons page.")
     setShowConfetti(true);
     setLessonComplete(true);
     setTimeout(() => {
@@ -390,21 +393,22 @@ function LessonsPracticePage() {
     }
 
     try {
-      const newLessonsCompleted = profile.lessonsCompleted + 1;
+      console.log(currentAccuracy)
+      const newComboCount = profile.comboCount + 1;
       const currentTotalAccuracy = currentAccuracy / uses * 100;
-      const newAccuracy = Math.floor((((profile.accuracyRate * profile.lessonsCompleted) + currentTotalAccuracy) / newLessonsCompleted));
+      const newAccuracy = Math.floor((((profile.accuracyRate * profile.comboCount) + currentTotalAccuracy) / newComboCount));
       console.log(newAccuracy)
       const completedTopic = lesson + "-" + level
-      let cur = [...(profile.chunks ?? [])]
+      let cur = [...(profile.completedCombos ?? [])]
 
       // If this lesson hasn't already been completed complete it in the backend and update the local storage.
       if(!(completedTopic in (cur[topicIndex] ?? {}))) {
-        await sendTopic(newLessonsCompleted, newAccuracy);
+        await sendTopic(newComboCount, newAccuracy);
         cur[topicIndex] = {
           ...(cur[topicIndex] ?? {}),
           [completedTopic]: true
         }
-        const updated = { ...profile, chunks: cur, lessonsCompleted: newLessonsCompleted, accuracyRate: newAccuracy}
+        const updated = { ...profile, completedCombos: cur, comboCount: newComboCount, accuracyRate: newAccuracy}
 
         setProfile(updated, user.uid)
         }
@@ -427,10 +431,10 @@ function LessonsPracticePage() {
   };
 
   // Function to mark topic as completed in backend.
-  const sendTopic = async (newLessonsCompleted, newAccuracy) => {
+  const sendTopic = async (newComboCount, newAccuracy) => {
     try {
-      await api.patch(`/updateChunkProgress?uid=${user.uid}&chunk=${lesson}&lesson=${topicIndex}&difficulty=${level}`);
-      await api.patch(`/updateCompletedLessons?uid=${user.uid}&new_lesson_value=${newLessonsCompleted}`);
+      await api.patch(`/updateCompletedCombo?uid=${user.uid}&lesson=${lesson}&topic=${topicIndex}&level=${level}`);
+      await api.patch(`/updateComboCount?uid=${user.uid}&new_combo_count=${newComboCount}`);
       await api.patch(`/updateAccuracy?uid=${user.uid}&new_accuracy=${newAccuracy}`);
     } catch (error) {
       console.log(error)
