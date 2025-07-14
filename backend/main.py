@@ -621,41 +621,86 @@ async def setLessonProgress(request: BaseSchema):
 # Generate a sentence or word for the user to practice.
 @app.post("/generateSentence")
 async def generateSentence(chunk: str, lesson: str, difficulty: str):
-      client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-      try:
-        prompt = (
-            f"You are a helpful assistant that generates Spanish sentences or words for a pronunciation app used by beginners. "
-            f"The current lesson chunk is '{chunk}', the specific lesson is '{lesson}', and the difficulty is '{difficulty}'. Make sure the sentence or word includes the target letter/sound in the lesson correctly."
-            f"Generate ONLY the Spanish sentence or word requested, with NO extra text, explanations, or introductions. Do not say anything like 'Here is a sentence:' or 'OK'. Just output the Spanish sentence or word itself. "
-            f"Use the Spanish alphabet, correct accent marks and also make sure the sentences are grammatically correct. "
-            f"If the difficulty is or includes 'word', return only a single word. "
-            f"Make sure the sentence or word is unique, creative, and not repetitive. Avoid using any sentences you have generated recently. "
-            f"Unless the difficulty is explicitly 'complex sentences', keep the sentences simple, clear, and easy to understand. They must be no longer than 10 words. Only use more complex grammar or longer sentences if the difficulty is 'complex sentences'."
-        )
-        user_content = (
-            f"Generate a unique and creative Spanish {difficulty} for the lesson '{lesson}' in the chunk '{chunk}'. "
-            f"ONLY return the Spanish sentence or word, and nothing else. Avoid repeating previously used phrases. "
-            f"Keep the sentence simple and clear unless the difficulty is 'complex sentences'. If the difficulty is 'complex sentences', use more advanced grammar and longer sentences."
-        )
-        response = client.chat.completions.create(
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    try:
+        # Special logic for special_vowel_combinations chunk with 'sentences' difficulty
+        if chunk == "special_vowel_combinations" and difficulty == "sentences":
+            # Step 1: Generate a word
+            word_prompt = (
+                f"You are a helpful assistant that generates Spanish words for a pronunciation app used by beginners. "
+                f"The current lesson chunk is '{chunk}', the specific lesson is '{lesson}', and the difficulty is 'word'. Make sure the word includes the target letter/sound in the lesson correctly. "
+                f"For the 'special_vowel_combinations' chunk, whatever the lesson is must be included in the generated word exactly how it appears in the lesson you are given. "
+                f"Generate ONLY the Spanish word requested, with NO extra text, explanations, or introductions. Do not say anything like 'Here is a word:' or 'OK'. Just output the Spanish word itself. "
+                f"Use the Spanish alphabet, correct accent marks and also make sure the word is grammatically correct. "
+                f"Return only a single word. "
+                f"Make sure the word is unique, creative, and not repetitive. Avoid using any words you have generated recently. "
+            )
+            word_user_content = (
+                f"Generate a unique and creative Spanish word for the lesson '{lesson}' in the chunk '{chunk}'. "
+                f"ONLY return the Spanish word, and nothing else. Avoid repeating previously used words. "
+            )
+            word_response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[{"role": "system", "content": word_prompt},
+                          {"role": "user", "content": word_user_content}],
+                temperature=1.2
+            )
+            generated_word = word_response.choices[0].message.content.strip()
+
+            # Step 2: Generate a sentence that includes the generated word
+            sentence_prompt = (
+                f"You are a helpful assistant that generates Spanish sentences for a pronunciation app used by beginners. "
+                f"The current lesson chunk is '{chunk}', the specific lesson is '{lesson}', and the difficulty is 'sentences'. Make sure the sentence includes the word '{generated_word}' exactly as it appears. "
+                f"Generate ONLY the Spanish sentence requested, with NO extra text, explanations, or introductions. Do not say anything like 'Here is a sentence:' or 'OK'. Just output the Spanish sentence itself. "
+                f"Use the Spanish alphabet, correct accent marks and also make sure the sentence is grammatically correct. "
+                f"Make sure the sentence is unique, creative, and not repetitive. Avoid using any sentences you have generated recently. "
+                f"Keep the sentence simple, clear, and easy to understand. It must be no longer than 10 words."
+            )
+            sentence_user_content = (
+                f"Generate a unique and creative Spanish sentence for the lesson '{lesson}' in the chunk '{chunk}' that includes the word '{generated_word}'. "
+                f"ONLY return the Spanish sentence, and nothing else. Avoid repeating previously used phrases. "
+                f"Keep the sentence simple and clear. It must be no longer than 10 words."
+            )
+            sentence_response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[{"role": "system", "content": sentence_prompt},
+                          {"role": "user", "content": sentence_user_content}],
+                temperature=1.2
+            )
+            current_sentence = sentence_response.choices[0].message.content.strip()
+        else:
+            prompt = (
+                f"You are a helpful assistant that generates Spanish sentences or words for a pronunciation app used by beginners. "
+                f"The current lesson chunk is '{chunk}', the specific lesson is '{lesson}', and the difficulty is '{difficulty}'. Make sure the sentence or word includes the target letter/sound in the lesson correctly. "
+                f"For the 'special_vowel_combinations' chunk, whatever the lesson is must be included in the generated sentence/word exactly how it appears in the lesson you are given. If the difficulty is sentences, first generate a word and then create a sentence that includes that given word. "
+                f"Generate ONLY the Spanish sentence or word requested, with NO extra text, explanations, or introductions. Do not say anything like 'Here is a sentence:' or 'OK'. Just output the Spanish sentence or word itself. "
+                f"Use the Spanish alphabet, correct accent marks and also make sure the sentences are grammatically correct. "
+                f"If the difficulty is or includes 'word', return only a single word. "
+                f"Make sure the sentence or word is unique, creative, and not repetitive. Avoid using any sentences you have generated recently. "
+                f"Unless the difficulty is explicitly 'complex sentences', keep the sentences simple, clear, and easy to understand. They must be no longer than 10 words. Only use more complex grammar or longer sentences if the difficulty is 'complex sentences'."
+            )
+            user_content = (
+                f"Generate a unique and creative Spanish {difficulty} for the lesson '{lesson}' in the chunk '{chunk}'. "
+                f"ONLY return the Spanish sentence or word, and nothing else. Avoid repeating previously used phrases. "
+                f"Keep the sentence simple and clear unless the difficulty is 'complex sentences'. If the difficulty is 'complex sentences', use more advanced grammar and longer sentences."
+            )
+            response = client.chat.completions.create(
                 model="gpt-4o",
                 messages=[{"role": "system", "content": prompt},
-                        {"role": "user", "content": user_content}],
+                          {"role": "user", "content": user_content}],
                 temperature=1.2
-        )
-        current_sentence = response.choices[0].message.content
-        
-      # if there is an error with OpenAI, use a backup list of sentences
-      except:
-            backup_sentences = [
-                "El gato duerme.", "La niña corre.", 
-                "El perro ladra.", "Hace mucho calor.",
-                "Llueve afuera.", "El vaso está lleno.",
-                "La casa es grande.", "El pan está caliente.",
-                "Hay una flor.", "La cama es cómoda."
-            ]
-            current_sentence = random.choice(backup_sentences)
-      finally:
+            )
+            current_sentence = response.choices[0].message.content
+    except:
+        backup_sentences = [
+            "El gato duerme.", "La niña corre.", 
+            "El perro ladra.", "Hace mucho calor.",
+            "Llueve afuera.", "El vaso está lleno.",
+            "La casa es grande.", "El pan está caliente.",
+            "Hay una flor.", "La cama es cómoda."
+        ]
+        current_sentence = random.choice(backup_sentences)
+    finally:
         return current_sentence
 
 # Check the user's pronunciation of a sentence or word.
