@@ -60,7 +60,7 @@ const generateLessonData = (topic, lesson, level) => {
     case "unique_sounds":
       phraseSpanish = `Practice the "${lessonInfo.label}" sound`;
       break;
-    case "special_vowels":
+    case "special_vowel_combinations":
       phraseSpanish = `Practice "${lessonInfo.label}" combinations`;
       break;
     case "accent_marks":
