@@ -13,6 +13,9 @@ import { useProfile } from '@/profileContext.jsx';
 
 import { lessonCategories } from '@/lessonCategories.js';
 import { completionRequirements } from '@/lessonCategories.js';
+import { toast } from 'sonner';
+import correctFile from '@/assets/sounds/correct.mp3';
+import correctConfetti from 'https://cdn.skypack.dev/canvas-confetti';
 
 // --- Dynamic Lesson Data Generation ---
 const generateLessonData = (topic, lesson, level) => {
@@ -117,15 +120,18 @@ function LessonsPracticePage() {
   const [isLessonComplete, setLessonComplete] = useState(false);
   const [amountToComplete, setAmountToComplete] = useState(completionRequirements[level])
   const [attempts, setAttempts] = useState(0);
+  const [uses, setUses] = useState(0);
 
   const [spanishSentence, setSpanishSentence] = useState("");
   const [loading, setLoading] = useState(false);
   const lastParams = useRef({ topic: null, lesson: null, level: null });
-  const [amountToPracticeSession, setAmountToPracticeSession] = useState(3);
+  const [amountToPracticeSession, setAmountToPracticeSession] = useState(2);
   const [currentAccuracy, setCurrentAccuracy] = useState(0);
 
   // How off is the user allowed to be before moving on to the next sentence.
   const allowedError = .5;
+
+  const correctSFX = new Audio(correctFile);
 
   // Uses the lessonCategories file to find out what the previous and next lessons are.
   for (const key in lessonCategories){
@@ -181,8 +187,22 @@ function LessonsPracticePage() {
   }, [amountToPracticeSession])
 
 
-  const fetchSentence = async () => {
+  const setTranscriptionBox = (string) => {
+    const message = `<div>${string}</div>`
+    document.getElementById("transcriptionBox").innerHTML = message;
+  }
 
+  const setQuestionStatus = (isCorrect) => {
+    if(isCorrect) {
+      document.getElementById("completionStatus").innerHTML = "<div class= 'motion-preset-confetti text-green-500'>Correct</div>"
+      correctSFX.play();
+      correctConfetti();
+
+    } else document.getElementById("completionStatus").innerHTML = "<div class= 'motion-preset-pulse motion-duration-2000 text-red-500'>Try Again</div>"
+  }
+
+
+  const fetchSentence = async () => {
         setLoading(true);
         setSpanishSentence("");
         try {
@@ -217,6 +237,7 @@ function LessonsPracticePage() {
   };
 
   const sendAudioToServer = (blob) => {
+    setTranscriptionBox("Pronunciation Checking Processing...");
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64data = reader.result.split(",")[1];
@@ -233,6 +254,7 @@ function LessonsPracticePage() {
         .then(response => {
           if (!response.ok) {
             console.log(response.statusText);
+            setTranscriptionBox("Error completeing pronunciation checking, please try again.");
             throw new Error("Failed to send voice note");
           }
           return response.text();
@@ -255,6 +277,12 @@ function LessonsPracticePage() {
             i++;
           }
 
+          setUses(prev => {
+            const newUses = prev + 1
+            console.log("Uses:" + newUses)
+            return newUses
+          })
+
           setAttempts(prev => {
             const newAttempts = prev + 1
             return newAttempts
@@ -262,14 +290,15 @@ function LessonsPracticePage() {
 
           //console.log(amountCorrect / generatedSentence.length)
           setCurrentAccuracy(prev => {
-            console.log(prev)
-            return (prev + (amountCorrect / generatedSentence.length))
+            const newAccuracy = prev + (amountCorrect / generatedSentence.length)
+            console.log("currentAccuracy:" + newAccuracy)
+            return newAccuracy
           })
           //console.log(amountCorrect / generatedSentence.length)
 
           if((amountCorrect >= generatedSentence.length * allowedError) && (generatedSentence.length == spanishSentence.length)) {
             if(!isLessonComplete && !isCurrentCorrect) handleCorrectAnswer();
-          }
+          } else setQuestionStatus(false)
           console.log(html);
           document.getElementById("transcriptionBox").innerHTML = html;
         })
@@ -279,6 +308,7 @@ function LessonsPracticePage() {
   };
   // This function is passed as callback to the AudioRecorder component.
   const handleAudioRecording = async (blob) => {
+    document.getElementById("completionStatus").innerHTML = ""
     console.log("Audio blob captured:", blob);
     setRecordedAudio(blob);
     sendAudioToServer(blob);
@@ -312,20 +342,22 @@ function LessonsPracticePage() {
 }
 
   const handleFinishAndNext = async () => {
-
-
     // Save the current lesson and level to localStorage
-
     if(nextPage <= -1) {
       navigate('/lessons');
+      return;
     }
     const practicePath = `/lessonsPractice?topic=${topic}&lesson=${[avalibleLessons[nextPage]["value"]]}&level=${level}`;
 
     if(nextPage > -1) {
+      setTranscriptionBox("");
+      setCurrentAccuracy(0)
       setCorrectAmount(0)
+      setUses(0)
       if(isLessonComplete == true) {
         setAmountToPracticeSession(prevCount => prevCount - 1)
       }
+      document.getElementById("completionStatus").innerHTML = ""
       setLessonComplete(false)
       setCurrentCorrect(false)
       navigate(practicePath)
@@ -335,6 +367,7 @@ function LessonsPracticePage() {
 
   const completeTopic = async () => {
 
+    toast("Congratulations! You've completed this topic. To continue hit the 'Next Lesson' button or choose a new topic from the lessons page.")
     setShowConfetti(true);
     setLessonComplete(true);
     setTimeout(() => {
@@ -364,21 +397,21 @@ function LessonsPracticePage() {
     }
 
     try {
-      const newLessonsCompleted = profile.lessonsCompleted + 1;
-      const currentTotalAccuracy = currentAccuracy / amountToComplete * 100;
-      console.log(currentTotalAccuracy)
-      const newAccuracy = Math.floor((((profile.accuracyRate * profile.lessonsCompleted) + currentTotalAccuracy) / newLessonsCompleted));
+      const newComboCount = profile.comboCount + 1;
+      const currentTotalAccuracy = currentAccuracy / uses * 100;
+      const newAccuracy = Math.floor((((profile.accuracyRate * profile.comboCount) + currentTotalAccuracy) / newComboCount));
+      console.log("Accuracy updated to " + newAccuracy + "%")
       const completedTopic = lesson + "-" + level
-      let cur = [...(profile.chunks ?? [])]
+      let cur = [...(profile.completedCombos ?? [])]
 
       // If this lesson hasn't already been completed complete it in the backend and update the local storage.
       if(!(completedTopic in (cur[topicIndex] ?? {}))) {
-        await sendTopic(newLessonsCompleted, newAccuracy);
+        await sendTopic(newComboCount, newAccuracy);
         cur[topicIndex] = {
           ...(cur[topicIndex] ?? {}),
           [completedTopic]: true
         }
-        const updated = { ...profile, chunks: cur, lessonsCompleted: newLessonsCompleted, accuracyRate: newAccuracy}
+        const updated = { ...profile, completedCombos: cur, comboCount: newComboCount, accuracyRate: newAccuracy}
 
         setProfile(updated, user.uid)
         }
@@ -401,10 +434,10 @@ function LessonsPracticePage() {
   };
 
   // Function to mark topic as completed in backend.
-  const sendTopic = async (newLessonsCompleted, newAccuracy) => {
+  const sendTopic = async (newComboCount, newAccuracy) => {
     try {
-      await api.patch(`/updateChunkProgress?uid=${user.uid}&chunk=${lesson}&lesson=${topicIndex}&difficulty=${level}`);
-      await api.patch(`/updateCompletedLessons?uid=${user.uid}&new_lesson_value=${newLessonsCompleted}`);
+      await api.patch(`/updateCompletedCombo?uid=${user.uid}&lesson=${lesson}&topic=${topicIndex}&level=${level}`);
+      await api.patch(`/updateComboCount?uid=${user.uid}&new_combo_count=${newComboCount}`);
       await api.patch(`/updateAccuracy?uid=${user.uid}&new_accuracy=${newAccuracy}`);
     } catch (error) {
       console.log(error)
@@ -433,6 +466,7 @@ function LessonsPracticePage() {
   const handleCorrectAnswer = () => {
     setCorrectAmount(prev => {
       setCurrentCorrect(true)
+      setQuestionStatus(true)
       const updated = prev + 1
       return updated;
     })
@@ -442,6 +476,8 @@ function LessonsPracticePage() {
   const handleNextSentence = () => {
     setAttempts(0);
     setCurrentCorrect(false);
+    setTranscriptionBox("");
+    document.getElementById("completionStatus").innerHTML = ""
     fetchSentence();
     setSelectedText(false);
   }
@@ -476,11 +512,9 @@ function LessonsPracticePage() {
             {/* Recorder */}
             <AudioRecorder onRecordingComplete={handleAudioRecording} />
             
-              { attempts > 5 && !isLessonComplete && (
               <Button onClick={handleNextSentence}>
-                Skip?
+                Regenerate?
               </Button>
-              )}
 
             {/* Feedback Field now uses selectedText */}
             <div className="mt-4 p-4 bg-muted/50 dark:bg-muted/20 rounded text-center w-full min-h-[50px]">
@@ -495,6 +529,10 @@ function LessonsPracticePage() {
               <p className="text-md text-muted-foreground" id="transcriptionBox">
               </p>
             </div>
+                  
+            <span className="" id="completionStatus">
+            </span>
+
             {isCurrentCorrect && !isLessonComplete && (
             <Button className={"cursor-pointer"} onClick={handleNextSentence}>
               Next Sentence

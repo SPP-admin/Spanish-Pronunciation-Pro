@@ -1,9 +1,19 @@
 import api from "./api.js"
 
 
-export const fetchData = async (uid) => {
+    const profile = {
+            accuracyRate: 0,
+            comboCount: 0,
+            practiceSessions: 0,
+            studyStreak: 0,
+            lastLogin: 0,
+            achievements: {},
+            activities: [],
+            completedCombos: [],
+            completedTopics: {},
+         };
 
-    async function trySetting(result, endpoint) {
+    async function trySetting(result, endpoint, uid) {
       try {
         if(result.status == 'fulfilled') {
           return result.value.data
@@ -18,107 +28,35 @@ export const fetchData = async (uid) => {
     }
   }
 
-    const profile = {
-            studyStreak: 0,
-            lessonsCompleted: 0,
-            practiceSessions: 0,
-            accuracyRate: 0,
-            activities: [],
-            achievements: {},
-            lessons: [],
-            chunks: [],
-            lastLogin: 0,
-         };
 
-        /*
-        try {
-          let response = await api.get(`/getUser?uid=${uid}`)
-        } catch (error) {
-          console.log(error.response.status)
-          if(error.response.status === 400) {
-            await api.post('/setUser', {id: uid}).catch(err => console.error(err))
-            await api.post('/setUserStatistics', {id: uid}).catch(err => console.error(err))
-            await api.post('/setAchievements', {id: uid}).catch(err => console.error(err))
-            await api.post('/setLessonProgress', {id: uid}).catch(err => console.error(err))
-            console.log("Account initialized.") 
-            return profile;
-          } else return profile;
-        }
-        */
+export const fetchData = async (uid) => {
+  try {
 
-        const results = await Promise.allSettled([
-            api.get(`/getUserStatistics?uid=${uid}`),
-            api.get(`/getAchievements?uid=${uid}`),
-            api.get(`/getActivityHistory?uid=${uid}`),
-            api.get(`/getLessonProgress?uid=${uid}`),
-        ]);
+        const result = await api.get(`/getUserStatistics?uid=${uid}`)
+        .then(response => ({ status: 'fulfilled', value: response }))
+        .catch(error => ({ status: 'rejected', reason: error }));
 
+        const stats = await trySetting(result, `/setUserStatistics`, uid);
         
-        const [statsResult, achievementsResult, activityHistoryResult, lessonProgressResult] = results
-
-        const stats = await trySetting(statsResult, `/setUserStatistics`);
-        const achievements = await trySetting(achievementsResult, `/setAchievements`);
-        const activityHistory = await trySetting(activityHistoryResult, `/setActivityHistory`);
-        const lessonProgress = await trySetting(lessonProgressResult, `/setLessonProgress`);
-
-        console.log([stats, achievements, activityHistory, lessonProgress])
-
-        return {
-            studyStreak: parseInt(stats?.user_stats.study_streak ?? "") || profile.studyStreak,
-            lessonsCompleted: parseInt(stats?.user_stats.completed_lessons ?? "") || profile.lessonsCompleted,
-            practiceSessions: parseInt(stats?.user_stats.practice_sessions ?? "") || profile.practiceSessions,
+        const profileData = {
             accuracyRate: parseInt(stats?.user_stats.accuracy_rate ?? "") || profile.accuracyRate,
+            comboCount: parseInt(stats?.user_stats.combo_count ?? "") || profile.comboCount,
+            practiceSessions: parseInt(stats?.user_stats.practice_sessions ?? "") || profile.practiceSessions,
+            studyStreak: parseInt(stats?.user_stats.study_streak ?? "") || profile.studyStreak,
             lastLogin: stats?.user_stats.last_login ?? profile.lastLogin,
-            activities: activityHistory?.activity_history ?? profile.activities,
-            achievements: achievements?.achievements.achievements ?? profile.achievements,
-            lessons: lessonProgress?.lessons.lesson_data ?? profile.lessons,
-            chunks: lessonProgress?.lessons.chunks ?? profile.chunks
-        }
+            achievements: stats?.user_stats?.achievements ?? profile.achievements,
+            activities: stats?.user_stats?.activities ?? profile.activities,
+            completedCombos: stats?.user_stats?.completed_combos ?? profile.completedCombos,
+            completedTopics: stats?.user_stats?.completed_topics ?? profile.completedTopics,
+        };
 
-        /*
-        try {
-          let fetchedData = await api.get(`/getUserStatistics?uid=${uid}`)
-          let userStats = fetchedData.data.user_stats
-          setProfile(prev => ({
-              ...prev,
-            lessonsCompleted: userStats.completed_lessons ?? prev.lessonsCompleted,
-            accuracyRate: userStats.accuracy_rate ?? prev.accuracyRate,
-            practiceSessions: userStats.practice_sessions ?? prev.practiceSessions,
-            studyStreak: userStats.study_streak ?? prev.studyStreak}));
-          fetchedData = await api.get(`/getAchievements?uid=${uid}`)
-          let fetchedAchievements = fetchedData.data.achievements.achievements
-          setProfile(prev => ({
-            ...prev,
-            achievements: fetchedAchievements
-          }))
+        console.log(profileData)
 
-        } catch (error) {
-          console.log(error)
-        }
+        return profileData;
 
-        try {
-          const fetchedData = await api.get(`/getActivityHistory?uid=${uid}`)
+      } catch (error) {
+        console.log(error);
+        return profile;
+      }
 
-          setProfile(prev => ({
-            ...prev,
-            activities: fetchedData.data.activity_history
-          }))
-
-        } catch (error) {
-          console.log(error)
-        }
-
-        try {
-          const fetchedData = await api.get(`/getLessonProgress?uid=${uid}`)
-          setProfile(prev => ({
-            ...prev,
-            lessons: fetchedData.data.lesson_data
-          }))
-
-          console.log("Fetched Properly!")
-          setFetchingData(false)
-        } catch(error) {
-          console.log(error)
-        }
-          */
-     }
+ }

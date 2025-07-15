@@ -6,15 +6,15 @@ const ProfileContext = createContext()
 export const ProfileProvider = ({children}) => {
     
     const [profile, _setProfile] = useState({
-    studyStreak: 0,
-    lessonsCompleted: 0,
-    practiceSessions: 0,
-    accuracyRate: 0,
-    activities: [],
-    achievements: {},
-    lessons: [],
-    chunks: [],
-    lastLogin: 0,
+            accuracyRate: 0,
+            comboCount: 0,
+            practiceSessions: 0,
+            studyStreak: 0,
+            lastLogin: 0,
+            achievements: {},
+            activities: [],
+            completedCombos: [],
+            completedTopics: {},
   }
 )
 
