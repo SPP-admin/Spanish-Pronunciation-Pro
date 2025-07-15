@@ -16,8 +16,8 @@ import { achievements } from '../achievements.js';
 function Dashboard({user}) {
 
   const { profile } = useProfile();
-  const totalLessons = 62;
-  const progressValue = (profile.lessonsCompleted / totalLessons) * 100;
+  const avalibleCombos = 62;
+  const progressValue = (profile.comboCount / avalibleCombos) * 100;
 
   const cleanAchievments = achievements.map(({condition, ...rest}) => rest);
   const localAchievements = structuredClone(cleanAchievments);
@@ -47,7 +47,7 @@ function Dashboard({user}) {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Lessons completed: {profile.comboCount}/{totalLessons}
+              Combos completed: {profile.comboCount}/{avalibleCombos}
             </p>
             <Progress value={progressValue} className="w-[60%] max-w-xs mt-2" />
           </CardContent>

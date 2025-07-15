@@ -13,7 +13,7 @@ import api from "./api.js"
             completedTopics: {},
          };
 
-    async function trySetting(result, endpoint) {
+    async function trySetting(result, endpoint, uid) {
       try {
         if(result.status == 'fulfilled') {
           return result.value.data
@@ -36,7 +36,7 @@ export const fetchData = async (uid) => {
         .then(response => ({ status: 'fulfilled', value: response }))
         .catch(error => ({ status: 'rejected', reason: error }));
 
-        const stats = await trySetting(result, `/setUserStatistics`);
+        const stats = await trySetting(result, `/setUserStatistics`, uid);
         
         const profileData = {
             accuracyRate: parseInt(stats?.user_stats.accuracy_rate ?? "") || profile.accuracyRate,
@@ -49,6 +49,8 @@ export const fetchData = async (uid) => {
             completedCombos: stats?.user_stats?.completed_combos ?? profile.completedCombos,
             completedTopics: stats?.user_stats?.completed_topics ?? profile.completedTopics,
         };
+
+        console.log(profileData)
 
         return profileData;
 

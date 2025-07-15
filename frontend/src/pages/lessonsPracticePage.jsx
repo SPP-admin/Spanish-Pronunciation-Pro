@@ -125,7 +125,7 @@ function LessonsPracticePage() {
   const [spanishSentence, setSpanishSentence] = useState("");
   const [loading, setLoading] = useState(false);
   const lastParams = useRef({ topic: null, lesson: null, level: null });
-  const [amountToPracticeSession, setAmountToPracticeSession] = useState(3);
+  const [amountToPracticeSession, setAmountToPracticeSession] = useState(2);
   const [currentAccuracy, setCurrentAccuracy] = useState(0);
 
   // How off is the user allowed to be before moving on to the next sentence.
@@ -289,8 +289,11 @@ function LessonsPracticePage() {
           })
 
           //console.log(amountCorrect / generatedSentence.length)
-          console.log(currentAccuracy)
-          setCurrentAccuracy(currentAccuracy + (amountCorrect / generatedSentence.length))
+          setCurrentAccuracy(prev => {
+            const newAccuracy = prev + (amountCorrect / generatedSentence.length)
+            console.log("currentAccuracy:" + newAccuracy)
+            return newAccuracy
+          })
           //console.log(amountCorrect / generatedSentence.length)
 
           if((amountCorrect >= generatedSentence.length * allowedError) && (generatedSentence.length == spanishSentence.length)) {
@@ -348,6 +351,7 @@ function LessonsPracticePage() {
 
     if(nextPage > -1) {
       setTranscriptionBox("");
+      setCurrentAccuracy(0)
       setCorrectAmount(0)
       setUses(0)
       if(isLessonComplete == true) {
@@ -393,11 +397,10 @@ function LessonsPracticePage() {
     }
 
     try {
-      console.log(currentAccuracy)
       const newComboCount = profile.comboCount + 1;
       const currentTotalAccuracy = currentAccuracy / uses * 100;
       const newAccuracy = Math.floor((((profile.accuracyRate * profile.comboCount) + currentTotalAccuracy) / newComboCount));
-      console.log(newAccuracy)
+      console.log("Completed combo with an accuracy of" + newAccuracy)
       const completedTopic = lesson + "-" + level
       let cur = [...(profile.completedCombos ?? [])]
 
@@ -471,7 +474,6 @@ function LessonsPracticePage() {
 
   // Resets the current attempts and fetches a new sentence.
   const handleNextSentence = () => {
-    setCurrentAccuracy(0)
     setAttempts(0);
     setCurrentCorrect(false);
     setTranscriptionBox("");
