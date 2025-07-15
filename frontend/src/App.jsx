@@ -48,22 +48,22 @@ function AppContent() {
   const [fetchingData, setFetchingData] = useState(true);
   const { setProfile, profile } = useProfile();
   
-    const { data, isLoading } = useQuery({
-    queryFn: () => fetchData(user.uid),
-    queryKey: ["profile", user?.uid],
-    enabled: !!user?.uid,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
-    staleTime: 1000 * 60 * 60 * 24,
-    retry: false,
-  });
+const { data, isLoading } = useQuery({
+  queryFn: () => fetchData(user.uid),
+  queryKey: ["profile", user?.uid],
+  enabled: typeof user?.uid === "string" && user?.uid.length > 0,
+  refetchOnWindowFocus: false,
+  refetchOnMount: false,
+  refetchOnReconnect: false,
+  staleTime: 1000 * 60 * 60 * 24,
+  retry: false,
+});
 
-  useEffect(() => {
-    if(data) {
-      setProfile(data, user.uid)
-    }
-  } ,[data, user])
+useEffect(() => {
+  if(data) {
+    setProfile(data, user.uid);
+  }
+}, [data, user?.uid]);
   
 
 // Uses firebase auth state change method to update the user.
