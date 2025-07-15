@@ -400,7 +400,7 @@ function LessonsPracticePage() {
       const newComboCount = profile.comboCount + 1;
       const currentTotalAccuracy = currentAccuracy / uses * 100;
       const newAccuracy = Math.floor((((profile.accuracyRate * profile.comboCount) + currentTotalAccuracy) / newComboCount));
-      console.log("Completed combo with an accuracy of" + newAccuracy)
+      console.log("Accuracy updated to " + newAccuracy + "%")
       const completedTopic = lesson + "-" + level
       let cur = [...(profile.completedCombos ?? [])]
 
@@ -512,11 +512,9 @@ function LessonsPracticePage() {
             {/* Recorder */}
             <AudioRecorder onRecordingComplete={handleAudioRecording} />
             
-              { attempts > 5 && !isLessonComplete && (
               <Button onClick={handleNextSentence}>
-                Skip?
+                Regenerate?
               </Button>
-              )}
 
             {/* Feedback Field now uses selectedText */}
             <div className="mt-4 p-4 bg-muted/50 dark:bg-muted/20 rounded text-center w-full min-h-[50px]">
