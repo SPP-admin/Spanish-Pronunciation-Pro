@@ -48,22 +48,22 @@ function AppContent() {
   const [fetchingData, setFetchingData] = useState(true);
   const { setProfile, profile } = useProfile();
   
-    const { data, isLoading } = useQuery({
-    queryFn: () => fetchData(user.uid),
-    queryKey: ["profile", user?.uid],
-    enabled: !!user?.uid,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
-    staleTime: 1000 * 60 * 60 * 24,
-    retry: false,
-  });
+const { data, isLoading } = useQuery({
+  queryFn: () => fetchData(user.uid),
+  queryKey: ["profile", user?.uid],
+  enabled: typeof user?.uid === "string" && user?.uid.length > 0,
+  refetchOnWindowFocus: false,
+  refetchOnMount: false,
+  refetchOnReconnect: false,
+  staleTime: 1000 * 60 * 60 * 24,
+  retry: false,
+});
 
-  useEffect(() => {
-    if(data) {
-      setProfile(data, user.uid)
-    }
-  } ,[data, user])
+useEffect(() => {
+  if(data) {
+    setProfile(data, user.uid);
+  }
+}, [data, user?.uid]);
   
 
 // Uses firebase auth state change method to update the user.
@@ -79,75 +79,6 @@ function AppContent() {
     return () => unsubscribe();
   }, [])
 
-  
-  // Fetches user data immediately as soon as user is found.
-  /*
-  useEffect(() => {
-    const getUser = async () => {
-      if (user) {
-        try {
-          let response = await api.get(`/getUser?uid=${user.uid}`)
-          console.log(response)
-        } catch (error) {
-          console.log(error.response.status)
-          if(error.response.status === 400) {
-            await api.post('/setUser', {id: user.uid}).catch(() => {})
-            await api.post('/setUserStatistics', {id: user.uid}).catch(() => {})
-            await api.post('/setAchievements', {id: user.uid}).catch(() => {})
-            await api.post('/setLessonProgress', {id: user.uid}).catch(() => {})
-            console.log("Account initialized.")
-          }
-        }
-
-        try {
-          let fetchedData = await api.get(`/getUserStatistics?uid=${user.uid}`)
-          let userStats = fetchedData.data.user_stats
-          setProfile(prev => ({
-              ...prev,
-            lessonsCompleted: userStats.completed_lessons ?? prev.lessonsCompleted,
-            accuracyRate: userStats.accuracy_rate ?? prev.accuracyRate,
-            practiceSessions: userStats.practice_sessions ?? prev.practiceSessions,
-            studyStreak: userStats.study_streak ?? prev.studyStreak}));
-          fetchedData = await api.get(`/getAchievements?uid=${user.uid}`)
-          let fetchedAchievements = fetchedData.data.achievements.achievements
-          setProfile(prev => ({
-            ...prev,
-            achievements: fetchedAchievements
-          }))
-
-        } catch (error) {
-          console.log(error)
-        }
-
-        try {
-          const fetchedData = await api.get(`/getActivityHistory?uid=${user.uid}`)
-
-          setProfile(prev => ({
-            ...prev,
-            activities: fetchedData.data.activity_history
-          }))
-
-        } catch (error) {
-          console.log(error)
-        }
-
-        try {
-          const fetchedData = await api.get(`/getLessonProgress?uid=${user.uid}`)
-          setProfile(prev => ({
-            ...prev,
-            lessons: fetchedData.data.lesson_data
-          }))
-
-          setFetchingData(false)
-        } catch(error) {
-          console.log(error)
-        }
-     }
-  }
-  if(user) getUser();
-
-}, [user])
-*/
 
   // If user is being fetched don't load page.
   if(isFetching || isLoading ) {
