@@ -78,6 +78,7 @@ class AudioData(BaseModel):
 class TranscriptionData(BaseModel):
      sentence: str
      base64_data: str
+     dialect: str
 # openai import
 import openai
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -447,7 +448,9 @@ async def checkPronunciation(data: TranscriptionData):
         audio, sampling_rate = librosa.load(random_string, sr=16000, mono=True, duration=30.0, dtype=np.int32)
         random2 = "tmp_" + random_string
         sf.write(random2, audio, 16000)
-        output = pronunciationChecking.correct_pronunciation(sentence, random2, 'latam')
+        dialect = "stress" if data.dialect == "accent_marks" else "latam"
+        print(dialect)
+        output = pronunciationChecking.correct_pronunciation(sentence, random2, dialect)
 
         # Get rid of audio recordings
         if os.path.exists(random_string):

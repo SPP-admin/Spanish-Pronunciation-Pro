@@ -43,27 +43,6 @@ def pcm2float(sig, dtype='float32'):
 	return (sig.astype(dtype) - offset) / abs_max
 
 # Read file, transcribe with whisperIPA because allosaurus doesn't include linguistic stress information
-def transcribe_with_stress(filepath):
-	transcription = ""
-
-	# Read, process file
-	rate, arr = scipy.io.wavfile.read(filepath)
-	if arr.dtype != np.float32:
-		arr = pcm2float(arr)
-
-	# Change sampling rate to match Whisper's required sampling rate
-	if (rate != WHISPER_SAMPLING_RATE):
-		arr = scipy.signal.resample(arr, int(len(arr) * WHISPER_SAMPLING_RATE / rate))
-
-	input_features = processor(arr, sampling_rate=WHISPER_SAMPLING_RATE, return_tensors="pt").input_features 
-
-	# generate token ids
-	predicted_ids = model.generate(input_features)
-	# decode token ids to text
-	transcription = processor.batch_decode(predicted_ids, skip_special_tokens=False)
-	return transcription[0]
-
-# Read file, transcribe with whisperIPA because allosaurus doesn't include linguistic stress information
 def transcribe(filepath):
 	transcription = ""
 

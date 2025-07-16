@@ -244,7 +244,7 @@ function LessonsPracticePage() {
   
       // Build the JSON payload.
       const generatedSentence = selectedText ? selectedText: spanishSentence;
-      const payload = { base64_data: base64data, sentence: generatedSentence};
+      const payload = { base64_data: base64data, sentence: generatedSentence, dialect: topic};
       console.log(payload)
       fetch(`${API_URL}/checkPronunciation`, {
         method: "POST",
@@ -266,15 +266,14 @@ function LessonsPracticePage() {
           console.log("Parsed Transcript", parsedTranscript);
           const arr = parsedTranscript.split(",");
           let amountCorrect = 0;
-          for (let i = 0; i < arr.length; i++) {
-            if (arr[i+1] == "true") {
-              html += `<span style="color:green">${arr[i]}</span>`;
-              amountCorrect += 1
-            }
-            else {
-              html += `<span style="color:red">${arr[i]}</span>`;
-            }
-            i++;
+          for (let i = 0; i < arr.length - 2; i++) {
+            html += (arr[i+1] == "True" ? `<span style="color:green">` : `<span style="color:red">`);
+			amountCorrect += (arr[i+1] == "True" ? 1 : 0);
+            html += (arr[i+2] == "False" ? `<u>` : "");
+			html += arr[i];
+			html += (arr[i+2] == "False" ? `</u>` : "");
+			html += "</span>";
+            i+=2;
           }
 
           setUses(prev => {
