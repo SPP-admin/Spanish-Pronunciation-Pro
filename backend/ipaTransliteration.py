@@ -15,11 +15,14 @@ class ipaMapping:
 # index j in ipa_indices holds the IPA letter at j & the index of the ipaMapping that corresponds to it
 # eg ipa_indices[0] = ("g", 2) means that ipa[0] is "g" & corresponds to sentenceMapping.ipa_mapping[2] 
 # (and the corresponding actually written text)
+# index i in syllable_mapping corresponds to the ith IPA mapping, and the start and end indices of the IPA mappings of its syllable
+# eg syllable_mapping[0] = ("ks", 0, 2) means that the syllable that "ks" is in starts with the 0th IPA mapping, etc
 class sentenceMapping:
 	def __init__(self, sentence):
 		self.sentence = sentence
 		self.ipa_mapping = []
 		self.ipa_indices = []
+		self.syllable_mapping = []
 
 	# Returns IPA letters as a plain string
 	def get_ipa(self):
@@ -48,7 +51,10 @@ class sentenceMapping:
 			self.set_indices()
 		return self.ipa_indices
 	
-	# Returns index of first vowel in 
+	def get_syllable_mapping(self):
+		return self.syllable_mapping
+	
+	# Returns index of first vowel in a given string
 	def first_vowel(self):
 		vowels = {"i", "y", "ɨ", "ʉ", "ɯ", "u", "ɪ", "ʏ", "ʊ", "e", "ø", "ɘ", "ɵ", "ɤ", "o", "e̞", "ø̞", "ə", "ɤ̞", "o̞", "ɛ", "œ", "ɜ", "ɞ", "ʌ", "ɔ", "æ", "ɐ", "a", "ɶ", "ä", "ɑ", "ɒ", "j", "w"}
 		w = {'w', 'W'}
@@ -59,44 +65,41 @@ class sentenceMapping:
 	# Get IPA transliteration of sentence in standard Latin American pronunciation,
 	# Find which syllable of each word is stressed with silabeador,
 	# Add stress to IPA mapping
-	# IPA mapping will be list of syllables, since stress is syllable-based (eg ["ma", "go"] vs ["m", "a", "g", "o"])
 	def transliterate_stress(self):
 		# Get words in sentence
 		words = self.sentence.split()
-		word_starts = [0]
 		sm = sentenceMapping(self.sentence)
 		# Transliterate syllable by syllable,
 		# Frankenstein the syllable mappings together,
-		#  add stress to IPA mapping of stressed syllable
+		# add stress to IPA mapping of stressed syllable
 		for word in words:
 			sb = silabeador.Syllabification(word)
 			syllables = sb.syllables
+			stressed_syllable_index = sb.stress + len(syllables) if sb.stress < 0 else sb.stress
 
 			for i in range(len(syllables)):
-				syllable_mapping = sentenceMapping(syllables[i])
-				syllable_mapping.transliterate_latam()
+				syllable = sentenceMapping(syllables[i])
+				syllable.transliterate_latam()
+				# Set syllable_mapping 
+				for j in syllable.ipa_mapping:
+					sm.syllable_mapping.append((j.ipa_letter, len(sm.ipa_mapping), len(syllable.ipa_mapping)))
 
-				if (i == sb.stress + len(syllables) and len(syllables) > 1):
-					sm.ipa_mapping[syllable_mapping.first_vowel()].ipa_letter = "'" + sm.ipa_mapping[-1].ipa_letter
+				if (i == stressed_syllable_index and len(syllables) > 1):
+					first_vowel_mapping = syllable.ipa_mapping[syllable.first_vowel()]
+					first_vowel_mapping.ipa_letter = "ˈ" + first_vowel_mapping.ipa_letter
 
-				# Condense syllable into 1 chunk
-				str = ""
-				ipa_str = ""
-				for mapping in syllable_mapping.ipa_mapping:
-					str += mapping.ortho_letter
-					ipa_str += mapping.ipa_mapping
+				sm.ipa_mapping.extend(syllable.ipa_mapping)
 
-				chunk = ipaMapping(str, ipa_str)
-				sm.ipa_mapping.extend(chunk)
-			
 			# Add whitespace to mapping
 			sm.ipa_mapping.append(ipaMapping(ortho_letter=" ", ipa_letter=""))
-
-
+			sm.syllable_mapping.append(("", len(sm.ipa_mapping), 1))
 		# Get rid of trailing whitespace
 		if sm.ipa_mapping[-1].ortho_letter == " ":
 			sm.ipa_mapping.pop(-1)
 
+		self.ipa_mapping = sm.ipa_mapping
+		self.syllable_mapping = sm.syllable_mapping
+		return self.ipa_mapping
 	
 	def transliterate_latam(self):
 		# Down the road, commas are used as delimiters so replace them with something that looks like a comma
@@ -148,7 +151,7 @@ class sentenceMapping:
 				else:
 					mapping.append(ipaMapping(ortho_letter=self.sentence[i+1], ipa_letter=sentence[i+1]))
 				i += 2
-			elif (sentence[i:i+2] == "gu" or sentence[i:i+2] == "gü"):
+			elif (sentence[i:i+2] == "gü"):
 				mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="g"))
 				mapping.append(ipaMapping(ortho_letter=self.sentence[i+1], ipa_letter="w"))
 				i += 2
