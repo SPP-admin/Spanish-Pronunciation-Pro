@@ -52,8 +52,10 @@ app = FastAPI(
     docs_url= "/"
 )
 
+'''
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+'''
 
 origins = [
     "http://localhost:5173",
@@ -216,18 +218,39 @@ async def updateComboCount(uid, new_combo_count):
     
 # When a user logs in consecutively update their study streak.
 @app.patch("/updateStudyStreak")
-async def updateStudyStreak(uid):
+async def updateStudyStreak(uid, new_streak):
     try:
+        date = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+
         doc_ref = db.collection('user_stats')
         query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
         doc_id = query_ref[0].id
-        doc_ref = db.collection('user_stats').document(doc_id).update({"study_streak": firestore.Increment(1)})
+        doc_ref = db.collection('user_stats').document(doc_id).update({"study_streak": new_streak,
+                                                                       "last_login": date})
         return JSONResponse(content={"message": f"User has logged in consecutively, study streak was incremented." }, 
                                     status_code = 201)
     except Exception as e:
         raise HTTPException(
             status_code=400,
             detail= f"Error updating streak. {str(e)}"
+        )
+    
+@app.patch("/updateLastLogin")
+async def updateLastLogin(uid):
+    try:
+        date = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+        
+        doc_ref = db.collection('user_stats')
+        query_ref = doc_ref.where(filter=FieldFilter("id", "==", uid)).get()
+        doc_id = query_ref[0].id
+        doc_ref = db.collection('user_stats').document(doc_id).update({"last_login": date})
+        return JSONResponse(content={"message": f"Users last login has been updated."},
+                              status_code = 201)
+       
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail= f"Error updating last login. {str(e)}"
         )
    
 
