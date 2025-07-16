@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from "@/lib/utils";
 import { QueryClient } from '@tanstack/react-query';
+import { useProfile } from '@/profileContext.jsx';
 
 import {
   NavigationMenu,
@@ -47,6 +48,8 @@ ListItem.displayName = "ListItem"
 
 function Navbar({user}) {
 
+  const { profile } = useProfile();
+
   // The useState for 'image' and the 'handleProfile' function are no longer needed here.
   // The 'user.photoURL' passed from App.jsx will automatically update the AvatarImage source.
 
@@ -86,7 +89,7 @@ function Navbar({user}) {
                 {/* Avatar is now just for display, not clickable for file input */}
                 <Avatar className="h-8 w-8 mr-2">
                   {/* Dynamic user image here, directly using user.photoURL */}
-                  <AvatarImage src={user?.photoURL || "https://github.com/shadcn.png"} alt="@shadcn" />
+                   <AvatarImage src={profile?.photoURL || user?.photoURL || "https://github.com/shadcn.png"} alt="@shadcn" />
                   <AvatarFallback>U</AvatarFallback>
                 </Avatar>
                 Account
