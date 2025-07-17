@@ -4,7 +4,7 @@ import Confetti from 'react-confetti';
 import AudioRecorder from '@/components/audioRecorder.jsx';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { FaArrowLeft, FaArrowRight, FaHighlighter } from 'react-icons/fa'; // Added FaHighlighter
+import { FaArrowLeft, FaArrowRight, FaHighlighter, FaVolumeUp } from 'react-icons/fa'; 
 import api from '../api.js';
 import { auth } from '@/firebase.js';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -122,8 +122,28 @@ function LessonsPracticePage() {
   const [attempts, setAttempts] = useState(0);
   const [uses, setUses] = useState(0);
 
+  const handlePlayAudio = (text) => {
+    if (!text || !window.speechSynthesis) {
+      console.error("Speech synthesis not supported or no text provided.");
+      return;
+    }
+
+    window.speechSynthesis.cancel(); // Stop any previous speech
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'es-ES'; 
+    utterance.rate = 0.9;
+
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+
+    window.speechSynthesis.speak(utterance);
+  };
+
   const [spanishSentence, setSpanishSentence] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const lastParams = useRef({ topic: null, lesson: null, level: null });
   const [amountToPracticeSession, setAmountToPracticeSession] = useState(2);
   const [currentAccuracy, setCurrentAccuracy] = useState(0);
@@ -489,7 +509,7 @@ function LessonsPracticePage() {
         <div className="w-full max-w-3xl mb-6 text-center md:text-left">
           <h1 className="text-2xl md:text-3xl font-bold mb-2 text-foreground">{lessonTitle}</h1>
           <div className="flex items-center justify-center md:justify-between text-sm text-muted-foreground">
-            <span>{correctAmount}/{amountToComplete}</span>
+            <span>Number until lesson completion: {correctAmount}/{amountToComplete}</span>
           </div>
         </div>
 
@@ -497,10 +517,23 @@ function LessonsPracticePage() {
         <Card className="w-full max-w-3xl shadow-lg">
           <CardContent className="p-6 md:p-8 flex flex-col items-center space-y-6">
             <div className="text-center w-full">
-              {/* This allows free-form text selection */}
-              <p className="text-3xl md:text-4xl font-bold text-black mb-3 select-text">
-                {loading ? "Loading..." : spanishSentence}
-              </p>
+              {/* Container for sentence and play button */}
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <p className="text-3xl md:text-4xl font-bold text-black mb-3 select-text">
+                  {loading ? "Loading..." : spanishSentence}
+                </p>
+                {/* New button to play audio */}
+                <Button 
+                  onClick={() => handlePlayAudio(spanishSentence)} 
+                  disabled={loading || isSpeaking}
+                  variant="outline" 
+                  size="icon"
+                  aria-label="Play audio pronunciation"
+                >
+                  <FaVolumeUp className="h-5 w-5" />
+                </Button>
+              </div>
+
               {/* Button to capture the highlighted text */}
               <Button onClick={handleCaptureSelection} variant="outline" size="sm">
                 <FaHighlighter className="mr-2 h-4 w-4" />
