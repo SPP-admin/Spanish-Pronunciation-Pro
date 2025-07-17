@@ -8,7 +8,7 @@ const isSameDay = (d1, d2) => {
 export const studyStreakHandler = (lastLogin) => {
     const lastLoginDate = new Date(lastLogin);
     const date = new Date();
-    const nextStreakDay = new Date (date);
+    const nextStreakDay = new Date (lastLogin);
     nextStreakDay.setUTCDate(lastLoginDate.getUTCDate() + 1);
 
     if(isSameDay(nextStreakDay, date)) {

@@ -184,16 +184,16 @@ function LessonsPracticePage() {
 
     if(amountToPracticeSession == 0) {
       completePracticeSession();
-      setAmountToPracticeSession(2)
+      setAmountToPracticeSession(2);
     }
   }, [amountToPracticeSession])
 
   useEffect(() => {
     if(!studyStreakChecked) {
-    const action = studyStreakHandler(profile.lastLogin);
-    console.log(action)
-    const newStudyStreak = profile.studyStreak + 1
-    handleStudyStreakUpdate(action, newStudyStreak)
+    const action = studyStreakHandler(profile.lastLogin); 
+    const newStudyStreak = profile.studyStreak + 1;
+    console.log(action);
+    handleStudyStreakUpdate(action, newStudyStreak);
     setStudyStreakChecked(true);
     }
   }, [])
@@ -475,7 +475,7 @@ function LessonsPracticePage() {
   // Function to mark topic as completed in backend.
   const sendTopic = async (newComboCount, newAccuracy) => {
     try {
-      await api.patch(`/updateCompletedCombo?uid=${user.uid}&lesson=${lesson}&topic=${topicIndex}&level=${level}`);
+      await api.patch(`/updateCompletedCombos?uid=${user.uid}&lesson=${lesson}&topic=${topicIndex}&level=${level}`);
       await api.patch(`/updateComboCount?uid=${user.uid}&new_combo_count=${newComboCount}`);
       await api.patch(`/updateAccuracy?uid=${user.uid}&new_accuracy=${newAccuracy}`);
     } catch (error) {

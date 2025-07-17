@@ -37,8 +37,6 @@ export const fetchData = async (uid) => {
         .catch(error => ({ status: 'rejected', reason: error }));
 
         const stats = await trySetting(result, `/setUserStatistics`, uid);
-
-        console.log(profile.lastLogin)
         
         const profileData = {
             accuracyRate: parseInt(stats?.user_stats.accuracy_rate ?? "") || profile.accuracyRate,

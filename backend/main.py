@@ -237,25 +237,6 @@ async def updateStudyStreak(uid, new_streak):
             status_code=400,
             detail= f"Error updating streak. {str(e)}"
         )
-    
-@app.patch("/updateLastLogin")
-async def updateLastLogin(uid):
-    try:
-        date = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-        
-        doc_ref = db.collection('user_stats')
-        query_ref = doc_ref.where(filter=FieldFilter("id", "==", uid)).get()
-        doc_id = query_ref[0].id
-        doc_ref = db.collection('user_stats').document(doc_id).update({"last_login": date})
-        return JSONResponse(content={"message": f"Users last login has been updated."},
-                              status_code = 201)
-       
-    except Exception as e:
-        raise HTTPException(
-            status_code=400,
-            detail= f"Error updating last login. {str(e)}"
-        )
-   
 
 # Set an achievment to true.
 @app.patch("/updateAchievements")
@@ -315,7 +296,7 @@ async def updateActivityHistory(uid, activity):
         )
 
 # Set a chunk to completed, (Stored as a map as firestore does not allow the storage of 2-d arrays / lists)
-@app.patch("/updateCompletedCombo")
+@app.patch("/updateCompletedCombos")
 # chunk, lesson, difficulty
 async def updateCompletedCombos(uid, lesson: str, topic: int, level: str):
     try:

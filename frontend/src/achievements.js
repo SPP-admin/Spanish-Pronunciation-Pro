@@ -1,10 +1,10 @@
 
-  const vowelLesson = 0;
-  const consonantLesson = 1;
-  const uniqueLesson = 2;
-  const speccialLesson = 3;
-  const accentLesson = 4;
-  const regionalLesson = 5;
+  const vowelTopic = 0;
+  const consonantTopic = 1;
+  const uniqueTopic = 2;
+  const specialTopic = 3;
+  const accentTopic = 4;
+  const regionalTopic = 5;
 
   export const achievements = [
     {
@@ -29,7 +29,7 @@
       description: "Complete all vowel combos.",
       unlocked: false,
       completionDate: 0,
-      condition: (userStats) => userStats?.completedTopics[vowelLesson] == true
+      condition: (userStats) => userStats?.completedTopics[vowelTopic] == true
     },
     {
       id: 3,
@@ -37,7 +37,7 @@
       description: "Complete all consonant combos.",
       unlocked: false,
       completionDate: 0,
-      condition: (userStats) => userStats?.completedTopics[consonantLesson] == true
+      condition: (userStats) => userStats?.completedTopics[consonantTopic] == true
     },
     {
       id: 4,
@@ -45,7 +45,7 @@
       description: "Complete all accent mark combos.",
       unlocked: false,
       completionDate: 0,
-      condition: (userStats) => userStats?.completedTopics[accentLesson] == true
+      condition: (userStats) => userStats?.completedTopics[accentTopic] == true
     },
     {
       id: 5,
