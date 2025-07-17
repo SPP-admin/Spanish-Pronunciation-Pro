@@ -13,7 +13,7 @@ import { Camera } from 'lucide-react';
 
 function ProfilePage({user}) {
 
-  const { profile } = useProfile();
+  const { profile, setProfile } = useProfile();
   const cleanAchievments = achievements.map(({condition, ...rest}) => rest);
   const localAchievements = structuredClone(cleanAchievments);
   const [image, setImage] = useState(user?.photoURL);
@@ -42,6 +42,7 @@ function ProfilePage({user}) {
       });
 
       setImage(downloadURL); // Update local
+      setProfile({ ...profile, photoURL: downloadURL }, user.uid);
     } catch (error) {
       console.error("Error updating profile picture:", error);
     }

@@ -47,7 +47,7 @@ export const lessonCategories = [
         ]
     },
     {
-        id: "special_vowels",
+        id: "special_vowel_combinations",
         title: "Special Vowel Combinations",
         description: "Master vowel combinations like 'ai', 'ei', 'oi'.",
         lessons: [
