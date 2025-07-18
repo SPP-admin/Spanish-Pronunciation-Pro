@@ -16,6 +16,7 @@ import { completionRequirements } from '@/lessonCategories.js';
 import { toast } from 'sonner';
 import correctFile from '@/assets/sounds/correct.mp3';
 import correctConfetti from 'https://cdn.skypack.dev/canvas-confetti';
+import { studyStreakHandler } from '../studyStreak.js';
 
 // --- Dynamic Lesson Data Generation ---
 const generateLessonData = (topic, lesson, level) => {
@@ -147,6 +148,7 @@ function LessonsPracticePage() {
   const lastParams = useRef({ topic: null, lesson: null, level: null });
   const [amountToPracticeSession, setAmountToPracticeSession] = useState(2);
   const [currentAccuracy, setCurrentAccuracy] = useState(0);
+  const [studyStreakChecked, setStudyStreakChecked] = useState(false);
 
   // How off is the user allowed to be before moving on to the next sentence.
   const allowedError = .5;
@@ -202,10 +204,19 @@ function LessonsPracticePage() {
 
     if(amountToPracticeSession == 0) {
       completePracticeSession();
-      setAmountToPracticeSession(3)
+      setAmountToPracticeSession(2);
     }
   }, [amountToPracticeSession])
 
+  useEffect(() => {
+    if(!studyStreakChecked) {
+    const action = studyStreakHandler(profile.lastLogin); 
+    const newStudyStreak = profile.studyStreak + 1;
+    console.log(action);
+    handleStudyStreakUpdate(action, newStudyStreak);
+    setStudyStreakChecked(true);
+    }
+  }, [])
 
   const setTranscriptionBox = (string) => {
     const message = `<div>${string}</div>`
@@ -360,6 +371,34 @@ function LessonsPracticePage() {
   }
 }
 
+  const handleStudyStreakUpdate = async (action, newStudyStreak) => {
+    switch (action) {
+      case 'updateStudyStreak': {
+        try {
+        api.patch(`/updateStudyStreak?uid=${user.uid}&new_streak=${newStudyStreak}`);
+        const updated = { ...profile, studyStreak: newStudyStreak, lastLogin: new Date().toISOString().replace('T', ' ').slice(0,19)}
+        setProfile(updated, user.uid)
+        toast(`Congrats, you've hit a study streak of ${newStudyStreak}!`)
+        } catch (error) {
+          console.log(error)
+        }
+        break;
+      }
+      case 'updateLastLogin': {
+        try {
+        api.patch(`/updateStudyStreak?uid=${user.uid}&new_streak=${0}`);
+        const updated = { ...profile, studyStreak: 0, lastLogin: new Date().toISOString().replace('T', ' ').slice(0,19)}
+        setProfile(updated, user.uid)
+        } catch (error) {
+          console.log(error)
+        }
+        break;
+      }
+      default:
+        break;
+    }
+  }
+
   const handleFinishAndNext = async () => {
     // Save the current lesson and level to localStorage
     if(nextPage <= -1) {
@@ -455,7 +494,7 @@ function LessonsPracticePage() {
   // Function to mark topic as completed in backend.
   const sendTopic = async (newComboCount, newAccuracy) => {
     try {
-      await api.patch(`/updateCompletedCombo?uid=${user.uid}&lesson=${lesson}&topic=${topicIndex}&level=${level}`);
+      await api.patch(`/updateCompletedCombos?uid=${user.uid}&lesson=${lesson}&topic=${topicIndex}&level=${level}`);
       await api.patch(`/updateComboCount?uid=${user.uid}&new_combo_count=${newComboCount}`);
       await api.patch(`/updateAccuracy?uid=${user.uid}&new_accuracy=${newAccuracy}`);
     } catch (error) {
