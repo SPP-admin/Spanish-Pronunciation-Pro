@@ -212,7 +212,6 @@ function LessonsPracticePage() {
     if(!profile.lastLogin) return;
 
     if(!studyStreakChecked) {
-    console.log(profile)
     const action = studyStreakHandler(profile.lastLogin); 
     const newStudyStreak = profile.studyStreak + 1;
     console.log(action);
