@@ -349,7 +349,14 @@ function LessonsPracticePage() {
   
       // Build the JSON payload.
       const generatedSentence = selectedText ? selectedText: spanishSentence;
-      const payload = { base64_data: base64data, sentence: generatedSentence, dialect: topic};
+	  let dialect = "latam";
+	  if (topic == "accent_marks") {
+		dialect = topic;
+	  }
+	  else {
+			dialect = lesson;
+		}
+      const payload = { base64_data: base64data, sentence: generatedSentence, dialect: dialect};
       console.log(payload)
       fetch(`${API_URL}/checkPronunciation`, {
         method: "POST",

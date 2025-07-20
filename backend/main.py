@@ -455,8 +455,7 @@ async def checkPronunciation(data: TranscriptionData):
         audio, sampling_rate = librosa.load(random_string, sr=16000, mono=True, duration=30.0, dtype=np.int32)
         random2 = "tmp_" + random_string
         sf.write(random2, audio, 16000)
-        dialect = "stress" if data.dialect == "accent_marks" else "latam"
-        print(dialect)
+        dialect = data.dialect
         output = pronunciationChecking.correct_pronunciation(sentence, random2, dialect)
 
         # Get rid of audio recordings

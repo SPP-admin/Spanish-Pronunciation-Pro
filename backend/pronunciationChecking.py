@@ -12,7 +12,7 @@ def correct_pronunciation(sentence, audio_path, dialect):
 	print(user_ipa)
 	user_ipa = remove_double_letters(user_ipa)
 	user_ipa = preprocess_user_ipa(user_ipa)
-	if dialect == "stress":
+	if dialect == "accent_marks":
 		user_ipa = user_ipa.translate(stress_translator)
 	else:
 		user_ipa = user_ipa.translate(translator)
@@ -26,12 +26,17 @@ def correct_pronunciation(sentence, audio_path, dialect):
 # and user_ipa[i1:i2] should be replaced/deleted/inserted or equal (as tag says) with correct_ipa[j1:j2]
 def compare_strings(sentence, user_ipa, dialect):
 	sentence_mapping = epi.sentenceMapping(sentence)
-	if dialect == 'latam':
-		sentence_mapping.transliterate_latam()
-	elif dialect == 'eu':
+	
+	if dialect == 'spain':
 		sentence_mapping.transliterate_eu()
-	elif dialect == 'stress':
+	elif dialect == 'argentina':
+		sentence_mapping.transliterate_rio()
+	elif dialect == 'puerto_rico':
+		sentence_mapping.transliterate_pr()
+	elif dialect == 'accent_marks':
 		sentence_mapping.transliterate_stress()
+	else:
+		sentence_mapping.transliterate_latam()
 	correct_ipa = sentence_mapping.get_ipa()
 	print(user_ipa)
 	print(correct_ipa)
