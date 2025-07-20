@@ -228,10 +228,17 @@ function LessonsPracticePage() {
     document.getElementById("transcriptionBox").innerHTML = message;
   }
 
-  const setQuestionStatus = (isCorrect) => {
-    if(isCorrect) {
+  const setQuestionStatus = (isSentenceCorrect, isWordCorrect) => {
+    console.log(isSentenceCorrect)
+    console.log(isWordCorrect)
+    if(isSentenceCorrect) {
       document.getElementById("completionStatus").innerHTML = "<div class= 'motion-preset-confetti text-green-500'>Correct</div>"
       correctSFX.play();
+      correctConfetti();
+    } else if(selectedText && isWordCorrect) {
+      document.getElementById("completionStatus").innerHTML = "<div class= 'motion-preset-confetti text-green-500'>Correct! Try the sentence again or pick a new word!</div>"
+      correctSFX.play();
+      setSelectedText(null);
       correctConfetti();
     } else document.getElementById("completionStatus").innerHTML = "<div class= 'motion-preset-pulse motion-duration-2000 text-red-500'>Try Again</div>"
   }
@@ -334,6 +341,7 @@ function LessonsPracticePage() {
           let amountCorrect = 0;
           let lettersCorrect = 0;
           let word = '';
+          let wordStatus = false;
 
           for (let i = 0; i < arr.length - 2; i++) {
 
@@ -356,12 +364,13 @@ function LessonsPracticePage() {
             i+=2;
           }
 
-          if(word != '') {
+          if(word != '') {  // Single word handler.
             console.log(lettersCorrect)
-                if((lettersCorrect >= word.length * allowedError) && correctWords.hasOwnProperty(word)) correctWords[word] = true;
+                if((lettersCorrect >= word.length * allowedError) && correctWords.hasOwnProperty(word)) {
+                  correctWords[word] = true;
+                  wordStatus = true;
+                }
           }
-
-          console.log(correctWords)
 
           setSentenceWords(sentenceWords)
 
@@ -388,7 +397,8 @@ function LessonsPracticePage() {
 
           if(isSentenceFullyPronounced) {
             if(!isLessonComplete && !isCurrentCorrect) handleCorrectAnswer();
-          } else setQuestionStatus(false)
+          } else setQuestionStatus(false, wordStatus)
+
           console.log(html);
           document.getElementById("transcriptionBox").innerHTML = html;
         })
@@ -588,7 +598,7 @@ function LessonsPracticePage() {
     setCorrectAmount(prev => {
       let updated = prev;
       if(!isCurrentCorrect) updated = prev + 1;
-      setCurrentCorrect(true)
+      setCurrentCorrect(true, false)
       setQuestionStatus(true)
       return updated;
     })
@@ -650,17 +660,19 @@ function LessonsPracticePage() {
               <Button onClick={handleNextSentence}>
                 Regenerate?
               </Button>
-            
-              <div className="mt-4 text-center min-h-[50px]">
+
+              {/* Clickable words section */}
+              <div className="mt-4 text-center">
                 <div className="font-bold">Remaining words to correctly pronounce:</div>
                 <div className="w-full flex flex-wrap p-4  gap-2 justify-center">
                 {Object.entries(sentenceWords)
                 .filter((([key, value]) => value === false))
                 .map(([key]) => {
-                  return <div class="motion-preset-expand" key={key}>{key}</div>
+                  return <div className="motion-preset-expand cursor-pointer hover:font-bold" key={key} onClick={() => setSelectedText(key)}>{key}</div>
                 })}
                 </div>
               </div>
+
             {/* Feedback Field now uses selectedText */}
             <div className="mt-4 p-4 bg-muted/50 dark:bg-muted/20 rounded text-center w-full min-h-[50px]">
               <p className="text-md text-muted-foreground">
