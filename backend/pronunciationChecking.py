@@ -67,7 +67,7 @@ def delete_incorrect(sentence_mapping, current_ipa, pos):
 
 	# edge case for 'h'
 	h = {'h', "H"}
-	if next_index > 0 and sentence_mapping.ipa_mapping[next_index - 1].ortho_letter in h and not is_vowel_ipa(next_mapping.ipa_letter[0]):
+	if next_index > 0 and sentence_mapping.ipa_mapping[next_index - 1].ortho_letter in h and (len(next_mapping.ipa_letter) > 0 and not is_vowel_ipa(next_mapping.ipa_letter[0])):
 		sentence_mapping.ipa_mapping[next_index - 1].pronounced_correctly = False
 
 	# Check stress
@@ -115,7 +115,7 @@ def insert_incorrect(sentence_mapping, user_ipa, correct_ipa, start_pos, end_pos
 	h = {'h', 'H'}
 	if prev_index >= 0:
 		prev_mapping = sentence_mapping.ipa_mapping[prev_index]
-		if prev_mapping.ortho_letter in h and not is_vowel_ipa(curr.ipa_letter[0]):
+		if prev_mapping.ortho_letter in h and (len(curr.ipa_letter) > 0 and not is_vowel_ipa(curr.ipa_letter[0])):
 			prev_mapping.pronounced_correctly = False
 	
 	for i in range(start_pos, end_pos if end_pos < len(sentence_mapping.ipa_indices) else len(sentence_mapping.ipa_indices)):
