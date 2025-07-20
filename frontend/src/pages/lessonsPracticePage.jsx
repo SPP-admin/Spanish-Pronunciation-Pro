@@ -233,7 +233,6 @@ function LessonsPracticePage() {
       document.getElementById("completionStatus").innerHTML = "<div class= 'motion-preset-confetti text-green-500'>Correct</div>"
       correctSFX.play();
       correctConfetti();
-
     } else document.getElementById("completionStatus").innerHTML = "<div class= 'motion-preset-pulse motion-duration-2000 text-red-500'>Try Again</div>"
   }
 
@@ -385,7 +384,9 @@ function LessonsPracticePage() {
           })
           //console.log(amountCorrect / generatedSentence.length)
 
-          if(!Object.values(sentenceWords).includes(false)) {
+          const isSentenceFullyPronounced = !Object.values(sentenceWords).includes(false)
+
+          if(isSentenceFullyPronounced) {
             if(!isLessonComplete && !isCurrentCorrect) handleCorrectAnswer();
           } else setQuestionStatus(false)
           console.log(html);
@@ -472,6 +473,7 @@ function LessonsPracticePage() {
       setTranscriptionBox("");
       setCurrentAccuracy(0)
       setCorrectAmount(0)
+      setSentenceWords({});
       setUses(0)
       if(isLessonComplete == true) {
         setAmountToPracticeSession(prevCount => prevCount - 1)
@@ -648,14 +650,16 @@ function LessonsPracticePage() {
               <Button onClick={handleNextSentence}>
                 Regenerate?
               </Button>
-
-              <div className="mt-4 p-4 bg-muted/50 dark:bg-muted/20 rounded text-center w-full min-h-[50px]">
-                Words to say correctly: 
+            
+              <div className="mt-4 text-center min-h-[50px]">
+                <div className="font-bold">Remaining words to correctly pronounce:</div>
+                <div className="w-full flex flex-wrap p-4  gap-2 justify-center">
                 {Object.entries(sentenceWords)
                 .filter((([key, value]) => value === false))
                 .map(([key]) => {
-                  return <div key={key}>{key}</div>
+                  return <div class="motion-preset-expand" key={key}>{key}</div>
                 })}
+                </div>
               </div>
             {/* Feedback Field now uses selectedText */}
             <div className="mt-4 p-4 bg-muted/50 dark:bg-muted/20 rounded text-center w-full min-h-[50px]">
