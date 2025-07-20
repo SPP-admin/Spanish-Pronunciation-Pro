@@ -197,6 +197,12 @@ function LessonsPracticePage() {
 			lang = "es-PR";
 			break;
 		default:
+			array = [...text.matchAll(regexSoftC)];
+			for (let group of array) {
+				replacement = "s" + group[1];
+				sentence = sentence.replace(group[0], replacement);
+			}
+			sentence = sentence.replace("z", "s");
 			lang = "es-MX";
 	}
     const utterance = new SpeechSynthesisUtterance(sentence);
