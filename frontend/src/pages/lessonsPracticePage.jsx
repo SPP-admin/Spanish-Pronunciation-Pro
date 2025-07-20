@@ -143,6 +143,7 @@ function LessonsPracticePage() {
   };
 
   const [spanishSentence, setSpanishSentence] = useState("");
+  const [sentenceWords, setSentenceWords] = useState({});
   const [loading, setLoading] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const lastParams = useRef({ topic: null, lesson: null, level: null });
@@ -154,6 +155,8 @@ function LessonsPracticePage() {
   const allowedError = .5;
 
   const correctSFX = new Audio(correctFile);
+
+  const delimiters = " ?!.,:;()[]{}¡¿…";
 
   // Uses the lessonCategories file to find out what the previous and next lessons are.
   for (const key in lessonCategories){
@@ -209,14 +212,16 @@ function LessonsPracticePage() {
   }, [amountToPracticeSession])
 
   useEffect(() => {
+    if(!profile.lastLogin) return;
+
     if(!studyStreakChecked) {
     const action = studyStreakHandler(profile.lastLogin); 
     const newStudyStreak = profile.studyStreak + 1;
-    console.log(action);
+    console.log(action)
     handleStudyStreakUpdate(action, newStudyStreak);
     setStudyStreakChecked(true);
     }
-  }, [])
+  }, [profile?.lastLogin])
 
   const setTranscriptionBox = (string) => {
     const message = `<div>${string}</div>`
@@ -244,12 +249,42 @@ function LessonsPracticePage() {
           let data = await res.text();
           data = data.replace(/^"|"$/g, "");
           setSpanishSentence(data);
+          const words = parseSentence(data);
+          setSentenceWords(words)
         } catch (err) {
           setSpanishSentence("Error generating sentence.");
         }
         setLoading(false);
       };
 
+  const parseSentence = (sentence) => {
+    let parsedSentence = {};
+    let currentWord = '';
+    let wordPosition = 0;
+
+    console.log(sentence)
+    for(let i = 0; i < sentence.length; i++) {
+      if(isDelimiter(sentence[i])) {
+        if(!isDelimiter(currentWord)) parsedSentence[currentWord] = false;
+        currentWord = '';
+        wordPosition += 1;
+      } else {
+        currentWord += sentence[i];
+      }
+    }
+
+    if(currentWord != '') {
+      parsedSentence[currentWord] = false;
+    }
+    console.log(parsedSentence)
+
+    return parsedSentence;
+  }
+
+  const isDelimiter = (char) => {
+    if(delimiters.includes(char)) return true;
+    return false;
+  }
 
   const handleCaptureSelection = () => {
     const selection = window.getSelection().toString();
@@ -296,16 +331,40 @@ function LessonsPracticePage() {
           let parsedTranscript = decodeURI(JSON.parse(transcript));
           console.log("Parsed Transcript", parsedTranscript);
           const arr = parsedTranscript.split(",");
+          const correctWords = sentenceWords;
           let amountCorrect = 0;
+          let lettersCorrect = 0;
+          let word = '';
+
           for (let i = 0; i < arr.length - 2; i++) {
+
             html += (arr[i+1] == "True" ? `<span style="color:green">` : `<span style="color:red">`);
-			amountCorrect += (arr[i+1] == "True" ? 1 : 0);
+                amountCorrect += (arr[i+1] == "True" ? 1 : 0);
             html += (arr[i+2] == "False" ? `<u>` : "");
-			html += arr[i];
-			html += (arr[i+2] == "False" ? `</u>` : "");
-			html += "</span>";
+                html += arr[i];
+                html += (arr[i+2] == "False" ? `</u>` : "");
+                html += "</span>";
+
+
+            if(isDelimiter(arr[i])) {
+                if((lettersCorrect >= word.length * allowedError) && correctWords.hasOwnProperty(word)) correctWords[word] = true;
+                word = '';
+                lettersCorrect = 0;
+            } else {
+                word += arr[i];
+                lettersCorrect += (arr[i+1] == "True" ? 1 : 0);
+            }
             i+=2;
           }
+
+          if(word != '') {
+            console.log(lettersCorrect)
+                if((lettersCorrect >= word.length * allowedError) && correctWords.hasOwnProperty(word)) correctWords[word] = true;
+          }
+
+          console.log(correctWords)
+
+          setSentenceWords(sentenceWords)
 
           setUses(prev => {
             const newUses = prev + 1
@@ -326,12 +385,13 @@ function LessonsPracticePage() {
           })
           //console.log(amountCorrect / generatedSentence.length)
 
-          if((amountCorrect >= generatedSentence.length * allowedError) && (generatedSentence.length == spanishSentence.length)) {
+          if(!Object.values(sentenceWords).includes(false)) {
             if(!isLessonComplete && !isCurrentCorrect) handleCorrectAnswer();
           } else setQuestionStatus(false)
           console.log(html);
           document.getElementById("transcriptionBox").innerHTML = html;
         })
+
         .catch(error => console.error("Error sending audio:", error));
     };
     reader.readAsDataURL(blob);
@@ -386,6 +446,7 @@ function LessonsPracticePage() {
       }
       case 'updateLastLogin': {
         try {
+        console.log(profile)
         api.patch(`/updateStudyStreak?uid=${user.uid}&new_streak=${0}`);
         const updated = { ...profile, studyStreak: 0, lastLogin: new Date().toISOString().replace('T', ' ').slice(0,19)}
         setProfile(updated, user.uid)
@@ -523,9 +584,10 @@ function LessonsPracticePage() {
   // Adds another answer to the amount of correct ones.
   const handleCorrectAnswer = () => {
     setCorrectAmount(prev => {
+      let updated = prev;
+      if(!isCurrentCorrect) updated = prev + 1;
       setCurrentCorrect(true)
       setQuestionStatus(true)
-      const updated = prev + 1
       return updated;
     })
   }
@@ -587,6 +649,14 @@ function LessonsPracticePage() {
                 Regenerate?
               </Button>
 
+              <div className="mt-4 p-4 bg-muted/50 dark:bg-muted/20 rounded text-center w-full min-h-[50px]">
+                Words to say correctly: 
+                {Object.entries(sentenceWords)
+                .filter((([key, value]) => value === false))
+                .map(([key]) => {
+                  return <div key={key}>{key}</div>
+                })}
+              </div>
             {/* Feedback Field now uses selectedText */}
             <div className="mt-4 p-4 bg-muted/50 dark:bg-muted/20 rounded text-center w-full min-h-[50px]">
               <p className="text-md text-muted-foreground">
