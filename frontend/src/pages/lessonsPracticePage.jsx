@@ -678,7 +678,7 @@ function LessonsPracticePage() {
               <p className="text-md text-muted-foreground">
                 {selectedText
                   ? `Now practicing: "${selectedText}". Record your pronunciation.`
-                  : "Practice this word/sentence, or highlight text and click 'Practice' to begin."}
+                  : "Practice this word/sentence, click a word in the remaining words box, or highlight text and click 'Practice' to begin."}
               </p>
             </div>
 			{/* Extra feedback field */}
