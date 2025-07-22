@@ -236,7 +236,9 @@ class sentenceMapping:
 					case "w":
 						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="w"))
 					case "x":
-						if (i < len(sentence) - 1 and not sentence[i+1] in vowels) or (i > 0 and not sentence[i-1].isalpha()) or i == 0:
+						if (i > 1 and i < len(sentence) - 2 and sentence[i-2:i+3] == "mexic"):
+							mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="x"))
+						elif (i < len(sentence) - 1 and not sentence[i+1] in vowels) or (i > 0 and not sentence[i-1].isalpha()) or i == 0:
 							mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="s"))
 						else:
 							mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="ks"))
