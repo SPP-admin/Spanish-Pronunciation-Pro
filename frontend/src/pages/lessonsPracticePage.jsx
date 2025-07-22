@@ -130,11 +130,85 @@ function LessonsPracticePage() {
     }
 
     window.speechSynthesis.cancel(); // Stop any previous speech
+	let sentence = text + " ";
+	// Regex for Puerto Rican Spanish
+	const regexIntervocalicD = /([aeiouáéíóúy])d([aeiouáéíóúy])/ig;
+	const regexPreconsonantS = /([\p{Letter}\p{Mark}])s([bcdfgjklmnñpqrtvwxz])/ig;
+	const regexPreconsonantR = /([aeiouyáéíóú])r([bcdfghjklmnñpqstvwxz])/ig;
+	const regexFinalSD = /([sd])([\s\p{P}])/ig;
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'es-ES'; 
+	const regexSoftC = /c([eiéí])/ig;
+	let array = [];
+	let replacement = "";
+	let lang = "es-MX";
+	switch (lesson) {
+		case "spain":
+			lang = "es-ES";
+			break;
+		case "mexico":
+			lang = "es-MX";
+			// Pre-process string a little bit to enforce features of the accent
+			array = [...text.matchAll(regexSoftC)];
+			for (let group of array) {
+				replacement = "s" + group[1];
+				sentence = sentence.replace(group[0], replacement);
+			}
+			sentence = sentence.replace("z", "s");
+			break;
+		case "argentina":
+			lang = "es-AR";
+			array = [...text.matchAll(regexSoftC)];
+			for (let group of array) {
+				replacement = "s" + group[1];
+				sentence = sentence.replace(group[0], replacement);
+			}
+			sentence = sentence.replace("z", "s");
+			break;
+		case "puerto_rico":
+			// Pre-process string a little bit to enforce features of the accent
+			array = [...text.matchAll(regexIntervocalicD)];
+			for (let group of array) {
+				replacement = group[1] + " " + group[2];
+				sentence = sentence.replace(group[0], replacement);
+			}
+
+			array = [...text.matchAll(regexPreconsonantS)];
+			for (let group of array) {
+				replacement = group[1] + "h " + group[2];
+				sentence = sentence.replace(group[0], replacement);
+			}
+			array = [...text.matchAll(regexFinalSD)];
+			for (let group of array) {
+				replacement = "h" + group[2];
+				sentence = sentence.replace(group[0], replacement);
+			}
+			array = [...text.matchAll(regexPreconsonantR)];
+			for (let group of array) {
+				replacement = group[1] + "l" + group[2];
+				sentence = sentence.replace(group[0], replacement);
+			}
+
+			array = [...text.matchAll(regexSoftC)];
+			for (let group of array) {
+				replacement = "s" + group[1];
+				sentence = sentence.replace(group[0], replacement);
+			}
+			sentence = sentence.replace("z", "s");
+			lang = "es-PR";
+			break;
+		default:
+			array = [...text.matchAll(regexSoftC)];
+			for (let group of array) {
+				replacement = "s" + group[1];
+				sentence = sentence.replace(group[0], replacement);
+			}
+			sentence = sentence.replace("z", "s");
+			lang = "es-MX";
+	}
+    const utterance = new SpeechSynthesisUtterance(sentence);
+	utterance.lang = lang;
     utterance.rate = 0.9;
-
+	console.log(sentence);
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => setIsSpeaking(false);
     utterance.onerror = () => setIsSpeaking(false);
@@ -277,7 +351,14 @@ function LessonsPracticePage() {
   
       // Build the JSON payload.
       const generatedSentence = selectedText ? selectedText: spanishSentence;
-      const payload = { base64_data: base64data, sentence: generatedSentence, dialect: topic};
+	  let dialect = "latam";
+	  if (topic == "accent_marks") {
+		dialect = topic;
+	  }
+	  else {
+			dialect = lesson;
+		}
+      const payload = { base64_data: base64data, sentence: generatedSentence, dialect: dialect};
       console.log(payload)
       fetch(`${API_URL}/checkPronunciation`, {
         method: "POST",

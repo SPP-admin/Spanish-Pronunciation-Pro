@@ -12,7 +12,7 @@ def correct_pronunciation(sentence, audio_path, dialect):
 	print(user_ipa)
 	user_ipa = remove_double_letters(user_ipa)
 	user_ipa = preprocess_user_ipa(user_ipa)
-	if dialect == "stress":
+	if dialect == "accent_marks":
 		user_ipa = user_ipa.translate(stress_translator)
 	else:
 		user_ipa = user_ipa.translate(translator)
@@ -26,12 +26,17 @@ def correct_pronunciation(sentence, audio_path, dialect):
 # and user_ipa[i1:i2] should be replaced/deleted/inserted or equal (as tag says) with correct_ipa[j1:j2]
 def compare_strings(sentence, user_ipa, dialect):
 	sentence_mapping = epi.sentenceMapping(sentence)
-	if dialect == 'latam':
-		sentence_mapping.transliterate_latam()
-	elif dialect == 'eu':
+	
+	if dialect == 'spain':
 		sentence_mapping.transliterate_eu()
-	elif dialect == 'stress':
+	elif dialect == 'argentina':
+		sentence_mapping.transliterate_rio()
+	elif dialect == 'puerto_rico':
+		sentence_mapping.transliterate_pr()
+	elif dialect == 'accent_marks':
 		sentence_mapping.transliterate_stress()
+	else:
+		sentence_mapping.transliterate_latam()
 	correct_ipa = sentence_mapping.get_ipa()
 	print(user_ipa)
 	print(correct_ipa)
@@ -67,7 +72,7 @@ def delete_incorrect(sentence_mapping, current_ipa, pos):
 
 	# edge case for 'h'
 	h = {'h', "H"}
-	if next_index > 0 and sentence_mapping.ipa_mapping[next_index - 1].ortho_letter in h and not is_vowel_ipa(next_mapping.ipa_letter[0]):
+	if next_index > 0 and sentence_mapping.ipa_mapping[next_index - 1].ortho_letter in h and (len(next_mapping.ipa_letter) > 0 and not is_vowel_ipa(next_mapping.ipa_letter[0])):
 		sentence_mapping.ipa_mapping[next_index - 1].pronounced_correctly = False
 
 	# Check stress
@@ -115,7 +120,7 @@ def insert_incorrect(sentence_mapping, user_ipa, correct_ipa, start_pos, end_pos
 	h = {'h', 'H'}
 	if prev_index >= 0:
 		prev_mapping = sentence_mapping.ipa_mapping[prev_index]
-		if prev_mapping.ortho_letter in h and not is_vowel_ipa(curr.ipa_letter[0]):
+		if prev_mapping.ortho_letter in h and (len(curr.ipa_letter) > 0 and not is_vowel_ipa(curr.ipa_letter[0])):
 			prev_mapping.pronounced_correctly = False
 	
 	for i in range(start_pos, end_pos if end_pos < len(sentence_mapping.ipa_indices) else len(sentence_mapping.ipa_indices)):
