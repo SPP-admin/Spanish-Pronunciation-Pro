@@ -209,6 +209,8 @@ function LessonsPracticePage() {
   }, [amountToPracticeSession])
 
   useEffect(() => {
+    if(!profile.lastLogin) return;
+
     if(!studyStreakChecked) {
     const action = studyStreakHandler(profile.lastLogin); 
     const newStudyStreak = profile.studyStreak + 1;
@@ -216,7 +218,7 @@ function LessonsPracticePage() {
     handleStudyStreakUpdate(action, newStudyStreak);
     setStudyStreakChecked(true);
     }
-  }, [])
+  }, [profile?.lastLogin])
 
   const setTranscriptionBox = (string) => {
     const message = `<div>${string}</div>`
