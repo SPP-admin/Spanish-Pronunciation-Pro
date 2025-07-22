@@ -403,7 +403,7 @@ async def generateSentence(chunk: str, lesson: str, difficulty: str):
                 f"Use the Spanish alphabet, correct accent marks and also make sure the sentences are grammatically correct. "
                 f"If the difficulty is or includes 'word', return only a single word. "
                 f"Make sure the sentence or word is unique, creative, and not repetitive. Avoid using any sentences you have generated recently. "
-                f"Unless the difficulty is explicitly 'complex sentences', keep the sentences simple, clear, and easy to understand. They must be no longer than 10 words. Only use more complex grammar or longer sentences if the difficulty is 'complex sentences'."
+                f"Unless the difficulty is explicitly 'complex sentences', keep the sentences simple, clear, and easy to understand. They must be no longer than 10 words. Only use more complex grammar or longer sentences (no more than 20 words) if the difficulty is 'complex sentences'."
             )
             user_content = (
                 f"Generate a unique and creative Spanish {difficulty} for the lesson '{lesson}' in the chunk '{chunk}'. "
