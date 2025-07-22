@@ -3,6 +3,7 @@
 # (true is pronounced correctly, false is incorrectly pronounced)
 import string
 import silabeador
+ENYO_SOUND = "52"
 
 class ipaMapping:
 	def __init__(self, ortho_letter, ipa_letter):
@@ -79,9 +80,11 @@ class sentenceMapping:
 
 			for i in range(len(syllables)):
 				syllable = sentenceMapping(syllables[i])
-				syllable.transliterate_latam()
+				syllable.transliterate_latam(is_stressed=True)
 				# Set syllable_mapping 
 				for j in syllable.ipa_mapping:
+					if j.ipa_letter == ENYO_SOUND:
+						j.ipa_letter = "nj"
 					sm.syllable_mapping.append((j.ipa_letter, len(sm.ipa_mapping), len(syllable.ipa_mapping)))
 
 				if (i == stressed_syllable_index and len(syllables) > 1):
@@ -101,7 +104,7 @@ class sentenceMapping:
 		self.syllable_mapping = sm.syllable_mapping
 		return self.ipa_mapping
 	
-	def transliterate_latam(self):
+	def transliterate_latam(self, is_stressed=False):
 		# Down the road, commas are used as delimiters so replace them with something that looks like a comma
 		self.sentence = self.sentence.replace(",", "‚")
 
@@ -208,9 +211,12 @@ class sentenceMapping:
 						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="m"))
 					case "n":
 						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="n"))
-					# Whisper is bad at detecting [ɲ] so use [nj] instead
 					case "ñ":
-						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="nj"))
+						if not is_stressed:
+							mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="ɲ"))
+						else:
+							mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter=ENYO_SOUND))
+
 					case "p":
 						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="p"))
 					case "r":
@@ -230,7 +236,7 @@ class sentenceMapping:
 					case "w":
 						mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="w"))
 					case "x":
-						if i < len(sentence) - 1 and not sentence[i+1] in vowels:
+						if (i < len(sentence) - 1 and not sentence[i+1] in vowels) or (i > 0 and not sentence[i-1].isalpha()) or i == 0:
 							mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="s"))
 						else:
 							mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="ks"))

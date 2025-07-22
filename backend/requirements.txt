@@ -3,14 +3,14 @@ uvicorn
 firebase-admin
 google-cloud-firestore
 python-dotenv
-openai
 python-multipart
 pydantic
 
+openai
 scipy
 numpy
 transformers
 silabeador
 librosa
 soundfile
-torch
+azure-cognitiveservices-speech
