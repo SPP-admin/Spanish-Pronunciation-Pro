@@ -5,7 +5,7 @@ google-cloud-firestore
 python-dotenv
 python-multipart
 pydantic
-
+torch
 openai
 scipy
 numpy
