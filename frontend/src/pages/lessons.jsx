@@ -24,7 +24,6 @@ import { toast } from 'sonner';
 function LessonsPage({user}) {
 
     const { profile, setProfile } = useProfile()
-
     // Checks if the user has earned any new achievements.
 
     useEffect(() => {
