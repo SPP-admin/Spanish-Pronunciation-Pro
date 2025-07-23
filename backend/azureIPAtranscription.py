@@ -19,7 +19,7 @@ def azure_transcribe(filepath, sentence, dialect):
 		input_sentence = input_sentence.replace("ll", "sh")
 		input_sentence = input_sentence.replace("ñ", "ni")
 		input_sentence = re.sub(r'y([aeiouyáéíóú])', r'sh\1', input_sentence)
-		input_sentence = re.sub(r's([bcdfgjklmnpqrtvwxz])', r'h\1', input_sentence)
+		input_sentence = re.sub(r's([bcdfgjklmnpqrtvwxz])', r'\1', input_sentence)
 		input_sentence = re.sub(r's(\W+[bcdfgjklmnpqrstvwxz])', r'h\1', input_sentence)
 
 	elif dialect == "puerto_rico":
@@ -28,7 +28,7 @@ def azure_transcribe(filepath, sentence, dialect):
 		# r at end of syllables before consonants -> l
 		input_sentence = input_sentence.lower()
 		input_sentence = re.sub(r'[sd]([\W$])', r'h\1', input_sentence, flags=re.MULTILINE)
-		input_sentence = re.sub(r's([bcdfgjklmnpqrstvwxz])', r'h\1', input_sentence)
+		input_sentence = re.sub(r's([bcdfgjklmnpqrstvwxz])', r'\1', input_sentence)
 		input_sentence = re.sub(r'([aeiouyáéíóú])d([aeiouyáéíóú])', r'\1h\2', input_sentence)
 		input_sentence = re.sub(r'([aeiouyáéíóú])r([bcdfgjklmnpqtvwxz])', r'\1l\2', input_sentence)
 
