@@ -133,7 +133,7 @@ function LessonsPracticePage() {
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'es-ES'; 
-    utterance.rate = 0.9;
+    utterance.rate = 0.8;
 
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => setIsSpeaking(false);
@@ -632,7 +632,7 @@ function LessonsPracticePage() {
             <div className="text-center w-full">
               {/* Container for sentence and play button */}
               <div className="flex items-center justify-center gap-3 mb-4">
-                <p className="text-3xl md:text-4xl font-bold text-black mb-3 select-text">
+                <p className="text-3xl md:text-4xl font-bold mb-3 select-text">
                   {loading ? "Loading..." : spanishSentence}
                 </p>
                 {/* New button to play audio */}
