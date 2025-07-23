@@ -3,15 +3,6 @@ import scipy.io.wavfile
 import scipy.signal
 import numpy as np
 
-WHISPER_SAMPLING_RATE = 16000
-processor = WhisperProcessor.from_pretrained("neurlang/ipa-whisper-base")
-model = WhisperForConditionalGeneration.from_pretrained("neurlang/ipa-whisper-base")
-model.config.forced_decoder_ids = None
-model.config.suppress_tokens = []
-model.generation_config.forced_decoder_ids = None
-model.generation_config.language = "es"
-model.generation_config._from_model_config = True
-
 # Convert 16-bit PCM wav to 32-bit floating point wav
 def pcm2float(sig, dtype='float32'):
 	"""Convert PCM signal to floating point with a range from -1 to 1.
@@ -44,6 +35,14 @@ def pcm2float(sig, dtype='float32'):
 
 # Read file, transcribe with whisperIPA because allosaurus doesn't include linguistic stress information
 def transcribe(filepath):
+	WHISPER_SAMPLING_RATE = 16000
+	processor = WhisperProcessor.from_pretrained("neurlang/ipa-whisper-base")
+	model = WhisperForConditionalGeneration.from_pretrained("neurlang/ipa-whisper-base")
+	model.config.forced_decoder_ids = None
+	model.config.suppress_tokens = []
+	model.generation_config.forced_decoder_ids = None
+	model.generation_config.language = "es"
+	model.generation_config._from_model_config = True
 	transcription = ""
 
 	# Read, process file

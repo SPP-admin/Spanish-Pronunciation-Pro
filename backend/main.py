@@ -21,6 +21,7 @@ from openai import OpenAI
 
 import pronunciationChecking
 import ipaTransliteration as epi
+import whisperIPAtranscription as stt
 import random
 import librosa
 import soundfile as sf
@@ -441,7 +442,6 @@ async def generateSentence(chunk: str, lesson: str, difficulty: str):
 @app.post("/checkPronunciation")
 async def checkPronunciation(data: TranscriptionData):
       try:
-        
         audio_bytes = base64.b64decode(data.base64_data)
         sentence = data.sentence
 
@@ -455,9 +455,10 @@ async def checkPronunciation(data: TranscriptionData):
         audio, sampling_rate = librosa.load(random_string, sr=16000, mono=True, duration=30.0, dtype=np.int32)
         random2 = "tmp_" + random_string
         sf.write(random2, audio, 16000)
-        dialect = "stress" if data.dialect == "accent_marks" else "latam"
-        print(dialect)
-        output = pronunciationChecking.correct_pronunciation(sentence, random2, dialect)
+        if data.dialect == "accent_marks":
+             output = pronunciationChecking.correct_pronunciation_with_accents(sentence, random2)
+        else:
+             output = pronunciationChecking.correct_pronunciation_azure(sentence, random2, data.dialect)
 
         # Get rid of audio recordings
         if os.path.exists(random_string):
