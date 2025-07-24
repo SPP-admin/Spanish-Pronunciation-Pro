@@ -207,7 +207,7 @@ function LessonsPracticePage() {
 	}
     const utterance = new SpeechSynthesisUtterance(sentence);
 	utterance.lang = lang;
-    utterance.rate = 0.9;
+    utterance.rate = 0.8;
 	console.log(sentence);
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => setIsSpeaking(false);
@@ -217,6 +217,7 @@ function LessonsPracticePage() {
   };
 
   const [spanishSentence, setSpanishSentence] = useState("");
+  const [sentenceWords, setSentenceWords] = useState({});
   const [loading, setLoading] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const lastParams = useRef({ topic: null, lesson: null, level: null });
@@ -228,6 +229,8 @@ function LessonsPracticePage() {
   const allowedError = .5;
 
   const correctSFX = new Audio(correctFile);
+
+  const delimiters = " ?!.,:;()[]{}¡¿…";
 
   // Uses the lessonCategories file to find out what the previous and next lessons are.
   for (const key in lessonCategories){
@@ -288,7 +291,7 @@ function LessonsPracticePage() {
     if(!studyStreakChecked) {
     const action = studyStreakHandler(profile.lastLogin); 
     const newStudyStreak = profile.studyStreak + 1;
-    console.log(action);
+    console.log(action)
     handleStudyStreakUpdate(action, newStudyStreak);
     setStudyStreakChecked(true);
     }
@@ -299,12 +302,18 @@ function LessonsPracticePage() {
     document.getElementById("transcriptionBox").innerHTML = message;
   }
 
-  const setQuestionStatus = (isCorrect) => {
-    if(isCorrect) {
+  const setQuestionStatus = (isSentenceCorrect, isWordCorrect) => {
+    console.log(isSentenceCorrect)
+    console.log(isWordCorrect)
+    if(isSentenceCorrect) {
       document.getElementById("completionStatus").innerHTML = "<div class= 'motion-preset-confetti text-green-500'>Correct</div>"
       correctSFX.play();
       correctConfetti();
-
+    } else if(selectedText && isWordCorrect) {
+      document.getElementById("completionStatus").innerHTML = "<div class= 'motion-preset-confetti text-green-500'>Correct! Try the sentence again or pick a new word!</div>"
+      correctSFX.play();
+      setSelectedText(null);
+      correctConfetti();
     } else document.getElementById("completionStatus").innerHTML = "<div class= 'motion-preset-pulse motion-duration-2000 text-red-500'>Try Again</div>"
   }
 
@@ -320,12 +329,42 @@ function LessonsPracticePage() {
           let data = await res.text();
           data = data.replace(/^"|"$/g, "");
           setSpanishSentence(data);
+          const words = parseSentence(data);
+          setSentenceWords(words)
         } catch (err) {
           setSpanishSentence("Error generating sentence.");
         }
         setLoading(false);
       };
 
+  const parseSentence = (sentence) => {
+    let parsedSentence = {};
+    let currentWord = '';
+    let wordPosition = 0;
+
+    console.log(sentence)
+    for(let i = 0; i < sentence.length; i++) {
+      if(isDelimiter(sentence[i])) {
+        if(!isDelimiter(currentWord)) parsedSentence[currentWord] = false;
+        currentWord = '';
+        wordPosition += 1;
+      } else {
+        currentWord += sentence[i];
+      }
+    }
+
+    if(currentWord != '') {
+      parsedSentence[currentWord] = false;
+    }
+    console.log(parsedSentence)
+
+    return parsedSentence;
+  }
+
+  const isDelimiter = (char) => {
+    if(delimiters.includes(char)) return true;
+    return false;
+  }
 
   const handleCaptureSelection = () => {
     const selection = window.getSelection().toString();
@@ -379,16 +418,42 @@ function LessonsPracticePage() {
           let parsedTranscript = decodeURI(JSON.parse(transcript));
           console.log("Parsed Transcript", parsedTranscript);
           const arr = parsedTranscript.split(",");
+          const correctWords = sentenceWords;
           let amountCorrect = 0;
+          let lettersCorrect = 0;
+          let word = '';
+          let wordStatus = false;
+
           for (let i = 0; i < arr.length - 2; i++) {
+
             html += (arr[i+1] == "True" ? `<span style="color:green">` : `<span style="color:red">`);
-			amountCorrect += (arr[i+1] == "True" ? 1 : 0);
+                amountCorrect += (arr[i+1] == "True" ? 1 : 0);
             html += (arr[i+2] == "False" ? `<u>` : "");
-			html += arr[i];
-			html += (arr[i+2] == "False" ? `</u>` : "");
-			html += "</span>";
+                html += arr[i];
+                html += (arr[i+2] == "False" ? `</u>` : "");
+                html += "</span>";
+
+
+            if(isDelimiter(arr[i])) {
+                if((lettersCorrect >= word.length * allowedError) && correctWords.hasOwnProperty(word)) correctWords[word] = true;
+                word = '';
+                lettersCorrect = 0;
+            } else {
+                word += arr[i];
+                lettersCorrect += (arr[i+1] == "True" ? 1 : 0);
+            }
             i+=2;
           }
+
+          if(word != '') {  // Single word handler.
+            console.log(lettersCorrect)
+                if((lettersCorrect >= word.length * allowedError) && correctWords.hasOwnProperty(word)) {
+                  correctWords[word] = true;
+                  wordStatus = true;
+                }
+          }
+
+          setSentenceWords(sentenceWords)
 
           setUses(prev => {
             const newUses = prev + 1
@@ -409,12 +474,16 @@ function LessonsPracticePage() {
           })
           //console.log(amountCorrect / generatedSentence.length)
 
-          if((amountCorrect >= generatedSentence.length * allowedError) && (generatedSentence.length == spanishSentence.length)) {
+          const isSentenceFullyPronounced = !Object.values(sentenceWords).includes(false)
+
+          if(isSentenceFullyPronounced) {
             if(!isLessonComplete && !isCurrentCorrect) handleCorrectAnswer();
-          } else setQuestionStatus(false)
+          } else setQuestionStatus(false, wordStatus)
+
           console.log(html);
           document.getElementById("transcriptionBox").innerHTML = html;
         })
+
         .catch(error => console.error("Error sending audio:", error));
     };
     reader.readAsDataURL(blob);
@@ -469,6 +538,7 @@ function LessonsPracticePage() {
       }
       case 'updateLastLogin': {
         try {
+        console.log(profile)
         api.patch(`/updateStudyStreak?uid=${user.uid}&new_streak=${0}`);
         const updated = { ...profile, studyStreak: 0, lastLogin: new Date().toISOString().replace('T', ' ').slice(0,19)}
         setProfile(updated, user.uid)
@@ -494,6 +564,7 @@ function LessonsPracticePage() {
       setTranscriptionBox("");
       setCurrentAccuracy(0)
       setCorrectAmount(0)
+      setSentenceWords({});
       setUses(0)
       if(isLessonComplete == true) {
         setAmountToPracticeSession(prevCount => prevCount - 1)
@@ -606,9 +677,10 @@ function LessonsPracticePage() {
   // Adds another answer to the amount of correct ones.
   const handleCorrectAnswer = () => {
     setCorrectAmount(prev => {
-      setCurrentCorrect(true)
+      let updated = prev;
+      if(!isCurrentCorrect) updated = prev + 1;
+      setCurrentCorrect(true, false)
       setQuestionStatus(true)
-      const updated = prev + 1
       return updated;
     })
   }
@@ -641,7 +713,7 @@ function LessonsPracticePage() {
             <div className="text-center w-full">
               {/* Container for sentence and play button */}
               <div className="flex items-center justify-center gap-3 mb-4">
-                <p className="text-3xl md:text-4xl font-bold text-black mb-3 select-text">
+                <p className="text-3xl md:text-4xl font-bold mb-3 select-text">
                   {loading ? "Loading..." : spanishSentence}
                 </p>
                 {/* New button to play audio */}
@@ -670,12 +742,24 @@ function LessonsPracticePage() {
                 Regenerate?
               </Button>
 
+              {/* Clickable words section */}
+              <div className="mt-4 text-center">
+                <div className="font-bold">Remaining words to correctly pronounce:</div>
+                <div className="w-full flex flex-wrap p-4  gap-2 justify-center">
+                {Object.entries(sentenceWords)
+                .filter((([key, value]) => value === false))
+                .map(([key]) => {
+                  return <div className="motion-preset-expand cursor-pointer hover:font-bold" key={key} onClick={() => setSelectedText(key)}>{key}</div>
+                })}
+                </div>
+              </div>
+
             {/* Feedback Field now uses selectedText */}
             <div className="mt-4 p-4 bg-muted/50 dark:bg-muted/20 rounded text-center w-full min-h-[50px]">
               <p className="text-md text-muted-foreground">
                 {selectedText
                   ? `Now practicing: "${selectedText}". Record your pronunciation.`
-                  : "Practice this word/sentence, or highlight text and click 'Practice' to begin."}
+                  : "Practice this word/sentence, click a word in the remaining words box, or highlight text and click 'Practice' to begin."}
               </p>
             </div>
 			{/* Extra feedback field */}
