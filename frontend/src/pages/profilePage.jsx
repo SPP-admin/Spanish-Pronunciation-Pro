@@ -115,16 +115,20 @@ function ProfilePage({user}) {
               <CardTitle>Recent Activity</CardTitle>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-3">
-                {profile.activities.map((act, index) => (
-                  <li key={index} className="text-sm">
-                    {act}
-                    <span className="text-xs text-muted-foreground block">
-                      {act.time}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              {profile.activities && profile.activities.length > 0 ? (
+                <ul className="space-y-3">
+                  {profile.activities.map((act, index) => (
+                    <li key={index} className="text-sm">
+                      {act}
+                      <span className="text-xs text-muted-foreground block">
+                        {act.time}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">No recent activity to display yet. Complete lessons to see your progress!</p>
+              )}
             </CardContent>
           </Card>
         </div>

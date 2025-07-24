@@ -37,7 +37,7 @@ function Dashboard({user}) {
   .slice(0,2);
 
 
-  return (
+return (
     <div className="p-4 md:p-8">
       <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -61,8 +61,9 @@ function Dashboard({user}) {
             <Button asChild>
               <Link to="/lessons">Continue Lessons</Link>
             </Button>
+            {/* Changed "Practice Pronunciation" to "View Profile" as per the new requirement */}
             <Button asChild>
-              <Link to="/lessonsPractice">Practice Pronunciation</Link>
+              <Link to="/profile">View Profile</Link>
             </Button>
           </CardContent>
         </Card>
@@ -72,17 +73,36 @@ function Dashboard({user}) {
             <CardTitle>Recent Activity</CardTitle>
           </CardHeader>
           <CardContent>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-                {profile.activities.map((activity, index) => (
-                  <li key={index} className="text-sm">
-                    {activity}
-                  </li>
-                ))}
-            </ul>
+            {profile.activities && profile.activities.length > 0 ? ( //
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                  {profile.activities.map((activity, index) => ( //
+                    <li key={index} className="text-sm"> {/* */}
+                      {activity} {/* */}
+                    </li>
+                  ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No recent activity. Start practicing to see your progress here!
+              </p>
+            )}
           </CardContent>
         </Card>
         <div>
-          <TrophiesCard trophies={recentAchievements} />
+          {recentAchievements && recentAchievements.length > 0 ? ( //
+            <TrophiesCard trophies={recentAchievements} />
+          ) : (
+            <Card className="col-span-1 lg:col-span-2">
+              <CardHeader>
+                <CardTitle>Achievements</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  No achievements unlocked yet. Keep practicing to earn your first trophy!
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>
