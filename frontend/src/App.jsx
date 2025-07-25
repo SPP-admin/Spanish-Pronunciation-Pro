@@ -12,8 +12,8 @@ import ForgotPasswordPage from './pages/passwordReset.jsx';  // Import ForgotPas
 import SignupPage from './pages/signup.jsx'; // Import SignupPage component
 import LessonsPage from './pages/lessons.jsx'; // Import LessonsPage component
 
-import { onAuthStateChanged} from 'firebase/auth';
-import { useEffect, useState } from 'react';  
+import { onAuthStateChanged } from 'firebase/auth';
+import { useEffect, useState } from 'react';
 import { ProtectedRoute } from './components/protectedRoute.jsx';
 import { auth } from './firebase.js';
 import ProfilePage from './pages/profilePage.jsx'; // Import ProfilePage component
@@ -32,41 +32,41 @@ import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persist
 
 import { MoonLoader } from 'react-spinners';
 
-const localStoragePersister = createSyncStoragePersister ({
+const localStoragePersister = createSyncStoragePersister({
   storage: window.localStorage,
 });
 
 persistQueryClient({
   queryClient,
   persister: localStoragePersister,
-  maxAge: 1000 * 60 * 60 * 1, // If the user data is older then one hour, refresh.
+  maxAge: 1000 * 60 * 60 * 1, // If the user data is older than one hour, refresh.
 });
 
 function AppContent() {
-  const [ user ] = useAuthState(auth);
+  const [user] = useAuthState(auth);
   const [isFetching, setIsFetching] = useState(true);
   const [fetchingData, setFetchingData] = useState(true);
   const { setProfile, profile } = useProfile();
-  
-const { data, isLoading } = useQuery({
-  queryFn: () => fetchData(user.uid),
-  queryKey: ["profile", user?.uid],
-  enabled: typeof user?.uid === "string" && user?.uid.length > 0,
-  refetchOnWindowFocus: false,
-  refetchOnMount: false,
-  refetchOnReconnect: false,
-  staleTime: 1000 * 60 * 60 * 24,
-  retry: false,
-});
 
-useEffect(() => {
-  if(data) {
-    setProfile(data, user.uid);
-  }
-}, [data, user?.uid]);
-  
+  const { data, isLoading } = useQuery({
+    queryFn: () => fetchData(user.uid),
+    queryKey: ["profile", user?.uid],
+    enabled: typeof user?.uid === "string" && user?.uid.length > 0,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    staleTime: 1000 * 60 * 60 * 24,
+    retry: false,
+  });
 
-// Uses firebase auth state change method to update the user.
+  useEffect(() => {
+    if (data) {
+      setProfile(data, user.uid);
+    }
+  }, [data, user?.uid]);
+
+
+  // Uses firebase auth state change method to update the user.
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -79,12 +79,24 @@ useEffect(() => {
     return () => unsubscribe();
   }, [])
 
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme'); //
+    if (savedTheme === 'dark') { //
+      document.documentElement.classList.add('dark'); //
+    } else if (savedTheme === 'light') { //
+      document.documentElement.classList.remove('dark'); //
+    } else {
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.classList.add('dark');
+      }
+    }
+  }, []);
 
   // If user is being fetched don't load page.
-  if(isFetching || isLoading ) {
+  if (isFetching || isLoading) {
     return <div className="flex justify-center items-center min-h-screen">
-      <MoonLoader size={50} color="#08b4fc"/>
-      </div>
+      <MoonLoader size={50} color="#08b4fc" />
+    </div>
   }
 
   return (
@@ -92,25 +104,25 @@ useEffect(() => {
       {/* --- Route Display Area --- */}
       <Routes>
         {/* Routes without the navbar*/}
-        <Route path="/" element={<LoginPage user={user} isFetching={isFetching}/>} />
+        <Route path="/" element={<LoginPage user={user} isFetching={isFetching} />} />
         <Route path="/login" element={<LoginPage user={user} isFetching={isFetching} />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/passwordReset" element={<ForgotPasswordPage />} />
 
         <Route element={<ProtectedRoute user={user} />}>
-        {/* Routes with the navbar, wrapped by the layout.jsx component.*/}
-        
-          <Route element={<Layout user={user}/>}>
-            <Route path="/lessonsPractice" element={<LessonsPracticePage/>} />
-            <Route path="/lessons" element={<LessonsPage user={user} isFetching={fetchingData}/>} />
+          {/* Routes with the navbar, wrapped by the layout.jsx component.*/}
+
+          <Route element={<Layout user={user} />}>
+            <Route path="/lessonsPractice" element={<LessonsPracticePage />} />
+            <Route path="/lessons" element={<LessonsPage user={user} isFetching={fetchingData} />} />
             <Route path="/profile" element={<ProfilePage user={user} />} />
             <Route path="/dashboard" element={<Dashboard user={user} />} />
-            <Route path="/settings" element={<SettingsPage user={user}/>} />
+            <Route path="/settings" element={<SettingsPage user={user} />} />
           </Route>
         </Route>
       </Routes>
       <Toaster richColors position="bottom-right" />
-      
+
     </div>
   );
 }
@@ -118,7 +130,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient} >
       <ProfileProvider>
-        <AppContent/>
+        <AppContent />
       </ProfileProvider>
     </QueryClientProvider>
   )

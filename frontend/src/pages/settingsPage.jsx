@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -19,14 +19,29 @@ function SettingsPage({ user }) {
     email: user.email,
   });
 
-  const [darkMode, setDarkMode] = useState(
-    document.documentElement.classList.contains("dark")
-  );
+  const [darkMode, setDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      return savedTheme === 'dark';
+    }
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem('theme', 'dark'); 
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem('theme', 'light'); 
+    }
+  }, [darkMode]);
 
   const handleToggleDarkMode = () => {
-    document.documentElement.classList.toggle("dark");
     setDarkMode((prev) => !prev);
   };
+
+  
 
   // Handle input changes
   const handleInputChange = (e) => {

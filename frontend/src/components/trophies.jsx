@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FaTrophy } from "react-icons/fa";
 
-// Trophy component
+
 function Trophy({ trophy }) {
   const isUnlocked = trophy.unlocked;
   const iconColor = isUnlocked ? "text-yellow-400" : "text-muted-foreground/30";
@@ -19,8 +19,11 @@ function Trophy({ trophy }) {
   );
 }
 
-// TrophiesCard component to display a list of achievements
+
 export function TrophiesCard({ trophies }) {
+  // Filter for unlocked trophies
+  const unlockedTrophies = trophies.filter(trophy => trophy.unlocked);
+
   return (
     <Card className="col-span-1 lg:col-span-2">
       <CardHeader>
@@ -28,9 +31,15 @@ export function TrophiesCard({ trophies }) {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {trophies.map((trophy) => (
-            <Trophy key={trophy.id} trophy={trophy} />
-          ))}
+          {unlockedTrophies.length > 0 ? ( // Conditional for placeholder
+            unlockedTrophies.map((trophy) => (
+              <Trophy key={trophy.id} trophy={trophy} />
+            ))
+          ) : (
+            <p className="col-span-full text-center text-sm text-muted-foreground">
+              No achievements unlocked yet. Keep practicing to earn trophies!
+            </p>
+          )}
         </div>
       </CardContent>
     </Card>
