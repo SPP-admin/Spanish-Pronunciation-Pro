@@ -43,8 +43,18 @@ def azure_transcribe(filepath, sentence, dialect):
 	pronunciation_assessment_result = speechsdk.PronunciationAssessmentResult(speech_recognition_result)
 
 	pronounced_correctly = []
-	for word in pronunciation_assessment_result.words:
-		for phoneme in word.phonemes:
-			pronounced_correctly.append(True if phoneme.accuracy_score >= 80 else False)
+
+	try:
+		for word in pronunciation_assessment_result.words:
+			for phoneme in word.phonemes:
+				pronounced_correctly.append(True if phoneme.accuracy_score >= 80 else False)
+	except Exception as e:
+		print(e)
+		speech_recognition_result = speech_recognizer.recognize_once()
+
+		pronunciation_assessment_result = speechsdk.PronunciationAssessmentResult(speech_recognition_result)
+		for word in pronunciation_assessment_result.words:
+			for phoneme in word.phonemes:
+				pronounced_correctly.append(True if phoneme.accuracy_score >= 80 else False)
 
 	return pronounced_correctly
