@@ -277,7 +277,8 @@ function LessonsPracticePage() {
 
   const setFeedbackBox = (string) => {
     const message = `<div>${string}</div>`;
-    document.getElementById("feedbackBox").innerHTML = message;
+	document.getElementById("sentenceBox").innerHTML = message;
+
   };
 
   const setQuestionStatus = (isSentenceCorrect, isWordCorrect) => {
@@ -634,7 +635,7 @@ function LessonsPracticePage() {
           <CardContent className="p-4 md:p-6 flex flex-col items-center space-y-4"> 
             <div className="text-center w-full">
               <div className="flex items-center justify-center gap-3 mb-3">
-                <p className="text-3xl md:text-4xl font-bold select-text leading-snug">
+                <p className="text-3xl md:text-4xl font-bold select-text leading-snug" id = "sentenceBox">
                   {loading ? "Loading..." : spanishSentence}
                 </p>
                 <Button
@@ -680,11 +681,7 @@ function LessonsPracticePage() {
               <AudioRecorder onRecordingComplete={handleAudioRecording} />
             </div>
 
-            <div className="mt-4 p-4 bg-muted/50 dark:bg-muted/20 rounded text-center w-full min-h-[50px]" id="feedbackBox">
-              <p className="text-md text-muted-foreground">
-                Start by recording the sentence or a selected word.
-              </p>
-            </div>
+            
 
             <div className="mt-2 text-center w-full"> 
               <p className="font-bold text-sm text-muted-foreground mb-2">Remaining words to correctly pronounce:</p>
