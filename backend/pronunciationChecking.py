@@ -3,6 +3,7 @@ import ipaTransliteration as epi
 from difflib import SequenceMatcher
 import whisperIPAtranscription as stress_tr
 import azureIPAtranscription as stt
+import copy
 
 # Check pronunciation with Azure Pronunciation Assessment tool
 def correct_pronunciation_azure(sentence, audio_path, dialect):
@@ -43,7 +44,8 @@ def correct_pronunciation_with_accents(sentence, audio_path):
 	user_ipa = remove_double_letters(user_ipa)
 	user_ipa = preprocess_user_ipa(user_ipa)
 	user_ipa = user_ipa.translate(stress_translator)
-	return compare_strings(sentence, user_ipa)
+	pronunciation_scores = stt.azure_transcribe(audio_path, sentence, "latam")
+	return compare_strings(sentence, user_ipa, pronunciation_scores)
 
 # Compare user pronunciation to correct pronunciation,
 # using difflib to find which symbols in correct pronunciation were pronounced incorrectly
@@ -51,13 +53,15 @@ def correct_pronunciation_with_accents(sentence, audio_path):
 # Opcodes are 5 tuples of form tag, i1, i2, j1, j2
 # where the tag is replace/delete/insert/equal
 # and user_ipa[i1:i2] should be replaced/deleted/inserted or equal (as tag says) with correct_ipa[j1:j2]
-def compare_strings(sentence, user_ipa):
+def compare_strings(sentence, user_ipa, pronunciation_scores):
 	sentence_mapping = epi.sentenceMapping(sentence)
-	
+	sentence_mapping.transliterate_latam()
+	sentence_mapping.set_indices()
+	indices = copy.deepcopy(sentence_mapping.ipa_indices)
 	sentence_mapping.transliterate_stress()
 	correct_ipa = sentence_mapping.get_ipa()
-	print(user_ipa)
-	print(correct_ipa)
+	print("User ipa: " + user_ipa)
+	print("Correct ipa: " + correct_ipa)
 	sentence_mapping.set_indices()
 	sequence_matcher = SequenceMatcher(None, user_ipa, correct_ipa)
 	opcode_list = sequence_matcher.get_opcodes()
@@ -70,10 +74,17 @@ def compare_strings(sentence, user_ipa):
 			insert_incorrect(sentence_mapping, user_ipa[opcode[1]:opcode[2]], correct_ipa, opcode[3], opcode[4])
 
 	# Send output as array of written letter(s) followed by whether those letters were pronounced correctly
+	# Use Azure to check if the IPA letters are correct, Whisper to check stress
+	print("azure array length: " + str(len(pronunciation_scores)))
+	print("indice length: " + str(len(indices)))
+	for i in range(len(pronunciation_scores)):
+		if i < len(indices) and indices[i][1] < len(sentence_mapping.ipa_mapping):
+			index = indices[i][1]
+			sentence_mapping.ipa_mapping[index].pronounced_correctly = pronunciation_scores[i]
 	output_str = []
 	for ipa in sentence_mapping.ipa_mapping:
 		output_str.append([ipa.ortho_letter, str(ipa.pronounced_correctly), str(ipa.stressed_correctly)])
-		
+	
 	return output_str 
 		
 # Mark prev/subsequent IPA symbols as incorrect if user inserted sounds that need to be deleted		

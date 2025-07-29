@@ -137,7 +137,7 @@ function LessonsPracticePage() {
 	const regexPreconsonantR = /([aeiouyáéíóú])r([bcdfghjklmnñpqstvwxz])/ig;
 	const regexFinalSD = /([sd])([\s\p{P}])/ig;
 
-	const regexSoftC = /c([eiéí])/ig;
+	const regexSoftC = /c([eiéíy])/ig;
 	let array = [];
 	let replacement = "";
 	let lang = "es-MX";
@@ -209,6 +209,7 @@ function LessonsPracticePage() {
 	utterance.lang = lang;
     utterance.rate = 0.8;
 	console.log(sentence);
+	console.log(lang)
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => setIsSpeaking(false);
     utterance.onerror = () => setIsSpeaking(false);
