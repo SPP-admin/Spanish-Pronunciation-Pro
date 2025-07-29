@@ -19,7 +19,7 @@ def azure_transcribe(filepath, sentence, dialect):
 		input_sentence = input_sentence.replace("ll", "sh")
 		input_sentence = input_sentence.replace("ñ", "ni")
 		input_sentence = re.sub(r'y([aeiouyáéíóú])', r'sh\1', input_sentence)
-		input_sentence = re.sub(r's([bcdfgjklmnpqrtvwxz])', r'h\1', input_sentence)
+		input_sentence = re.sub(r's([bcdfgjklmnpqrtvwxz])', r'\1', input_sentence)
 		input_sentence = re.sub(r's(\W+[bcdfgjklmnpqrstvwxz])', r'h\1', input_sentence)
 
 	elif dialect == "puerto_rico":
@@ -28,7 +28,7 @@ def azure_transcribe(filepath, sentence, dialect):
 		# r at end of syllables before consonants -> l
 		input_sentence = input_sentence.lower()
 		input_sentence = re.sub(r'[sd]([\W$])', r'h\1', input_sentence, flags=re.MULTILINE)
-		input_sentence = re.sub(r's([bcdfgjklmnpqrstvwxz])', r'h\1', input_sentence)
+		input_sentence = re.sub(r's([bcdfgjklmnpqrstvwxz])', r'\1', input_sentence)
 		input_sentence = re.sub(r'([aeiouyáéíóú])d([aeiouyáéíóú])', r'\1h\2', input_sentence)
 		input_sentence = re.sub(r'([aeiouyáéíóú])r([bcdfgjklmnpqtvwxz])', r'\1l\2', input_sentence)
 
@@ -43,8 +43,18 @@ def azure_transcribe(filepath, sentence, dialect):
 	pronunciation_assessment_result = speechsdk.PronunciationAssessmentResult(speech_recognition_result)
 
 	pronounced_correctly = []
-	for word in pronunciation_assessment_result.words:
-		for phoneme in word.phonemes:
-			pronounced_correctly.append(True if phoneme.accuracy_score >= 80 else False)
+
+	try:
+		for word in pronunciation_assessment_result.words:
+			for phoneme in word.phonemes:
+				pronounced_correctly.append(True if phoneme.accuracy_score >= 80 else False)
+	except Exception as e:
+		print(e)
+		speech_recognition_result = speech_recognizer.recognize_once()
+
+		pronunciation_assessment_result = speechsdk.PronunciationAssessmentResult(speech_recognition_result)
+		for word in pronunciation_assessment_result.words:
+			for phoneme in word.phonemes:
+				pronounced_correctly.append(True if phoneme.accuracy_score >= 80 else False)
 
 	return pronounced_correctly
