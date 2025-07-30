@@ -636,12 +636,12 @@ function LessonsPracticePage() {
 
             <div>
             {selectedText && (
-            <Button onClick={handeRestoreSentence} variant="outline" size="sm" className="ml-4 motion-preset-expand">
+            <Button onClick={handeRestoreSentence} variant="outline" size="sm" className="ml-4 motion-preset-expand cursor-pointer">
               Restore Original Sentence
             </Button>
             )}
 
-            <Button onClick={handleNextSentence} variant="outline" size="sm" className="ml-4">
+            <Button onClick={handleNextSentence} variant="outline" size="sm" className="ml-4 cursor-pointer">
               Regenerate Sentence
             </Button>
             </div>
@@ -726,10 +726,10 @@ function LessonsPracticePage() {
         </Card>
 
         <div className="w-full max-w-3xl mt-6 flex justify-between">
-          <Button variant="outline" onClick={handlePrevious}>
+          <Button variant="outline" onClick={handlePrevious} className="cursor-pointer">
             <FaArrowLeft className="mr-2 h-4 w-4" /> End Practice
           </Button>
-          <Button variant="outline" onClick={handleFinishAndNext}>
+          <Button variant="outline" onClick={handleFinishAndNext} className="cursor-pointer">
             Next Lesson <FaArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
