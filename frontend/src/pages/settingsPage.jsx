@@ -98,7 +98,7 @@ function SettingsPage({ user }) {
             <Button
               variant="outline"
               onClick={handleToggleDarkMode}
-              className="ml-4"
+              className="ml-4 cursor-pointer"
             >
               {darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
             </Button>
@@ -113,10 +113,11 @@ function SettingsPage({ user }) {
               onChange={handleInputChange}
             />
           </div>
-          <Button onClick={handleSaveChanges}>Save Changes</Button>
+          <Button className="cursor-pointer" onClick={handleSaveChanges}>Save Changes</Button>
           <div className="space-y-2">
             <Label htmlFor="email">Email Address</Label>
             <Input
+              className="cursor-pointer"
               id="email"
               type="email"
               value={userData.email}
@@ -125,7 +126,7 @@ function SettingsPage({ user }) {
           </div>
         </CardContent>
         <CardFooter>
-          <Button onClick={handleEmailChanges}>Send Email Reset Link</Button>
+          <Button className="cursor-pointer" onClick={handleEmailChanges}>Send Email Reset Link</Button>
         </CardFooter>
       </Card>
     </div>
