@@ -626,7 +626,7 @@ function LessonsPracticePage() {
           <div className="flex items-center justify-center md:justify-between text-sm text-muted-foreground">
             <span>Progress: {correctAmount}/{amountToComplete} completed</span>
             <Button onClick={handleNextSentence} variant="outline" size="sm" className="ml-4">
-              New Sentence
+              Regenerate Sentence
             </Button>
           </div>
         </div>
