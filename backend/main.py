@@ -21,6 +21,7 @@ from openai import OpenAI
 
 import pronunciationChecking
 import ipaTransliteration as epi
+import whisperIPAtranscription as stt
 import random
 import librosa
 import soundfile as sf
@@ -52,8 +53,13 @@ app = FastAPI(
     docs_url= "/"
 )
 
+
+
+'''
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("main:app", host="127.0.0.1", port=8080, reload=True)
+'''
+
 
 origins = [
     "http://localhost:5173",
@@ -78,6 +84,7 @@ class AudioData(BaseModel):
 class TranscriptionData(BaseModel):
      sentence: str
      base64_data: str
+     dialect: str
 # openai import
 import openai
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -216,12 +223,15 @@ async def updateComboCount(uid, new_combo_count):
     
 # When a user logs in consecutively update their study streak.
 @app.patch("/updateStudyStreak")
-async def updateStudyStreak(uid):
+async def updateStudyStreak(uid, new_streak):
     try:
+        date = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+
         doc_ref = db.collection('user_stats')
         query_ref = doc_ref.where(filter= FieldFilter("id", "==", uid)).get()
         doc_id = query_ref[0].id
-        doc_ref = db.collection('user_stats').document(doc_id).update({"study_streak": firestore.Increment(1)})
+        doc_ref = db.collection('user_stats').document(doc_id).update({"study_streak": new_streak,
+                                                                       "last_login": date})
         return JSONResponse(content={"message": f"User has logged in consecutively, study streak was incremented." }, 
                                     status_code = 201)
     except Exception as e:
@@ -229,7 +239,6 @@ async def updateStudyStreak(uid):
             status_code=400,
             detail= f"Error updating streak. {str(e)}"
         )
-   
 
 # Set an achievment to true.
 @app.patch("/updateAchievements")
@@ -289,7 +298,7 @@ async def updateActivityHistory(uid, activity):
         )
 
 # Set a chunk to completed, (Stored as a map as firestore does not allow the storage of 2-d arrays / lists)
-@app.patch("/updateCompletedCombo")
+@app.patch("/updateCompletedCombos")
 # chunk, lesson, difficulty
 async def updateCompletedCombos(uid, lesson: str, topic: int, level: str):
     try:
@@ -432,22 +441,25 @@ async def generateSentence(chunk: str, lesson: str, difficulty: str):
 # Check the user's pronunciation of a sentence or word.
 @app.post("/checkPronunciation")
 async def checkPronunciation(data: TranscriptionData):
+      random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=20))
+      random_string = random_string + ".wav"
+      random2 = "tmp_" + random_string
       try:
-        
         audio_bytes = base64.b64decode(data.base64_data)
         sentence = data.sentence
 
 		# Generating random name for the audio files
-        random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=20))
-        random_string = random_string + ".wav"
+        
         with open(random_string, "wb") as f:
               f.write(audio_bytes)
         
         print(os.path.isfile(random_string))
         audio, sampling_rate = librosa.load(random_string, sr=16000, mono=True, duration=30.0, dtype=np.int32)
-        random2 = "tmp_" + random_string
         sf.write(random2, audio, 16000)
-        output = pronunciationChecking.correct_pronunciation(sentence, random2, 'latam')
+        if data.dialect == "accent_marks":
+             output = pronunciationChecking.correct_pronunciation_with_accents(sentence, random2)
+        else:
+             output = pronunciationChecking.correct_pronunciation_azure(sentence, random2, data.dialect)
 
         # Get rid of audio recordings
         if os.path.exists(random_string):
@@ -459,6 +471,14 @@ async def checkPronunciation(data: TranscriptionData):
             print(random2 + " deleted successfully.")
         else: print(f"File not found.")
       except Exception as e:
+            if os.path.exists(random_string):
+                 os.remove(random_string)
+                 print(random_string + " deleted successfully.")
+            else: print(f"File not found.")
+            if os.path.exists(random2):
+                os.remove(random2)
+                print(random2 + " deleted successfully.")
+            else: print(f"File not found.")
             print('Error: ', str(e))
             traceback.print_exc()
             raise HTTPException(

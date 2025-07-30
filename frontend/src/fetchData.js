@@ -6,7 +6,7 @@ import api from "./api.js"
             comboCount: 0,
             practiceSessions: 0,
             studyStreak: 0,
-            lastLogin: 0,
+            lastLogin: new Date().toISOString().replace('T', ' ').slice(0,19),
             achievements: {},
             activities: [],
             completedCombos: [],

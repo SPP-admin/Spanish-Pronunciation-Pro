@@ -11,20 +11,20 @@ import { useState } from 'react';
 import { Camera } from 'lucide-react';
 
 
-function ProfilePage({user}) {
+function ProfilePage({ user }) {
 
-  const { profile } = useProfile();
-  const cleanAchievments = achievements.map(({condition, ...rest}) => rest);
+  const { profile, setProfile } = useProfile();
+  const cleanAchievments = achievements.map(({ condition, ...rest }) => rest);
   const localAchievements = structuredClone(cleanAchievments);
   const [image, setImage] = useState(user?.photoURL);
 
   // Match achievements to databases.
-    for (const key in localAchievements) {
-      if(profile?.achievements[key]?.completed == true) {
-        localAchievements[key].unlocked = true;
-        localAchievements[key].completionDate = profile.achievements[key].completion_date
-      } else localAchievements[key].unlocked = false;
-    }
+  for (const key in localAchievements) {
+    if (profile?.achievements[key]?.completed == true) {
+      localAchievements[key].unlocked = true;
+      localAchievements[key].completionDate = profile.achievements[key].completion_date
+    } else localAchievements[key].unlocked = false;
+  }
 
   const handleProfile = async (e) => {
     try {
@@ -42,6 +42,7 @@ function ProfilePage({user}) {
       });
 
       setImage(downloadURL); // Update local
+      setProfile({ ...profile, photoURL: downloadURL }, user.uid);
     } catch (error) {
       console.error("Error updating profile picture:", error);
     }
@@ -53,7 +54,7 @@ function ProfilePage({user}) {
       <h1 className="text-3xl font-bold mb-6">Profile</h1>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: User Info and Stats */}
-       <div className="col-span-1 space-y-6">
+        <div className="col-span-1 space-y-6">
           <Card>
             <CardHeader className="flex flex-col items-center text-center">
               {/*Updated Profile Picture Area */}
@@ -67,7 +68,7 @@ function ProfilePage({user}) {
                   <Camera className="h-8 w-8 text-white" />
                 </div>
               </label>
-              <input id="profile-pic-upload" className="hidden" type="file" onChange={handleProfile}/>
+              <input id="profile-pic-upload" className="hidden" type="file" onChange={handleProfile} />
               <p className="mt-2 text-sm font-medium text-muted-foreground">Click image to change</p>
               {/*Profile Picture Area */}
               <CardTitle className="mt-2">{user.displayName}</CardTitle>
@@ -114,16 +115,22 @@ function ProfilePage({user}) {
               <CardTitle>Recent Activity</CardTitle>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-3">
-                {profile.activities.map((act, index) => (
-                  <li key={index} className="text-sm">
-                    {act}
-                    <span className="text-xs text-muted-foreground block">
-                      {act.time}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              {profile.activities && profile.activities.length > 0 ? (
+                <ul className="space-y-3">
+                  {profile.activities.map((act, index) => (
+                    <li key={index} className="text-sm">
+                      {act}
+                      <span className="text-xs text-muted-foreground block">
+                        {act.time}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No recent activity yet. Complete lessons or practice sessions to see your progress here!
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>
