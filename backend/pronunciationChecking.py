@@ -23,12 +23,17 @@ def correct_pronunciation_azure(sentence, audio_path, dialect):
 		output_mapping.set_indices()
 	print(len(correct_pronunciation))
 	print(len(output_mapping.ipa_indices))
+	
 	print(dialect)
 	for i in range(len(correct_pronunciation)):
 		if i < len(output_mapping.ipa_indices):
 			index = output_mapping.ipa_indices[i][1]
 			output_mapping.ipa_mapping[index].pronounced_correctly = correct_pronunciation[i]
-
+	# Empty pronunciation scores = nothing said, so all incorrect
+	if (len(correct_pronunciation) == 0):
+		for i in output_mapping.ipa_mapping:
+			if i.ortho_letter.isalpha():
+				i.pronounced_correctly = False
 	output_str = []
 	for ipa in output_mapping.ipa_mapping:
 		output_str.append([ipa.ortho_letter, str(ipa.pronounced_correctly), str(ipa.stressed_correctly)])

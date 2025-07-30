@@ -614,7 +614,13 @@ function LessonsPracticePage() {
     setCurrentCorrect(false);
     setFeedbackBox("");
     fetchSentence();
+    setSentenceWords({});
     setSelectedText(null); // Ensure selected text is cleared
+  };
+
+  const handeRestoreSentence = () => {
+    setFeedbackBox(spanishSentence)
+    setSelectedText(null);
   };
 
   return (
@@ -623,11 +629,22 @@ function LessonsPracticePage() {
       <main className="flex-grow container mx-auto p-4 md:p-6 flex flex-col items-center">
         <div className="w-full max-w-3xl mb-6 text-center md:text-left">
           <h1 className="text-2xl md:text-3xl font-bold mb-2 text-foreground">{lessonTitle}</h1>
-          <div className="flex items-center justify-center md:justify-between text-sm text-muted-foreground">
+          <div className="flex items-center text-sm justify-center md:justify-between text-muted-foreground">
+            <div>
             <span>Progress: {correctAmount}/{amountToComplete} completed</span>
+            </div>
+
+            <div>
+            {selectedText && (
+            <Button onClick={handeRestoreSentence} variant="outline" size="sm" className="ml-4 motion-preset-expand">
+              Restore Original Sentence
+            </Button>
+            )}
+
             <Button onClick={handleNextSentence} variant="outline" size="sm" className="ml-4">
               Regenerate Sentence
             </Button>
+            </div>
           </div>
         </div>
 
@@ -691,7 +708,7 @@ function LessonsPracticePage() {
                   .map(([key]) => (
                     <div className="motion-preset-expand cursor-pointer hover:font-bold text-sm" key={key} onClick={() => setSelectedText(key)}>{key}</div>
                   ))}
-                {Object.values(sentenceWords).every(val => val === true) && (
+                {Object.values(sentenceWords).every(val => val === true) && Object.values(sentenceWords).length > 0 && (
                   <p className="text-sm text-green-600">All words pronounced correctly!</p>
                 )}
                 {Object.values(sentenceWords).every(val => val === false) && !loading && spanishSentence && (
