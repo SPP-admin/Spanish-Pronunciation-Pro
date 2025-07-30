@@ -140,7 +140,8 @@ class sentenceMapping:
 					mapping.append(ipaMapping(ortho_letter=self.sentence[i+1], ipa_letter="i"))
 				i += 2
 			elif (sentence[i:i+2] == "ch"):
-				mapping.append(ipaMapping(ortho_letter=self.sentence[i:i+2], ipa_letter="tʃ"))
+				# technically it makes [tʃ] sound but Azure transcribes it as one symbol so keep the lists the same length
+				mapping.append(ipaMapping(ortho_letter=self.sentence[i:i+2], ipa_letter="ʃ"))
 				i += 2
 			elif (sentence[i:i+2] == "ge"):
 				mapping.append(ipaMapping(ortho_letter=self.sentence[i], ipa_letter="x"))
