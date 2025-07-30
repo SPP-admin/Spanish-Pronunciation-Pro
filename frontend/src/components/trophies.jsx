@@ -22,7 +22,6 @@ function Trophy({ trophy }) {
 
 export function TrophiesCard({ trophies }) {
   // Filter for unlocked trophies
-  const unlockedTrophies = trophies.filter(trophy => trophy.unlocked);
 
   return (
     <Card className="col-span-1 lg:col-span-2">
@@ -31,8 +30,8 @@ export function TrophiesCard({ trophies }) {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {unlockedTrophies.length > 0 ? ( // Conditional for placeholder
-            unlockedTrophies.map((trophy) => (
+          {trophies.length > 0 ? ( // Conditional for placeholder
+            trophies.map((trophy) => (
               <Trophy key={trophy.id} trophy={trophy} />
             ))
           ) : (
