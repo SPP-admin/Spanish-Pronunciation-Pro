@@ -34,8 +34,9 @@ def azure_transcribe(filepath, sentence, dialect):
 
 	speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, language=lang, audio_config=audio_config)
 	pronunciation_config = speechsdk.PronunciationAssessmentConfig(
-		json_string="{\"referenceText\":\"" + input_sentence + "\",\"gradingSystem\":\"HundredMark\",\"granularity\":\"Phoneme\",\"phonemeAlphabet\":\"IPA\",\"nBestPhonemeCount\":5}"
+		json_string='{"referenceText":"' + input_sentence + '","gradingSystem":"HundredMark","granularity":"Phoneme","phonemeAlphabet":"IPA"}'
 		)
+	
 
 	pronunciation_config.apply_to(speech_recognizer)
 	speech_recognition_result = speech_recognizer.recognize_once()
@@ -53,8 +54,9 @@ def azure_transcribe(filepath, sentence, dialect):
 		speech_recognition_result = speech_recognizer.recognize_once()
 
 		pronunciation_assessment_result = speechsdk.PronunciationAssessmentResult(speech_recognition_result)
-		for word in pronunciation_assessment_result.words:
-			for phoneme in word.phonemes:
-				pronounced_correctly.append(True if phoneme.accuracy_score >= 80 else False)
+		if (hasattr(pronunciation_assessment_result, "words")):
+			for word in pronunciation_assessment_result.words:
+				for phoneme in word.phonemes:
+					pronounced_correctly.append(True if phoneme.accuracy_score >= 80 else False)
 
 	return pronounced_correctly
