@@ -5,7 +5,6 @@ A web application designed to help users improve their Spanish pronunciation thr
 ## Table of Contents
 
 - [Features](#features)
-- [Demo](#demo)
 - [Tech Stack](#tech-stack)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
@@ -13,9 +12,6 @@ A web application designed to help users improve their Spanish pronunciation thr
   - [Running the App](#running-the-app)
 - [Project Structure](#project-structure)
 - [Usage](#usage)
-- [Contributing](#contributing)
-- [License](#license)
-- [Contact](#contact)
 
 ---
 
@@ -27,10 +23,6 @@ A web application designed to help users improve their Spanish pronunciation thr
 - User authentication and personalized profiles
 - Progress tracking, study streaks, and achievements to motivate learning
 - Gamified lessons and practice sessions with interactive UI
-
-## Demo
-
-> _Add screenshots or a link to a live demo here._
 
 ## Tech Stack
 
@@ -58,7 +50,7 @@ cd backend
 pip install -r requirements.txt
 ```
 
-3. (Optional) Set up environment variables for Azure/Firebase credentials as needed.
+Set up environment variables for Azure/Firebase credentials as needed.
 
 #### Frontend
 
@@ -74,7 +66,13 @@ npm install
 ```bash
 cd backend
 python main.py
+```
 
+or
+
+```bash
+cd backend
+uvicorn main:app --host 0.0.0.0 --port 8080
 ```
 
 #### Frontend
@@ -84,7 +82,7 @@ cd frontend
 npm run dev
 ```
 
-The frontend will typically run on `http://localhost:5173` and the backend on `http://localhost:8000`.
+The frontend will typically run on `http://localhost:5173` and the backend on `http://0.0.0.0:8080/`.
 
 ## Project Structure
 
@@ -115,25 +113,5 @@ Spanish-Pronunciation-Pro/
 4. Receive instant feedback and IPA transliteration.
 5. Track your progress, earn achievements, and maintain your study streak.
 6. Adjust your profile and settings as needed.
-
-## Contributing
-
-Contributions are welcome! Please open an issue or submit a pull request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/YourFeature`)
-3. Commit your changes (`git commit -am 'Add new feature'`)
-4. Push to the branch (`git push origin feature/YourFeature`)
-5. Open a pull request
-
-## License
-
-> 
-
-## Contact
-
-- **Author:** _Your Name_
-- **Email:** _your.email@example.com_
-- **Project Link:** [GitHub Repo](https://github.com/yourusername/Spanish-Pronunciation-Pro)
 
 ---
