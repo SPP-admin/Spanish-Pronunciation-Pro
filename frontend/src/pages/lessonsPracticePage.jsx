@@ -290,7 +290,6 @@ function LessonsPracticePage() {
     } else if(selectedText && isWordCorrect) {
       toast.success("Correct word! Try the whole sentence again or pick a new word!", { duration: 4000 });
       correctSFX.play();
-      setSelectedText(null);
       correctConfetti();
       setFeedbackBox("<span class='text-green-500 font-bold'>Correct word!</span>");
     } else {
