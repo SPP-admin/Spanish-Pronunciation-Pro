@@ -64,7 +64,8 @@ if __name__ == "__main__":
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "https://spanish-pronunciation-pro.vercel.app"
+    "https://spanish-pronunciation-pro.vercel.app",
+	"https://spanish-pronunciation-pro-nine.vercel.app"
 ]
 
 app.add_middleware(
