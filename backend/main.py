@@ -33,11 +33,12 @@ load_dotenv()
 
 import requests
 import traceback
+import httpx
 
 if not firebase_admin._apps:
     #check if file exists
-    if os.path.exists("spanish-pronunciation-pro-firebase-adminsdk-fbsvc-af37a865d2.json"):
-        cred = credentials.Certificate("spanish-pronunciation-pro-firebase-adminsdk-fbsvc-af37a865d2.json")
+    if os.path.exists("spanish-pronunciation-pro-firebase-adminsdk-fbsvc-c91263f812.json"):
+        cred = credentials.Certificate("spanish-pronunciation-pro-firebase-adminsdk-fbsvc-c91263f812.json")
     else:
         firebase_creds_json = os.environ.get("FIREBASE_CREDENTIALS")
         temp_path = "/tmp/firebase_credentials.json"
@@ -48,11 +49,15 @@ if not firebase_admin._apps:
 
 
 app = FastAPI(
+    root_path="/pronunciemos",
     description = "API's for the Spanish Pronunciation Pro Project",
     title = "SPP API's",
-    docs_url= "/"
+    
 )
 
+@app.get("/")
+async def root():
+    return {"message": "Pronunciemos backend is online", "status": "success"}
 
 
 '''
@@ -62,6 +67,9 @@ if __name__ == "__main__":
 
 
 origins = [
+    "http://localhost:3002",
+    "https://chdr.cs.ucf.edu", 
+    "http://chdr.cs.ucf.edu:3002",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "https://spanish-pronunciation-pro.vercel.app",
@@ -89,6 +97,20 @@ class TranscriptionData(BaseModel):
 # openai import
 import openai
 openai.api_key = os.getenv("OPENAI_API_KEY")
+
+
+#For testing
+#custom_http_client = httpx.Client(
+   # timeout=httpx.Timeout(
+        #timeout=120.0,  # Total timeout
+       # connect=15.0,   # Time to establish the 'handshake'
+       # read=90.0,      # Time to wait for the AI's actual data
+        #write=15.0      # Time to send your prompt to OpenAI
+    #),
+    # Disables connection pooling which can "hang" behind proxies
+   # limits=httpx.Limits(max_connections=5, max_keepalive_connections=0)
+#)
+#unsafe_http_client = httpx.Client(verify=False)
 
 @app.post("/sendVoiceNote")
 async def send_voice_note(data: AudioData):
@@ -357,7 +379,9 @@ async def updateTopicProgress(uid, topic: int):
 # Generate a sentence or word for the user to practice.
 @app.post("/generateSentence")
 async def generateSentence(chunk: str, lesson: str, difficulty: str):
-    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    client = OpenAI(
+         api_key=os.getenv("OPENAI_API_KEY"),
+    )
     try:
         # Special logic for special_vowel_combinations chunk with 'sentences' difficulty
         if chunk == "special_vowel_combinations" and difficulty == "sentences":
@@ -376,10 +400,11 @@ async def generateSentence(chunk: str, lesson: str, difficulty: str):
                 f"ONLY return the Spanish word, and nothing else. Avoid repeating previously used words. "
             )
             word_response = client.chat.completions.create(
-                model="gpt-4o",
+                model="gpt-4o-mini",
                 messages=[{"role": "system", "content": word_prompt},
                           {"role": "user", "content": word_user_content}],
-                temperature=1.2
+                temperature=1.2,
+                timeout=60.0
             )
             generated_word = word_response.choices[0].message.content.strip()
 
@@ -398,10 +423,11 @@ async def generateSentence(chunk: str, lesson: str, difficulty: str):
                 f"Keep the sentence simple and clear. It must be no longer than 10 words."
             )
             sentence_response = client.chat.completions.create(
-                model="gpt-4o",
+                model="gpt-4o-mini",
                 messages=[{"role": "system", "content": sentence_prompt},
                           {"role": "user", "content": sentence_user_content}],
-                temperature=1.2
+                temperature=1.2,
+                timeout=60.0
             )
             current_sentence = sentence_response.choices[0].message.content.strip()
         else:
@@ -421,13 +447,15 @@ async def generateSentence(chunk: str, lesson: str, difficulty: str):
                 f"Keep the sentence simple and clear unless the difficulty is 'complex sentences'. If the difficulty is 'complex sentences', use more advanced grammar and longer sentences."
             )
             response = client.chat.completions.create(
-                model="gpt-4o",
+                model="gpt-4o-mini",
                 messages=[{"role": "system", "content": prompt},
                           {"role": "user", "content": user_content}],
-                temperature=1.2
+                temperature=1.2,
+                timeout=60.0
             )
             current_sentence = response.choices[0].message.content
-    except:
+    except Exception as e:
+        print(f"!!! OPENAI ERROR: {e}")
         backup_sentences = [
             "El gato duerme.", "La niña corre.", 
             "El perro ladra.", "Hace mucho calor.",
@@ -436,8 +464,23 @@ async def generateSentence(chunk: str, lesson: str, difficulty: str):
             "Hay una flor.", "La cama es cómoda."
         ]
         current_sentence = random.choice(backup_sentences)
-    finally:
-        return current_sentence
+        
+    return current_sentence
+    
+@app.get("/testAI")
+async def testAI():
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    try:
+        # A tiny 2-word prompt
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": "Say hi"}],
+            max_tokens=5,
+            timeout=200.0
+        )
+        return {"status": "success", "response": response.choices[0].message.content}
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
 
 # Check the user's pronunciation of a sentence or word.
 @app.post("/checkPronunciation")
