@@ -1,122 +1,84 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { cn } from "@/lib/utils";
-import { QueryClient } from '@tanstack/react-query';
-import { useProfile } from '@/profileContext.jsx';
-
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-  navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; //
-
-import { signOut } from 'firebase/auth';
-import { auth } from '../firebase.js'; //
-import { queryClient } from '@/queryClient.jsx';
-
-// Re-usable component for list items in the navigation menu, as per shadcn/ui docs
-const ListItem = React.forwardRef(({ className, title, to, children, ...props }, ref) => {
-  return (
-    <li>
-      <NavigationMenuLink asChild>
-        <Link
-          to={to}
-          ref={ref}
-          className={cn(
-            "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
-            className
-          )}
-          {...props}
-        >
-          <div className="text-sm font-medium leading-none">{title}</div>
-          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-            {children}
-          </p>
-        </Link>
-      </NavigationMenuLink>
-    </li>
-  );
-});
-ListItem.displayName = "ListItem"
+import { Link, useLocation } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { auth } from "@/firebase"; // Adjust path to your firebase config
+import { signOut } from "firebase/auth";
 
 
+import LOGO from '@/assets/images/LOGO.png';
 
-function Navbar({user}) {
+function Navbar() {
+  const location = useLocation();
 
-  const { profile } = useProfile();
+  const handleLogout = () => {
+    signOut(auth);
+  };
 
-  // The useState for 'image' and the 'handleProfile' function are no longer needed here.
-  // The 'user.photoURL' passed from App.jsx will automatically update the AvatarImage source.
-
+  // Helper to determine if a link is active to apply the gold underline
+  const isActive = (path) => location.pathname === path;
 
   return (
-    <header className="bg-card text-card-foreground shadow-sm border-b sticky top-0 z-50">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
-        {/* Logo */}
-        <Link to="/dashboard" className="text-xl font-bold text-primary">
-            ¡Pronunciemos!
+    <nav 
+      className="w-full h-24 px-8 md:px-16 flex items-center justify-between transition-colors duration-500 sticky top-0 z-50 backdrop-blur-md border-b"
+      style={{ 
+        backgroundColor: "var(--bg-alt)", 
+        borderColor: "var(--border-color)",
+        color: "var(--text-main)" 
+      }}
+    >
+      {/* 1. Logo Section */}
+      <div className="flex items-center gap-4">
+        <Link to="/dashboard" className="flex items-center">
+          <img 
+            src={LOGO}  // Ensure your logo path is correct
+            alt="UCF Logo" 
+            className="h-16 w-auto object-contain"
+          />
         </Link>
-
-        {/* Navigation Menu */}
-        <NavigationMenu>
-          <NavigationMenuList>
-            {/* Dashboard Link */}
-            <NavigationMenuItem>
-              <NavigationMenuLink asChild>
-                <Link to="/dashboard" className={navigationMenuTriggerStyle()}>
-                  Dashboard
-                </Link>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-
-            {/* Lessons Link */}
-            <NavigationMenuItem>
-              <NavigationMenuLink asChild>
-                <Link to="/lessons" className={navigationMenuTriggerStyle()}>
-                  Lessons
-                </Link>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-
-            {/* Account Hover Menu */}
-            <NavigationMenuItem>
-              <NavigationMenuTrigger>
-                {/* Avatar is now just for display, not clickable for file input */}
-                <Avatar className="h-8 w-8 mr-2">
-                  {/* Dynamic user image here, directly using user.photoURL */}
-                   <AvatarImage src={profile?.photoURL || user?.photoURL || "https://github.com/shadcn.png"} alt="@shadcn" />
-                  <AvatarFallback>U</AvatarFallback>
-                </Avatar>
-                Account
-              </NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <ul className="grid w-[200px] gap-3 p-4">
-                  <ListItem to="/profile" title="Profile">
-                    View your progress and achievements.
-                  </ListItem>
-                  <ListItem to="/settings" title="Settings">
-                    Manage your account details.
-                  </ListItem>
-                  <ListItem onClick={() => {
-                    signOut(auth);
-                    localStorage.clear();
-                    queryClient.clear();
-                  }
-                    } title="Logout">
-                    Log out of your account.
-                  </ListItem>
-                </ul>
-              </NavigationMenuContent>
-            </NavigationMenuItem>
-          </NavigationMenuList>
-        </NavigationMenu>
       </div>
-    </header>
+
+      {/* 2. Navigation Links */}
+      <div className="hidden md:flex items-center gap-12">
+        {[
+          { name: 'Dashboard', path: '/dashboard' },
+          { name: 'Lessons', path: '/lessons' },
+          { name: 'Settings', path: '/settings' },
+          { name: 'Profile', path: '/profile' },
+        ].map((link) => (
+          <Link
+            key={link.path}
+            to={link.path}
+            className={`text-xl font-black tracking-tight transition-all hover:opacity-80 relative pb-1`}
+            style={{ 
+              color: isActive(link.path) ? "var(--brand-gold)" : "var(--text-main)" 
+            }}
+          >
+            {link.name}
+            {/* Active Underline Indicator */}
+            {isActive(link.path) && (
+              <span 
+                className="absolute bottom-0 left-0 w-full h-1 rounded-full"
+                style={{ backgroundColor: "var(--brand-gold)" }}
+              />
+            )}
+          </Link>
+        ))}
+      </div>
+
+      {/* 3. Action Section */}
+      <div className="flex items-center">
+        <Button 
+          onClick={handleLogout}
+          className="rounded-full px-8 py-2 font-black text-sm uppercase tracking-widest transition-transform active:scale-95 shadow-lg"
+          style={{ 
+            backgroundColor: "var(--brand-gold)", 
+            color: "#000000" // Always black text on the gold button for readability
+          }}
+        >
+          Log Out
+        </Button>
+      </div>
+    </nav>
   );
 }
 

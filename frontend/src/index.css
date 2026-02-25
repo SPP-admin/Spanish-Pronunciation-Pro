@@ -198,8 +198,39 @@
       0% 0%,
       0% 0%,
       0% 0%,
-      0% 0%;
+      0% 0%; 
   }
+}
+
+html, body, #root {
+  background-color: var(--bg-main, #171818); 
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  width: 100%;
+  transition: background-color 0.50s ease;
+  /* Ensure shadows aren't cut off at the very edges of the screen */
+  overflow-x: hidden; 
+}
+@keyframes float-slow {
+  0% {
+    /* Anchors the center of the image to the center of the screen */
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+  }
+  50% {
+    /* Moves slightly but maintains the -50% offset so it stays centered */
+    transform: translate(-47%, -53%) scale(1.05) rotate(2deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+  }
+}
+
+.animate-float {
+  /* Increased duration for a smoother 'breathing' effect */
+  animation: float-slow 10s ease-in-out infinite;
+  /* Ensures the animation rotates/scales from the center */
+  transform-origin: center; 
 }
 
 @keyframes bottomfetti {

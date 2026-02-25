@@ -78,6 +78,7 @@ function AppContent() {
 
     return () => unsubscribe();
   }, [])
+  
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme'); //
@@ -126,6 +127,7 @@ function AppContent() {
     </div>
   );
 }
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient} >
