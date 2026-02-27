@@ -4,7 +4,6 @@ import { FaGoogle } from "react-icons/fa";
 import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 import { toast } from 'sonner';
 
-// Shadcn UI components
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +11,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 
 import { auth, googleProvider } from '../firebase.js';
 
-// Assets
 import loginImage from '@/assets/images/LOGO.png';
 import blob from '@/assets/images/Login_Underlay.png';
 

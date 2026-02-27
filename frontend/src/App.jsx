@@ -1,139 +1,123 @@
-import React from 'react';
-import api from './api.js';
-import { Routes, Route, useNavigate } from 'react-router-dom';
-import { Button } from "@/components/ui/button"; // Import Shadcn Button
-import Layout from './components/layout.jsx';  // Import Layout component
-import { Toaster } from '@/components/ui/sonner'; // Import Toaster component for notifications
-
-import LoginPage from './pages/loginPage.jsx'; // Import LoginPage component
-import LessonsPracticePage from './pages/lessonsPracticePage.jsx'; // Import LessonsPage component
-import Dashboard from './pages/dashboard.jsx'; // Import Dashboard component
-import ForgotPasswordPage from './pages/passwordReset.jsx';  // Import ForgotPasswordPage component
-import SignupPage from './pages/signup.jsx'; // Import SignupPage component
-import LessonsPage from './pages/lessons.jsx'; // Import LessonsPage component
-
-import { onAuthStateChanged } from 'firebase/auth';
-import { useEffect, useState } from 'react';
-import { ProtectedRoute } from './components/protectedRoute.jsx';
+import React, { useEffect, useState } from 'react';
+import { Routes, Route } from 'react-router-dom';
+import Layout from './components/layout.jsx';
+import { Toaster } from '@/components/ui/sonner';
+import LoginPage from './pages/loginPage.jsx';
+import LessonsPracticePage from './pages/lessonsPracticePage.jsx';
+import Dashboard from './pages/dashboard.jsx';
+import SignupPage from './pages/signup.jsx';
+import PasswordReset from './pages/passwordReset.jsx'; 
+import LessonsPage from './pages/lessons.jsx';
+import ProfilePage from './pages/profilePage.jsx';
+import SettingsPage from './pages/settingsPage.jsx';
 import { auth } from './firebase.js';
-import ProfilePage from './pages/profilePage.jsx'; // Import ProfilePage component
-import SettingsPage from './pages/settingsPage.jsx'; // Import SettingsPage component
+import { onAuthStateChanged } from 'firebase/auth';
+import { ProtectedRoute } from './components/protectedRoute.jsx';
 import { useAuthState } from 'react-firebase-hooks/auth';
-
-import { ProfileProvider } from './profileContext.jsx';
-import { useProfile } from './profileContext.jsx';
-
+import { ProfileProvider, useProfile } from './profileContext.jsx';
 import { queryClient } from './queryClient.jsx';
-import { QueryClientProvider } from '@tanstack/react-query'
-import { useQuery } from '@tanstack/react-query';
+import { QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { fetchData } from './fetchData.js';
-import { persistQueryClient } from '@tanstack/react-query-persist-client';
-import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
-
-import { MoonLoader } from 'react-spinners';
-
-const localStoragePersister = createSyncStoragePersister({
-  storage: window.localStorage,
-});
-
-persistQueryClient({
-  queryClient,
-  persister: localStoragePersister,
-  maxAge: 1000 * 60 * 60 * 24, // If the user data is older than a day, refresh.
-});
 
 function AppContent() {
   const [user] = useAuthState(auth);
   const [isFetching, setIsFetching] = useState(true);
-  const [fetchingData, setFetchingData] = useState(true);
-  const { setProfile, profile } = useProfile();
+  const { setProfile } = useProfile();
 
-  const { data, isLoading } = useQuery({
-    queryFn: () => fetchData(user.uid),
+  const { data } = useQuery({
+    queryFn: () => (user?.uid ? fetchData(user.uid) : Promise.resolve(null)),
     queryKey: ["profile", user?.uid],
-    enabled: typeof user?.uid === "string" && user?.uid.length > 0,
+    enabled: !!user?.uid,
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
-    staleTime: 1000 * 60 * 60 * 24,
-    retry: false,
   });
 
   useEffect(() => {
-    if (data) {
+    if (data && user?.uid) {
       setProfile(data, user.uid);
     }
-  }, [data, user?.uid]);
+  }, [data, user?.uid, setProfile]);
 
-
-  // Uses firebase auth state change method to update the user.
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setIsFetching(false)
-        return;
-      }
-      setIsFetching(false);
-    })
-
+    const unsubscribe = onAuthStateChanged(auth, () => setIsFetching(false));
     return () => unsubscribe();
-  }, [])
-  
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme'); //
-    if (savedTheme === 'dark') { //
-      document.documentElement.classList.add('dark'); //
-    } else if (savedTheme === 'light') { //
-      document.documentElement.classList.remove('dark'); //
-    } else {
-      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.documentElement.classList.add('dark');
-      }
-    }
   }, []);
 
-  // If user is being fetched don't load page.
-  if (isFetching || isLoading) {
-    return <div className="flex justify-center items-center min-h-screen">
-      <MoonLoader size={50} color="#08b4fc" />
-    </div>
-  }
+  // --- THEME ENGINE ---
+  useEffect(() => {
+    const applyGlobalTheme = () => {
+      const root = document.documentElement;
+      const isDark = localStorage.getItem("theme") !== "light";
+      const brandColor = localStorage.getItem("app-brand-color") || "#C5A358";
+      const fontFamily = localStorage.getItem("app-font") || "Inter, sans-serif";
+      const fontSize = localStorage.getItem("app-font-size") || "1";
+      const savedTextColor = localStorage.getItem("app-text-color");
+      const textColor = savedTextColor || (isDark ? "#FFFFFF" : "#1A1A1A");
+
+      root.style.setProperty("--brand-gold", brandColor);
+      root.style.setProperty("--font-main", fontFamily);
+      root.style.setProperty("--text-main", textColor);
+      root.style.setProperty("--font-size-multiplier", fontSize);
+      root.style.fontFamily = fontFamily;
+      root.style.fontSize = `calc(16px * ${fontSize})`;
+
+      if (isDark) {
+        root.classList.add("dark");
+        root.style.setProperty("--bg-main", "#171818");
+        root.style.setProperty("--bg-card", "#222222");
+        root.style.setProperty("--text-muted", "rgba(255, 255, 255, 0.6)");
+        root.style.setProperty("--border-color", "rgba(255, 255, 255, 0.1)");
+        root.style.setProperty("--card-shadow", "0 20px 40px rgba(0, 0, 0, 0.4)");
+      } else {
+        root.classList.remove("dark");
+        root.style.setProperty("--bg-main", "#e1e5eb");
+        root.style.setProperty("--bg-card", "#FFFFFF");
+        root.style.setProperty("--text-muted", "rgba(0, 0, 0, 0.6)");
+        root.style.setProperty("--border-color", "rgba(0, 0, 0, 0.1)");
+        root.style.setProperty("--card-shadow", "0 10px 20px rgba(0, 0, 0, 0.25)");
+      }
+    };
+
+    applyGlobalTheme();
+    window.addEventListener('theme-update', applyGlobalTheme);
+    window.addEventListener('storage', applyGlobalTheme);
+    return () => {
+      window.removeEventListener('theme-update', applyGlobalTheme);
+      window.removeEventListener('storage', applyGlobalTheme);
+    };
+  }, []);
 
   return (
-    <div>
-      {/* --- Route Display Area --- */}
+    <div className="min-h-screen bg-[var(--bg-main)] font-[var(--font-main)] transition-colors duration-500">
       <Routes>
-        {/* Routes without the navbar*/}
+        {/* PUBLIC ROUTES */}
         <Route path="/" element={<LoginPage user={user} isFetching={isFetching} />} />
         <Route path="/login" element={<LoginPage user={user} isFetching={isFetching} />} />
         <Route path="/signup" element={<SignupPage />} />
-        <Route path="/passwordReset" element={<ForgotPasswordPage />} />
+        {/* 2. Use the Capitalized name here */}
+        <Route path="/passwordReset" element={<PasswordReset />} />
 
+        {/* PROTECTED ROUTES */}
         <Route element={<ProtectedRoute user={user} />}>
-          {/* Routes with the navbar, wrapped by the layout.jsx component.*/}
-
           <Route element={<Layout user={user} />}>
-            <Route path="/lessonsPractice" element={<LessonsPracticePage />} />
-            <Route path="/lessons" element={<LessonsPage user={user} isFetching={fetchingData} />} />
+            <Route path="/lessons" element={<LessonsPage user={user} />} />
             <Route path="/profile" element={<ProfilePage user={user} />} />
             <Route path="/dashboard" element={<Dashboard user={user} />} />
             <Route path="/settings" element={<SettingsPage user={user} />} />
+            <Route path="/lessonsPractice" element={<LessonsPracticePage />} />
           </Route>
         </Route>
       </Routes>
       <Toaster richColors position="bottom-right" />
-
     </div>
   );
 }
-
+ 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient} >
+    <QueryClientProvider client={queryClient}>
       <ProfileProvider>
         <AppContent />
       </ProfileProvider>
     </QueryClientProvider>
-  )
-};
+  );
+}

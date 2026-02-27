@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -9,141 +8,156 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Moon, Sun } from "lucide-react";
-import { updateProfile } from "firebase/auth";
+import { Moon, Sun, Type, Maximize } from "lucide-react";
 import { toast } from "sonner";
 
 function SettingsPage({ user }) {
-  const [displayName, setDisplayName] = useState(user?.displayName || "");
-
   const [settings, setSettings] = useState({
-    fontFamily: localStorage.getItem("app-font") || "Inter, sans-serif",
-    fontSize: localStorage.getItem("app-font-size") || "16px",
     brandColor: localStorage.getItem("app-brand-color") || "#C5A358",
+    textColor: localStorage.getItem("app-text-color") || "#FFFFFF",
+    fontFamily: localStorage.getItem("app-font") || "Inter, sans-serif",
+    fontSize: localStorage.getItem("app-font-size") || "1", // Multiplier base
     isDark: localStorage.getItem("theme") !== "light",
   });
 
-  useEffect(() => {
-    const root = document.documentElement;
-    
-    root.style.setProperty("--font-main", settings.fontFamily);
-    root.style.fontFamily = settings.fontFamily;
-    root.style.fontSize = settings.fontSize;
-    root.style.setProperty("--brand-gold", settings.brandColor);
-    root.style.setProperty("--primary", settings.brandColor); 
-    
-    if (settings.isDark) {
-      root.style.setProperty("--bg-main", "#171818");
-      root.style.setProperty("--bg-alt","#050505");
-      root.style.setProperty("--bg-card", "rgba(42, 42, 42, 0.4)"); 
-      root.style.setProperty("--text-main", settings.brandColor); 
-      root.style.setProperty("--text-muted", "rgba(255, 255, 255, 0.5)");
-      root.style.setProperty("--border-color", "rgba(255, 255, 255, 0.12)"); 
-      root.style.setProperty("--card-shadow", "0 30px 60px -12px rgba(0, 0, 0, 0.6)");
-      root.classList.add("dark");
-    } else {
-      root.style.setProperty("--bg-main", "#e1e5eb"); 
-      root.style.setProperty("--bg-alt","#000000");
-      root.style.setProperty("--bg-card", "rgba(255, 255, 255, 0.95)"); 
-      root.style.setProperty("--text-main", "#1A1A1A"); 
-      root.style.setProperty("--text-muted", "rgba(0, 0, 0, 0.6)");
-      root.style.setProperty("--border-color", "rgba(0, 0, 0, 0.08)");
-      root.style.setProperty("--card-shadow", "0 15px 35px rgba(0, 0, 0, 0.05)");
-      root.classList.remove("dark");
-    }
-
-    localStorage.setItem("theme", settings.isDark ? "dark" : "light");
-    localStorage.setItem("app-brand-color", settings.brandColor);
-  }, [settings]);
-
   const handleUpdateSetting = (key, value) => {
-    setSettings((prev) => ({ ...prev, [key]: value }));
-  };
+    setSettings((prev) => {
+      const newSet = { ...prev, [key]: value };
+      
+      const keyMap = {
+        isDark: "theme",
+        brandColor: "app-brand-color",
+        fontFamily: "app-font",
+        textColor: "app-text-color",
+        fontSize: "app-font-size" // sizing multiplier
+      };
 
-  const handleSaveAll = async () => {
-    try {
-      if (user && displayName !== user.displayName) {
-        await updateProfile(user, { displayName: displayName });
-      }
-      toast.success("Settings saved successfully!");
-    } catch (error) {
-      toast.error("Failed to update: " + error.message);
-    }
+      const storageValue = key === "isDark" ? (value ? "dark" : "light") : value;
+      localStorage.setItem(keyMap[key], storageValue);
+
+      window.dispatchEvent(new Event("theme-update"));
+      return newSet;
+    });
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-6 transition-all duration-500 relative overflow-hidden"
-         style={{ backgroundColor: "var(--bg-main)", color: "var(--text-main)" }}>
+    <div className="flex flex-col items-center justify-center min-h-screen p-6 relative bg-[var(--bg-main)] transition-all duration-500">
       
-      {/* Background Glows (Matching Dashboard) */}
-      <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] blur-[150px] rounded-full pointer-events-none opacity-[0.08] dark:opacity-[0.15] z-0" 
-           style={{ backgroundColor: "var(--brand-gold)" }} />
+      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] blur-[150px] rounded-full opacity-10 bg-[var(--brand-gold)]" />
 
-      {/* Settings Card Blob */}
-      <div className="relative z-10 rounded-[60px] p-12 w-full max-w-4xl border-2 backdrop-blur-xl transition-all duration-500"
-           style={{ 
-             backgroundColor: "var(--bg-card)", 
-             borderColor: "var(--border-color)",
-             boxShadow: "var(--card-shadow)" 
-           }}>
+      <div className="relative z-10 rounded-[60px] p-12 w-full max-w-4xl border-2 bg-[var(--bg-card)] border-[var(--border-color)] shadow-2xl transition-all duration-500">
+        <h2 className="text-4xl font-black text-center mb-12 text-[var(--brand-gold)] tracking-tighter">Preferences</h2>
         
         <div className="space-y-10 max-w-2xl mx-auto">
-          <h2 className="text-4xl font-black tracking-tighter text-center mb-8" style={{ color: "var(--brand-gold)" }}>Preferences</h2>
           
-          {/* Identity Section */}
-          <div className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
-              <Label className="text-xl font-bold w-40" style={{ color: "var(--brand-gold)" }}>Display Name</Label>
-              <Input 
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                className="h-12 border-2 rounded-2xl text-lg shadow-sm transition-all focus:ring-2"
-                style={{ 
-                    backgroundColor: settings.isDark ? "rgba(0,0,0,0.2)" : "white",
-                    borderColor: "var(--border-color)",
-                    color: "var(--text-main)"
-                }}
-              />
+          {/* 1. APPEARANCE MODE */}
+          <div className="flex items-center justify-between py-2">
+            <div className="space-y-1">
+              <Label className="text-xl font-bold text-[var(--brand-gold)]">Appearance</Label>
+              <p className="text-xs text-[var(--text-muted)] font-medium">Switch between light and dark</p>
             </div>
-          </div>
-
-          {/* Theme Toggle */}
-          <div className="flex items-center gap-8 py-4">
-            <Label className="text-xl font-bold w-40" style={{ color: "var(--brand-gold)" }}>Appearance</Label>
             <div 
               onClick={() => handleUpdateSetting("isDark", !settings.isDark)}
-              className="flex bg-black/10 dark:bg-white/10 rounded-full p-1 w-64 h-14 border-2 cursor-pointer relative transition-all"
-              style={{ borderColor: "var(--border-color)" }}
+              className="flex bg-black/10 dark:bg-white/10 rounded-full p-1 w-48 h-12 border-2 cursor-pointer relative border-[var(--border-color)]"
             >
-              <div className={`absolute top-1 bottom-1 w-[calc(50%-4px)] transition-all duration-500 rounded-full shadow-lg ${settings.isDark ? 'left-1 bg-zinc-800' : 'left-[calc(50%+2px)] bg-white'}`} />
-              <span className={`flex-1 flex items-center justify-center gap-2 text-sm font-black z-10 ${settings.isDark ? 'text-white' : 'text-zinc-400'}`}><Moon size={16}/> Dark</span>
-              <span className={`flex-1 flex items-center justify-center gap-2 text-sm font-black z-10 ${!settings.isDark ? 'text-black' : 'text-zinc-500'}`}><Sun size={16}/> Light</span>
+              <div className={`absolute top-1 bottom-1 w-[calc(50%-4px)] transition-all duration-300 rounded-full ${settings.isDark ? 'left-1 bg-zinc-800' : 'left-[calc(50%+2px)] bg-white shadow-md'}`} />
+              <span className={`flex-1 flex items-center justify-center gap-2 text-xs font-black z-10 ${settings.isDark ? 'text-white' : 'text-zinc-400'}`}><Moon size={14}/> Dark</span>
+              <span className={`flex-1 flex items-center justify-center gap-2 text-xs font-black z-10 ${!settings.isDark ? 'text-black' : 'text-zinc-500'}`}><Sun size={14}/> Light</span>
             </div>
           </div>
 
-          {/* Brand Color Selector */}
-          <div className="flex items-center gap-8 pt-4 border-t" style={{ borderColor: "var(--border-color)" }}>
-            <Label className="text-xl font-bold w-40" style={{ color: "var(--brand-gold)" }}>Brand Tint</Label>
-            <div className="flex gap-4">
-               {["#C5A358", "#000000", "#FFFFFF", "#F5EEDA"].map((color) => (
+          {/* 2. TYPOGRAPHY (FONT SELECTION) */}
+          <div className="flex items-center justify-between py-6 border-t border-[var(--border-color)]">
+            <div className="space-y-1">
+              <Label className="text-xl font-bold text-[var(--brand-gold)]">Typography</Label>
+              <p className="text-xs text-[var(--text-muted)] font-medium">Select your preferred font style</p>
+            </div>
+            <Select 
+              value={settings.fontFamily} 
+              onValueChange={(val) => handleUpdateSetting("fontFamily", val)}
+            >
+              <SelectTrigger className="w-64 h-12 rounded-2xl bg-black/5 dark:bg-white/5 border-[var(--border-color)] text-[var(--text-main)] font-bold">
+                <SelectValue placeholder="Select Font" />
+              </SelectTrigger>
+              <SelectContent className="rounded-2xl border-2">
+                <SelectItem value="Inter, sans-serif">Inter (Modern)</SelectItem>
+                <SelectItem value="'Outfit', sans-serif">Outfit (Geometric)</SelectItem>
+                <SelectItem value="'Lexend', sans-serif">Lexend (Readable)</SelectItem>
+                <SelectItem value="'Space Grotesk', sans-serif">Space Grotesk (Tech)</SelectItem>
+                <SelectItem value="'Playfair Display', serif">Playfair (Classic)</SelectItem>
+                <SelectItem value="'JetBrains Mono', monospace">JetBrains (Mono)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* 3. FONT SIZING  */}
+          <div className="flex items-center justify-between py-6 border-t border-[var(--border-color)]">
+            <div className="space-y-1">
+              <Label className="text-xl font-bold text-[var(--brand-gold)]">Text Scale</Label>
+              <p className="text-xs text-[var(--text-muted)] font-medium">Adjust the size of the interface</p>
+            </div>
+            <div className="flex gap-2 bg-black/5 dark:bg-white/5 p-1.5 rounded-2xl border border-[var(--border-color)]">
+               {[
+                 { label: "S", val: "0.85" },
+                 { label: "M", val: "1" },
+                 { label: "L", val: "1.15" },
+                 { label: "XL", val: "1.3" }
+               ].map((size) => (
+                 <button 
+                  key={size.val}
+                  onClick={() => handleUpdateSetting("fontSize", size.val)}
+                  className={`w-12 h-10 rounded-xl font-black transition-all ${settings.fontSize === size.val ? 'bg-[var(--brand-gold)] text-black shadow-lg scale-105' : 'text-[var(--text-main)] opacity-40 hover:opacity-100'}`}
+                 >
+                   {size.label}
+                 </button>
+               ))}
+            </div>
+          </div>
+
+          {/* 4. BRAND COLOR */}
+          <div className="flex items-center justify-between py-6 border-t border-[var(--border-color)]">
+            <div className="space-y-1">
+              <Label className="text-xl font-bold text-[var(--brand-gold)]">Brand Tint</Label>
+              <p className="text-xs text-[var(--text-muted)] font-medium">Primary accent color</p>
+            </div>
+            <div className="flex gap-3">
+               {["#C5A358", "#3b82f6", "#ef4444", "#10b981", "#a855f7"].map((color) => (
                  <button 
                   key={color}
                   onClick={() => handleUpdateSetting("brandColor", color)}
-                  className={`w-10 h-10 rounded-full border-2 transition-transform hover:scale-110 ${settings.brandColor === color ? 'border-blue-500 scale-110' : 'border-transparent'}`}
-                  style={{ backgroundColor: color, boxShadow: "0 4px 10px rgba(0,0,0,0.1)" }}
+                  className={`w-10 h-10 rounded-full border-4 transition-all hover:scale-110 ${settings.brandColor === color ? 'border-[var(--text-main)] scale-110 shadow-lg' : 'border-transparent'}`}
+                  style={{ backgroundColor: color }}
                  />
                ))}
             </div>
           </div>
+
+          {/* 5. TEXT COLOR */}
+          <div className="flex items-center justify-between py-6 border-t border-[var(--border-color)]">
+            <div className="space-y-1">
+              <Label className="text-xl font-bold text-[var(--brand-gold)]">Body Brightness</Label>
+              <p className="text-xs text-[var(--text-muted)] font-medium">Adjust the contrast of text</p>
+            </div>
+            <div className="flex gap-3 bg-black/5 dark:bg-white/5 p-2 rounded-2xl border border-[var(--border-color)]">
+               {["#FFFFFF", "#F5EEDA", "#D1D1D1", "#888888"].map((color) => (
+                 <button 
+                  key={color}
+                  onClick={() => handleUpdateSetting("textColor", color)}
+                  className={`w-8 h-8 rounded-lg border-2 transition-all ${settings.textColor === color ? 'border-[var(--brand-gold)] scale-110 shadow-md' : 'border-transparent'}`}
+                  style={{ backgroundColor: color }}
+                 />
+               ))}
+            </div>
+          </div>
+
         </div>
       </div>
 
       <Button 
-        onClick={handleSaveAll}
-        className="mt-12 text-black hover:scale-105 active:scale-95 transition-all rounded-full px-16 py-8 text-2xl font-black shadow-2xl"
-        style={{ backgroundColor: "var(--brand-gold)" }}
+        onClick={() => toast.success("Preferences Saved!")}
+        className="mt-12 bg-[var(--brand-gold)] text-black hover:scale-105 active:scale-95 transition-all rounded-full px-16 py-8 text-2xl font-black shadow-2xl"
       >
-        Apply Changes
+        Save & Close
       </Button>
     </div>
   );
