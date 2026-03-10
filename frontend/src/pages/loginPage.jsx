@@ -98,14 +98,16 @@ function LoginPage({ user, isFetching }) {
                 name="email" 
                 value={cred.email} 
                 onChange={handleChange} 
-                className="rounded-xl border-gray-200 h-11 focus:ring-[#C59C47]" 
+                placeholder="Enter your email address"
+                className="rounded-xl text-black border-gray-200 h-11 focus:ring-[#C59C47]" 
                 required 
               />
             </div>
             <div className="space-y-2">
               <div className="flex justify-between items-center ml-1">
-                <Label htmlFor="password" name="password" className="font-bold">Password</Label>
+              <Label htmlFor="password" name="password" className="font-bold text-black">Password</Label>
                 <Link to="/passwordReset" className="text-xs text-blue-500 hover:underline">Forgot password?</Link>
+
               </div>
               <Input 
                 id="password" 
@@ -113,7 +115,8 @@ function LoginPage({ user, isFetching }) {
                 name="password" 
                 value={cred.password} 
                 onChange={handleChange} 
-                className="rounded-xl border-gray-200 h-11 focus:ring-[#C59C47]" 
+                placeholder="Enter your Password"
+                className="rounded-xl text-black border-gray-200 h-11 focus:ring-[#C59C47]" 
                 required 
               />
               {errorMessage && (<div className="text-xs text-red-500 mt-1">{errorMessage}</div>)}
@@ -133,14 +136,15 @@ function LoginPage({ user, isFetching }) {
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-white px-3 text-gray-400 font-bold">Or</span>
               </div>
+              
             </div>
 
             <Button 
               variant="outline" 
-              className="w-full h-12 rounded-xl text-black font-bold border-gray-200 hover:bg-gray-50" 
+              className="w-full h-12 rounded-xl font-bold border-gray-200 hover:bg-gray-50" 
               onClick={googleLogin}
             >
-              <FaGoogle className="mr-2 text-red-500" /> Sign in with Google
+              <FaGoogle className="mr-2 text-black-500" /> Sign in with Google
             </Button>
 
             <p className="text-sm text-gray-500 text-center">

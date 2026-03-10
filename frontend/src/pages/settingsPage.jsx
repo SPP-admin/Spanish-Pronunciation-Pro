@@ -11,7 +11,7 @@ import {
 import { Moon, Sun, Type, Maximize } from "lucide-react";
 import { toast } from "sonner";
 
-function SettingsPage({ user }) {
+function SettingsPage() {
   const [settings, setSettings] = useState({
     brandColor: localStorage.getItem("app-brand-color") || "#C5A358",
     textColor: localStorage.getItem("app-text-color") || "#FFFFFF",
@@ -79,7 +79,7 @@ function SettingsPage({ user }) {
               <SelectTrigger className="w-64 h-12 rounded-2xl bg-black/5 dark:bg-white/5 border-[var(--border-color)] text-[var(--text-main)] font-bold">
                 <SelectValue placeholder="Select Font" />
               </SelectTrigger>
-              <SelectContent className="rounded-2xl border-2">
+              <SelectContent className="rounded-2xl bg-black border-2">
                 <SelectItem value="Inter, sans-serif">Inter (Modern)</SelectItem>
                 <SelectItem value="'Outfit', sans-serif">Outfit (Geometric)</SelectItem>
                 <SelectItem value="'Lexend', sans-serif">Lexend (Readable)</SelectItem>

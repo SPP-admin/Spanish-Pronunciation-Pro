@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { TrophiesCard } from "@/components/trophies";
 import { useProfile } from '@/profileContext.jsx';
+
 import { achievements } from '../achievements.js';
 
 function Dashboard({ user }) {
