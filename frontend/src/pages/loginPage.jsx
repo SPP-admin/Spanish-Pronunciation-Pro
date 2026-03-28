@@ -141,7 +141,7 @@ function LoginPage({ user, isFetching }) {
 
             <Button 
               variant="outline" 
-              className="w-full h-12 rounded-xl font-bold border-gray-200 hover:bg-gray-50" 
+              className="w-full h-12 rounded-xl  font-bold border-gray-200 hover:bg-gray-50" 
               onClick={googleLogin}
             >
               <FaGoogle className="mr-2 text-black-500" /> Sign in with Google

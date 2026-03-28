@@ -90,6 +90,6 @@
 }
 
 .animate-float {
-  animation: float-slow 3s ease-in-out infinite;
+  animation: float-slow 5s ease-in-out infinite;
   transform-origin: center; 
 }
