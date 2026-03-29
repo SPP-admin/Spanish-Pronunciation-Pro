@@ -1,62 +1,78 @@
 import os 
 import azure.cognitiveservices.speech as speechsdk
 import re
+import json
+import requests
 
 # Get accuracy of each IPA symbol of correct pronunciation from Azure's Pronunciation Assessment tool
 def azure_transcribe(filepath, sentence, dialect):
-	speech_config = speechsdk.SpeechConfig(subscription=os.getenv("AZURE_API_KEY"), endpoint=os.getenv("AZURE_ENDPOINT"))
-	audio_config = speechsdk.audio.AudioConfig(filename=filepath)
-	lang = ""
-	if dialect == "spain":
-		lang = "es-ES"
-	else:
-		lang = "es-MX"
-	input_sentence = sentence
-	if dialect == "argentina":
-		# Preprocess input string to add in features of Argentinian Spanish
-		# Aspiration of s before consonants, and sheismo
-		input_sentence = input_sentence.lower()
-		input_sentence = input_sentence.replace("ll", "sh")
-		input_sentence = input_sentence.replace("ñ", "ni")
-		input_sentence = re.sub(r'y([aeiouyáéíóú])', r'sh\1', input_sentence)
-		input_sentence = re.sub(r's([bcdfgjklmnpqrtvwxz])', r'\1', input_sentence)
-		input_sentence = re.sub(r's(\W+[bcdfgjklmnpqrstvwxz])', r'h\1', input_sentence)
+    
+    raw_endpoint = os.getenv("AZURE_ENDPOINT", "")
+    region = raw_endpoint.replace("https://", "").split(".")[0]
+    api_key = os.getenv("AZURE_API_KEY")
 
-	elif dialect == "puerto_rico":
-		# Preprocess input string to add in features of Puerto Rican Spanish
-		# Aspiration of final s and final d, aspiration of s before consonants, aspiration of intervocalic d
-		# r at end of syllables before consonants -> l
-		input_sentence = input_sentence.lower()
-		input_sentence = re.sub(r'[sd]([\W$])', r'h\1', input_sentence, flags=re.MULTILINE)
-		input_sentence = re.sub(r's([bcdfgjklmnpqrstvwxz])', r'\1', input_sentence)
-		input_sentence = re.sub(r'([aeiouyáéíóú])d([aeiouyáéíóú])', r'\1h\2', input_sentence)
-		input_sentence = re.sub(r'([aeiouyáéíóú])r([bcdfgjklmnpqtvwxz])', r'\1l\2', input_sentence)
 
-	speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, language=lang, audio_config=audio_config)
-	pronunciation_config = speechsdk.PronunciationAssessmentConfig(
-		json_string='{"referenceText":"' + input_sentence + '","gradingSystem":"HundredMark","granularity":"Phoneme","phonemeAlphabet":"IPA"}'
-		)
-	
+    url = (
+        f"https://{region}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1"
+        f"?language={'es-ES' if dialect == 'spain' else 'es-MX'}"
+        f"&format=detailed" 
+    )
 
-	pronunciation_config.apply_to(speech_recognizer)
-	speech_recognition_result = speech_recognizer.recognize_once()
+    # Dialect Preprocessing 
+    input_sentence = sentence
+    if dialect == "argentina":
+        input_sentence = input_sentence.lower().replace("ll", "sh").replace("ñ", "ni")
+        input_sentence = re.sub(r'y([aeiouyáéíóú])', r'sh\1', input_sentence)
+        input_sentence = re.sub(r's([bcdfgjklmnpqrtvwxz])', r'\1', input_sentence)
+        input_sentence = re.sub(r's(\W+[bcdfgjklmnpqrstvwxz])', r'h\1', input_sentence)
+    elif dialect == "puerto_rico":
+        input_sentence = input_sentence.lower()
+        input_sentence = re.sub(r'[sd]([\W$])', r'h\1', input_sentence, flags=re.MULTILINE)
+        input_sentence = re.sub(r's([bcdfgjklmnpqrstvwxz])', r'\1', input_sentence)
+        input_sentence = re.sub(r'([aeiouyáéíóú])d([aeiouyáéíóú])', r'\1h\2', input_sentence)
+        input_sentence = re.sub(r'([aeiouyáéíóú])r([bcdfgjklmnpqtvwxz])', r'\1l\2', input_sentence)
 
-	pronunciation_assessment_result = speechsdk.PronunciationAssessmentResult(speech_recognition_result)
+    # Read audio & Set Headers
+    with open(filepath, 'rb') as f:
+        audio_data = f.read()
 
-	pronounced_correctly = []
+    headers = {
+        'Ocp-Apim-Subscription-Key': api_key,
+        'Content-Type': 'audio/wav; codecs=audio/pcm; samplerate=16000',
+        'Accept': 'application/json',
+        # This header mimics the Pronunciation Assessment config from the SDK
+        'Pronunciation-Assessment': json.dumps({
+            "ReferenceText": input_sentence,
+            "GradingSystem": "HundredMark",
+            "Granularity": "Phoneme",
+            "PhonemeAlphabet": "IPA"
+        })
+    }
 
-	try:
-		for word in pronunciation_assessment_result.words:
-			for phoneme in word.phonemes:
-				pronounced_correctly.append(True if phoneme.accuracy_score >= 80 else False)
-	except Exception as e:
-		print(e)
-		speech_recognition_result = speech_recognizer.recognize_once()
+    pronounced_correctly = []
 
-		pronunciation_assessment_result = speechsdk.PronunciationAssessmentResult(speech_recognition_result)
-		if (hasattr(pronunciation_assessment_result, "words")):
-			for word in pronunciation_assessment_result.words:
-				for phoneme in word.phonemes:
-					pronounced_correctly.append(True if phoneme.accuracy_score >= 80 else False)
+    try:
+        # standard POST request 
+        response = requests.post(url, headers=headers, data=audio_data, timeout=15)
+        
+        if response.status_code == 200:
+            data = response.json()
+            # Navigate the REST response: NBest -> Words -> Phonemes
+            nbest = data.get("NBest", [{}])
+            words = nbest[0].get("Words", [])
 
-	return pronounced_correctly
+            for word in words:
+                phonemes = word.get("Phonemes", [])
+                for phoneme in phonemes:
+                    accuracy = phoneme.get("PronunciationAssessment", {}).get("AccuracyScore", 0)
+                    pronounced_correctly.append(True if accuracy >= 80 else False)
+            
+            print(f"Azure REST success. Phonemes evaluated: {len(pronounced_correctly)}")
+        else:
+            print(f"!!! Azure REST Error {response.status_code}: {response.text}")
+
+    except Exception as e:
+        print(f"!!! REST Request Failed: {e}")
+
+    return pronounced_correctly
+        
