@@ -15,7 +15,6 @@ import { toast } from 'sonner';
 import correctFile from '@/assets/sounds/correct.mp3';
 import correctConfetti from 'https://cdn.skypack.dev/canvas-confetti';
 import { studyStreakHandler } from '../studyStreak.js';
-
 const generateLessonData = (topic, lesson, level) => {
   const category = lessonCategories.find(cat => cat.id === topic);
   if (!category) {
@@ -303,14 +302,11 @@ function LessonsPracticePage() {
     setFeedbackBox("");
     setSelectedText(null); // Clear any selected text on new sentence
     setHasHighlightedText(false); // Reset highlight state for new sentence
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/generateSentence?chunk=${topic}&lesson=${lesson}&difficulty=${level}`, { 
-      method: "POST" 
-  });
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/generateSentence?chunk=${topic}&lesson=${lesson}&difficulty=${level}`, { 
-        method: "POST" 
-    });
-      
+      const res = await fetch(
+        `${API_URL}/generateSentence?chunk=${topic}&lesson=${lesson}&difficulty=${level}`,
+        { method: "POST" }
+      );
       let data = await res.text();
       data = data.replace(/^"|"$/g, "");
       setSpanishSentence(data);
@@ -624,7 +620,6 @@ function LessonsPracticePage() {
     setFeedbackBox(spanishSentence)
     setSelectedText(null);
   };
-
   return (
     <div className="flex flex-col items-center min-h-screen p-6 relative bg-[var(--bg-main)] transition-all duration-500 overflow-x-hidden">
       {showConfetti && <Confetti />}
@@ -637,10 +632,10 @@ function LessonsPracticePage() {
         {/* HEADER SECTION - Adjusted for wider Progress Widget */}
         <div className="w-full mb-10 px-4 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="text-center md:text-left flex-1">
-            <span className="text-[var(--brand-gold)] text-[20px] font-black uppercase tracking-[0.4em] mb-2 block opacity-70">
+            <span className="text-[var(--brand-gold)] text-[2px] font-black uppercase tracking-[0.4em] mb-2 block opacity-70">
               Training Module
             </span>
-            <h1 className="text-4xl md:text-3xl font-black text-[var(--text-main)] tracking-tighter leading-tight">
+            <h1 className="text-4xl md:text-5l font-black text-[var(--text-main)] tracking-tighter leading-tight">
               {lessonTitle}
             </h1>
           </div>
