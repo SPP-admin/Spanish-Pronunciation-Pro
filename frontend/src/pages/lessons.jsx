@@ -90,7 +90,10 @@ function LessonsPage({user}) {
                     const currentLevel = currentProgress.currentLevel || category.levels[0].value;
                     const isComboComplete = profile.completedCombos?.[index]?.[`${currentLesson}-${currentLevel}`] || false;
                     const isCategoryComplete = isCategoryFullyComplete(category, index);
-                    const practicePath = `/lessonsPractice?topic=${category.id}&lesson=${currentLesson}&level=${currentLevel}`;
+                    
+                    const practicePath = category.id === 'regional_differences' 
+                    ? `/regionalLesson?topic=${category.id}&lesson=${currentLesson}&level=${currentLevel}`
+                    : `/lessonsPractice?topic=${category.id}&lesson=${currentLesson}&level=${currentLevel}`;
 
                     return (
                         <div 
@@ -121,23 +124,26 @@ function LessonsPage({user}) {
                                 </p>
 
                                 <div className="grid grid-cols-1 gap-6 pt-4">
-                                    <div className="space-y-3">
-                                        <Label className="uppercase tracking-widest text-xs font-bold ml-1 opacity-80"
-                                               style={{ color: "var(--brand-gold)" }}>
-                                            Lesson Type
-                                        </Label>
-                                        <Select
-                                            onValueChange={(value) => handleSelectionChange(category.id, 'currentLesson', value)}
-                                            defaultValue={currentLesson}
-                                        >
-                                            <SelectTrigger className="bg-black/20 border-[var(--border-color)] rounded-full h-12 text-[var(--text-main)]">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent className="bg-[var(--bg-card)] border-[var(--border-color)] text-[var(--text-main)] rounded-2xl">
-                                                {category.lessons.map(l => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
+                                    {/* UPDATED: Only show Lesson Type if NOT Regional Differences */}
+                                    {category.id !== 'regional_differences' && (
+                                        <div className="space-y-3">
+                                            <Label className="uppercase tracking-widest text-xs font-bold ml-1 opacity-80"
+                                                style={{ color: "var(--brand-gold)" }}>
+                                                Lesson Type
+                                            </Label>
+                                            <Select
+                                                onValueChange={(value) => handleSelectionChange(category.id, 'currentLesson', value)}
+                                                defaultValue={currentLesson}
+                                            >
+                                                <SelectTrigger className="bg-black/20 border-[var(--border-color)] rounded-full h-12 text-[var(--text-main)]">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-[var(--bg-card)] border-[var(--border-color)] text-[var(--text-main)] rounded-2xl">
+                                                    {category.lessons.map(l => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    )}
 
                                     <div className="space-y-3">
                                         <Label className="uppercase tracking-widest text-xs font-bold ml-1 opacity-80"

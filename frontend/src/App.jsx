@@ -10,6 +10,8 @@ import PasswordReset from './pages/passwordReset.jsx';
 import LessonsPage from './pages/lessons.jsx';
 import ProfilePage from './pages/profilePage.jsx';
 import SettingsPage from './pages/settingsPage.jsx';
+import RegionalLesson from './pages/regionalLesson.jsx'; 
+
 import { auth } from './firebase.js';
 import { onAuthStateChanged } from 'firebase/auth';
 import { ProtectedRoute } from './components/protectedRoute.jsx';
@@ -18,6 +20,9 @@ import { ProfileProvider, useProfile } from './profileContext.jsx';
 import { queryClient } from './queryClient.jsx';
 import { QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { fetchData } from './fetchData.js';
+
+
+
 
 function AppContent() {
   const [user] = useAuthState(auth);
@@ -104,6 +109,7 @@ function AppContent() {
             <Route path="/dashboard" element={<Dashboard user={user} />} />
             <Route path="/settings" element={<SettingsPage user={user} />} />
             <Route path="/lessonsPractice" element={<LessonsPracticePage />} />
+            <Route path="/regionalLesson" element={<RegionalLesson />} />
           </Route>
         </Route>
       </Routes>
