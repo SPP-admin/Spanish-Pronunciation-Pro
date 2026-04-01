@@ -6,6 +6,7 @@ import azureIPAtranscription as stt
 import copy
 
 # Check pronunciation with Azure Pronunciation Assessment tool
+"""""
 def correct_pronunciation_azure(sentence, audio_path, dialect):
 	correct_pronunciation = stt.azure_transcribe(audio_path, sentence, dialect)
 	output_mapping = epi.sentenceMapping(sentence)
@@ -39,6 +40,54 @@ def correct_pronunciation_azure(sentence, audio_path, dialect):
 		output_str.append([ipa.ortho_letter, str(ipa.pronounced_correctly), str(ipa.stressed_correctly)])
 		
 	return output_str
+"""""
+def correct_pronunciation_azure(sentence, audio_path, dialect):
+    if dialect == "spain":
+        azure_locale = "es-ES"
+    elif dialect == "argentina":
+        azure_locale = "es-AR"
+    elif dialect == "puerto_rico":
+        azure_locale = "es-PR"
+    else:
+        azure_locale = "es-MX"   # safe default for latam and all non-region lesson names
+
+    correct_pronunciation = stt.azure_transcribe(audio_path, sentence, azure_locale)
+
+    output_mapping = epi.sentenceMapping(sentence)
+
+    if dialect == "spain":
+        output_mapping.transliterate_eu()
+        output_mapping.set_indices()
+    elif dialect == "argentina":
+        output_mapping.transliterate_rio()
+        output_mapping.set_indices()
+    elif dialect == "puerto_rico":
+        output_mapping.transliterate_pr()
+        output_mapping.set_indices()
+    else:
+        output_mapping.transliterate_latam()
+        output_mapping.set_indices()
+
+    print("dialect from app:", dialect)
+    print("locale sent to azure:", azure_locale)
+    print(len(correct_pronunciation))
+    print(len(output_mapping.ipa_indices))
+
+    for i in range(len(correct_pronunciation)):
+        if i < len(output_mapping.ipa_indices):
+            index = output_mapping.ipa_indices[i][1]
+            output_mapping.ipa_mapping[index].pronounced_correctly = correct_pronunciation[i]
+
+    if len(correct_pronunciation) == 0:
+        for i in output_mapping.ipa_mapping:
+            if i.ortho_letter.isalpha():
+                i.pronounced_correctly = False
+
+    output_str = []
+    for ipa in output_mapping.ipa_mapping:
+        output_str.append([ipa.ortho_letter, str(ipa.pronounced_correctly), str(ipa.stressed_correctly)])
+
+    return output_str
 
 # Check pronunciation for accent marks lesson
 def correct_pronunciation_with_accents(sentence, audio_path):

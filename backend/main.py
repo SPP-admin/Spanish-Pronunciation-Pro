@@ -13,6 +13,13 @@ from pydantic import BaseModel
 
 from models import LoginSchema, SignUpSchema, ChunkSchema, BaseSchema
 
+from pydub import AudioSegment
+import base64, os, random, string, traceback
+import librosa
+import soundfile as sf
+import numpy as np
+from fastapi import HTTPException
+
 
 
 #import pyrebase
@@ -570,52 +577,60 @@ async def testAI():
     except Exception as e:
         return {"status": "error", "detail": str(e)}
 
+###
+
 # Check the user's pronunciation of a sentence or word.
 @app.post("/checkPronunciation")
 async def checkPronunciation(data: TranscriptionData):
-      random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=20))
-      random_string = random_string + ".wav"
-      random2 = "tmp_" + random_string
-      try:
+    base_name = ''.join(random.choices(string.ascii_letters + string.digits, k=20))
+    webm_path = f"{base_name}.webm"
+    wav_path = f"{base_name}.wav"
+    tmp_wav_path = f"tmp_{base_name}.wav"
+
+    try:
         audio_bytes = base64.b64decode(data.base64_data)
         sentence = data.sentence
 
-		# Generating random name for the audio files
-        
-        with open(random_string, "wb") as f:
-              f.write(audio_bytes)
-        
-        print(os.path.isfile(random_string))
-        audio, sampling_rate = librosa.load(random_string, sr=16000, mono=True, duration=30.0, dtype=np.int32)
-        sf.write(random2, audio, 16000)
+        # Save incoming browser audio as its real format first
+        with open(webm_path, "wb") as f:
+            f.write(audio_bytes)
+
+        print("saved webm:", os.path.isfile(webm_path))
+
+        # Convert webm -> wav
+        audio_segment = AudioSegment.from_file(webm_path)
+        audio_segment = audio_segment.set_frame_rate(16000).set_channels(1)
+        audio_segment.export(wav_path, format="wav")
+
+        # Load the real wav
+        audio, sampling_rate = librosa.load(
+            wav_path,
+            sr=16000,
+            mono=True,
+            duration=30.0
+        )
+
+        sf.write(tmp_wav_path, audio, 16000)
+
         if data.dialect == "accent_marks":
-             output = pronunciationChecking.correct_pronunciation_with_accents(sentence, random2)
+            output = pronunciationChecking.correct_pronunciation_with_accents(sentence, tmp_wav_path)
         else:
-             output = pronunciationChecking.correct_pronunciation_azure(sentence, random2, data.dialect)
+            output = pronunciationChecking.correct_pronunciation_azure(sentence, tmp_wav_path, data.dialect)
 
-        # Get rid of audio recordings
-        if os.path.exists(random_string):
-            os.remove(random_string)
-            print(random_string + " deleted successfully.")
-        else: print(f"File not found.")
-        if os.path.exists(random2):
-            os.remove(random2)
-            print(random2 + " deleted successfully.")
-        else: print(f"File not found.")
-      except Exception as e:
-            if os.path.exists(random_string):
-                 os.remove(random_string)
-                 print(random_string + " deleted successfully.")
-            else: print(f"File not found.")
-            if os.path.exists(random2):
-                os.remove(random2)
-                print(random2 + " deleted successfully.")
-            else: print(f"File not found.")
-            print('Error: ', str(e))
-            traceback.print_exc()
-            raise HTTPException(
-                status_code=500,
-                detail=f"Error in pronunciation checking: {str(e)}"
-            )
+    except Exception as e:
+        print("Error:", str(e))
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error in pronunciation checking: {str(e)}"
+        )
 
-      return output
+    finally:
+        for path in [webm_path, wav_path, tmp_wav_path]:
+            if os.path.exists(path):
+                os.remove(path)
+                print(path + " deleted successfully.")
+            else:
+                print(f"{path} not found.")
+
+    return output
