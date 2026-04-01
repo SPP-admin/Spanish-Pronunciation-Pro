@@ -1,8 +1,20 @@
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+ /* max-width: 1280px; */
+  /* margin: 0 auto; */
+  /* padding: 2rem; */
+  /* text-align: center; */
+}
+
+:root {
+  --brand-gold: #C5A358; /* Fallback values */
+  --bg-main: #e1e5eb;
+  --text-main: #1A1A1A;
+}
+
+body {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  transition: background-color 0.3s ease;
 }
 
 .logo {
@@ -11,6 +23,7 @@
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
@@ -40,3 +53,4 @@
 .read-the-docs {
   color: #888;
 }
+
