@@ -498,11 +498,10 @@ async def generateSentence(chunk: str, lesson: str, difficulty: str):
             word_response = model.generate_content(
                 word_prompt,
                 generation_config=genai.types.GenerationConfig(
-                temperature=0.5,  
-                top_p=1,
-                top_k=1,          
-                
-    )
+                    temperature=0.5,
+                    top_p=1,
+                    top_k=1,
+                )
             )
             generated_word = word_response.text.strip()
 
@@ -523,8 +522,62 @@ async def generateSentence(chunk: str, lesson: str, difficulty: str):
             )
             current_sentence = sentence_response.text.strip()
 
+        elif chunk == "regional_differences":
+            if lesson == "spain":
+                regional_prompt = (
+                    "Generate ONE short natural Spanish sentence for beginners using vocabulary typical of Spain. "
+                    "Use AT LEAST ONE of these focus words: Qué chulo, ¡Qué fuerte!, coche, móvil, ordenador, zumo, piso, conducir. "
+                    "Do NOT use Latin American equivalents like carro, celular, computadora, jugo, or manejar. "
+                    "Do NOT generate repeat/duplicate sentences. Or use focus words that are not region specific"
+                    "Do NOT generate repeat/duplicate sentences"
+                    "Return ONLY the Spanish sentence."
+                )
+            elif lesson == "mexico":
+                regional_prompt = (
+                    "Generate ONE short natural Spanish sentence for beginners using vocabulary typical of Mexico. "
+                    "Use AT LEAST ONE of these words: Güey, Neta, No manches, ¡Órale!,Chido. "
+                    "Do NOT use Spain-specific equivalents like coche, móvil, ordenador, zumo, piso, or conducir. "
+                    "Do NOT generate repeat/duplicate sentences. Or use focus words that are not region specific"
+                    "Return ONLY the Spanish sentence."
+                )
+            elif lesson == "argentina":
+                regional_prompt = (
+                    "Generate ONE short natural Spanish sentence for beginners using vocabulary typical of Argentina. "
+                    "Use AT LEAST ONE of these words: Chévere, vos, Pana, Si va!, Coroto . "
+                    "Do NOT generate repeat/duplicate sentences. Or use focus words that are not region specific"
+                    "Return ONLY the Spanish sentence."
+                )
+            elif lesson == "puerto_rico":
+                regional_prompt = (
+                    "Generate ONE short natural Spanish sentence for beginners using vocabulary typical of Puerto Rico. "
+                    "Use AT LEAST ONE of these words: guagua, china,¡Ay bendito!, Boricua, Hanguiar, Mamey. "
+                    "Do NOT generate repeat/duplicate sentences. Or use focus words that are not region specific"
+                    "Return ONLY the Spanish sentence."
+                )
+            else:
+                regional_prompt = (
+                    "Generate ONE short natural Spanish sentence with clear regional vocabulary. "
+                    "Do NOT generate repeat/duplicate sentences. Or use focus words that are not region specific"
+                    "Return ONLY the Spanish sentence."
+                )
+
+            if difficulty != "complex sentences":
+                regional_prompt += " Keep it under 10 words."
+            else:
+                regional_prompt += " Keep it under 20 words with slightly more complex grammar."
+
+            response = model.generate_content(
+                regional_prompt,
+                generation_config=genai.types.GenerationConfig(
+                    temperature=0.8,
+                    top_p=1,
+                    top_k=1,
+                )
+            )
+            current_sentence = response.text.strip()
+
         else:
-            # General generation logic
+            # General generation logic (UNCHANGED)
             general_prompt = (
                 f"SYSTEM: You are a helpful assistant generating Spanish {difficulty} for a pronunciation app. "
                 f"Lesson chunk: '{chunk}', Specific lesson: '{lesson}'. "
@@ -540,14 +593,15 @@ async def generateSentence(chunk: str, lesson: str, difficulty: str):
                 f"Example Response: Lluvia"
                 f"USER: Generate a unique and creative Spanish {difficulty} for the lesson '{lesson}' in the chunk '{chunk}'."
             )
+
+            print("REGIONAL LESSON RECEIVED:", lesson)
             
             response = model.generate_content(
                 general_prompt,
                 generation_config=genai.types.GenerationConfig(
-                temperature=0.5,  
-                top_p=1,
-                top_k=1,          
-                
+                    temperature=0.5,
+                    top_p=1,
+                    top_k=1,
                 )
             )
             current_sentence = response.text.strip()
@@ -555,12 +609,13 @@ async def generateSentence(chunk: str, lesson: str, difficulty: str):
     except Exception as e:
         print(f"!!! GEMINI ERROR: {e}")
         backup_sentences = [
-            "El gato duerme.", "La niña corre.", "El perro ladra.", 
+            "El gato duerme.", "La niña corre.", "El perro ladra.",
             "Hace mucho calor.", "Llueve afuera.", "El vaso está lleno."
         ]
         current_sentence = random.choice(backup_sentences)
         
     return current_sentence
+
 
 @app.get("/testAI")
 async def testAI():
