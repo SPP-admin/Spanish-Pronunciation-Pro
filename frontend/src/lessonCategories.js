@@ -91,7 +91,9 @@ export const lessonCategories = [
             { value: "puerto_rico", label: "Puerto Rico" },
         ],
         levels: [
-            { value: "regional_practice", label: "Regional Practice" },
+            { value: "easy", label: "Easy" },
+            { value: "medium", label: "Medium" },
+            { value: "hard", label: "Hard" },
         ],
     },
 ];

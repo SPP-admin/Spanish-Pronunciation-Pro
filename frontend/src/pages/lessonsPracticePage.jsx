@@ -15,7 +15,6 @@ import { toast } from 'sonner';
 import correctFile from '@/assets/sounds/correct.mp3';
 import correctConfetti from 'https://cdn.skypack.dev/canvas-confetti';
 import { studyStreakHandler } from '../studyStreak.js';
-
 const generateLessonData = (topic, lesson, level) => {
   const category = lessonCategories.find(cat => cat.id === topic);
   if (!category) {
@@ -621,117 +620,171 @@ function LessonsPracticePage() {
     setFeedbackBox(spanishSentence)
     setSelectedText(null);
   };
-
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col items-center min-h-screen p-6 relative bg-[var(--bg-main)] transition-all duration-500 overflow-x-hidden">
       {showConfetti && <Confetti />}
-      <main className="flex-grow container mx-auto p-4 md:p-6 flex flex-col items-center">
-        <div className="w-full max-w-3xl mb-6 text-center md:text-left">
-          <h1 className="text-2xl md:text-3xl font-bold mb-2 text-foreground">{lessonTitle}</h1>
-          <div className="flex items-center text-sm justify-center md:justify-between text-muted-foreground">
-            <div>
-            <span>Progress: {correctAmount}/{amountToComplete} completed</span>
-            </div>
-
-            <div>
-            {selectedText && (
-            <Button onClick={handeRestoreSentence} variant="outline" size="sm" className="ml-4 motion-preset-expand cursor-pointer">
-              Restore Original Sentence
-            </Button>
-            )}
-
-            <Button onClick={handleNextSentence} variant="outline" size="sm" className="ml-4 cursor-pointer">
-              Regenerate Sentence
-            </Button>
+  
+      {/* Background Glow */}
+      <div className="absolute top-[-5%] right-[-10%] w-[400px] h-[400px] blur-[150px] rounded-full opacity-10 bg-[var(--brand-gold)] pointer-events-none" />
+  
+      <main className="relative z-10 w-full max-w-5xl flex flex-col items-center">
+        
+        {/* HEADER SECTION - Adjusted for wider Progress Widget */}
+        <div className="w-full mb-10 px-4 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="text-center md:text-left flex-1">
+            <span className="text-[var(--brand-gold)] text-[2px] font-black uppercase tracking-[0.4em] mb-2 block opacity-70">
+              Training Module
+            </span>
+            <h1 className="text-4xl md:text-5l font-black text-[var(--text-main)] tracking-tighter leading-tight">
+              {lessonTitle}
+            </h1>
+          </div>
+  
+          {/* Fixed Progress Widget: Added min-width and whitespace-nowrap */}
+          <div className="flex items-center gap-4 min-w-[200px]">
+            <div className="bg-[var(--bg-card)] border-2 border-[var(--border-color)] px-8 py-4 rounded-[30px] shadow-xl w-full text-center whitespace-nowrap">
+              <span className="text-[10px] font-black text-[var(--brand-gold)] uppercase mr-3 tracking-widest">Progress</span>
+              <span className="text-2xl font-black text-[var(--text-main)]">
+                {correctAmount} <span className="opacity-20 mx-1">/</span> {amountToComplete}
+              </span>
             </div>
           </div>
         </div>
-
-        <Card className="w-full max-w-3xl shadow-lg">
-          <CardContent className="p-4 md:p-6 flex flex-col items-center space-y-4"> 
-            <div className="text-center w-full">
-              <div className="flex items-center justify-center gap-3 mb-3">
-                <p className="text-3xl md:text-4xl font-bold select-text leading-snug" id = "sentenceBox">
-                  {loading ? "Loading..." : spanishSentence}
-                </p>
-                <Button
-                  onClick={() => handlePlayAudio(spanishSentence)}
-                  disabled={loading || isSpeaking}
-                  variant="outline"
-                  size="icon"
-                  aria-label="Play audio pronunciation"
-                >
-                  <FaVolumeUp className="h-5 w-5" />
-                </Button>
-              </div>
-
-              <div className="mt-4 pt-2 text-center w-full">
+  
+        {/* MAIN CONTENT CARD - Made Taller and Wider */}
+        <Card className="w-full rounded-[60px] p-8 md:p-16 border-2 bg-[var(--bg-card)] border-[var(--border-color)] shadow-2xl transition-all duration-500 min-h-[500px] flex flex-col">
+          <CardContent className="p-0 flex flex-col items-center flex-grow space-y-12">
             
-                <div className="flex flex-col sm:flex-row items-center gap-2 justify-center">
-                  <p className="text-sm text-muted-foreground">
-                    Highlight text in the sentence above or click a word below.
-                  </p>
+            {/* SENTENCE BOX SECTION */}
+            <div className="text-center w-full relative">
+              <div className="flex flex-col items-center justify-center gap-8">
+                <div 
+                  className="text-4xl md:text-6xl font-black leading-tight text-[var(--text-main)] tracking-tight min-h-[160px] max-w-4xl mx-auto flex items-center justify-center transition-all duration-300" 
+                  id="sentenceBox"
+                >
+                  {loading ? (
+                    <span className="animate-pulse opacity-20 tracking-tighter">GENERATING...</span>
+                  ) : (
+                    spanishSentence
+                  )}
+                </div>
+  
+                {/* ACTION BUTTONS: Now includes Regenerate and Restore */}
+                <div className="flex flex-wrap justify-center gap-4">
                   <Button
-                    onClick={handleCaptureSelection}
-                    disabled={!hasHighlightedText}
-                    variant="outline"
-                    size="sm"
-                    className="flex-shrink-0"
+                    onClick={() => handlePlayAudio(spanishSentence)}
+                    disabled={loading || isSpeaking}
+                    className="h-20 w-20 rounded-full bg-[var(--brand-gold)] text-black hover:scale-110 active:scale-95 transition-all shadow-lg"
                   >
-                    <FaHighlighter className="mr-2 h-4 w-4" />
-                    Practice Highlighted
+                    <FaVolumeUp size={28} />
                   </Button>
+                  
+                  <Button 
+                    onClick={handleNextSentence} 
+                    variant="ghost" 
+                    className="h-20 px-8 rounded-full border-2 border-[var(--border-color)] text-[var(--text-main)] font-black hover:bg-white/5 uppercase text-xs tracking-widest"
+                  >
+                    Regenerate Sentence
+                  </Button>
+  
+                  {selectedText && (
+                    <Button 
+                      onClick={handeRestoreSentence} 
+                      variant="ghost" 
+                      className="h-20 px-8 rounded-full border-2 border-[var(--brand-gold)] text-[var(--brand-gold)] font-black hover:bg-[var(--brand-gold)] hover:text-black transition-all uppercase text-xs tracking-widest"
+                    >
+                      Restore Full
+                    </Button>
+                  )}
                 </div>
               </div>
-
+  
+              {/* HIGHLIGHT TOOLBAR */}
+              <div className="mt-12 pt-8 border-t border-[var(--border-color)] flex flex-col items-center gap-4">
+                <p className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest opacity-60">
+                  Isolation Mode: Highlight text above to practice specific fragments
+                </p>
+                <Button
+                  onClick={handleCaptureSelection}
+                  disabled={!hasHighlightedText}
+                  className={`rounded-full px-10 py-7 font-black transition-all uppercase text-xs tracking-[0.2em] ${
+                    hasHighlightedText 
+                    ? "bg-white text-black scale-105 shadow-2xl border-none" 
+                    : "bg-white/5 text-white/20 border-2 border-white/5 cursor-not-allowed"
+                  }`}
+                >
+                  <FaHighlighter className="mr-3" />
+                  Practice Selection
+                </Button>
+              </div>
+            </div>
+  
+            {/* RECORDER SECTION */}
+            <div className="w-full max-w-2xl p-10 rounded-[40px] bg-[var(--bg-main)] border-2 border-[var(--border-color)] relative shadow-inner">
+              <AudioRecorder onRecordingComplete={handleAudioRecording} />
               {selectedText && (
-                <div className="mt-3 p-2 bg-muted/50 dark:bg-muted/20 rounded text-center w-full"> 
-                  <p className="text-sm text-muted-foreground">
-                    Practicing: "<span className="font-semibold text-foreground">{selectedText}</span>"
-                  </p>
+                <div className="mt-8 text-center animate-in fade-in zoom-in-95 duration-500">
+                  <span className="text-[10px] font-black uppercase text-[var(--brand-gold)] tracking-[0.3em]">Currently Targeting</span>
+                  <p className="text-3xl font-black text-[var(--text-main)] mt-2 tracking-tighter italic">"{selectedText}"</p>
                 </div>
               )}
             </div>
-
-            <div className="w-full pt-2">
-              <AudioRecorder onRecordingComplete={handleAudioRecording} />
-            </div>
-
-            
-
-            <div className="mt-2 text-center w-full"> 
-              <p className="font-bold text-sm text-muted-foreground mb-2">Remaining words to correctly pronounce:</p>
-              <div className="w-full flex flex-wrap p-2 gap-1 justify-center rounded bg-muted/50 dark:bg-muted/20"> 
+  
+            {/* WORD CHIPS (REMAINING TARGETS) - Fixed Visibility */}
+            <div className="w-full pt-4">
+              <h3 className="text-center font-black text-[10px] uppercase tracking-[0.4em] text-[var(--text-muted)] mb-8 opacity-80">
+                Remaining Targets
+              </h3>
+              <div className="flex flex-wrap gap-4 justify-center min-h-[60px]">
                 {Object.entries(sentenceWords)
                   .filter((([, value]) => value === false))
                   .map(([key]) => (
-                    <div className="motion-preset-expand cursor-pointer hover:font-bold text-sm" key={key} onClick={() => setSelectedText(key)}>{key}</div>
+                    <button 
+                      key={key} 
+                      onClick={() => setSelectedText(key)}
+                      className="px-8 py-4 rounded-[20px] bg-white/5 border-2 border-[var(--border-color)] text-[var(--text-main)] font-black text-sm hover:border-[var(--brand-gold)] hover:text-[var(--brand-gold)] hover:bg-white/5 hover:scale-105 transition-all active:scale-95 shadow-sm"
+                    >
+                      {key}
+                    </button>
                   ))}
                 {Object.values(sentenceWords).every(val => val === true) && Object.values(sentenceWords).length > 0 && (
-                  <p className="text-sm text-green-600">All words pronounced correctly!</p>
-                )}
-                {Object.values(sentenceWords).every(val => val === false) && !loading && spanishSentence && (
-                  <p className="text-sm text-muted-foreground">All words are still left to practice.</p>
+                  <div className="px-12 py-5 bg-[var(--brand-gold)] rounded-full shadow-[0_0_30px_rgba(197,163,88,0.3)]">
+                    <span className="text-black font-black text-sm uppercase tracking-widest">✓ Phrase Mastered</span>
+                  </div>
                 )}
               </div>
             </div>
-
+  
+            {/* NEXT SENTENCE ACTION */}
             {isCurrentCorrect && !isLessonComplete && (
-              <Button onClick={handleNextSentence}>
-                Next Sentence
+              <Button 
+                onClick={handleNextSentence}
+                className="w-full py-12 rounded-[30px] bg-[var(--brand-gold)] text-black text-3xl font-black shadow-[0_20px_50px_rgba(0,0,0,0.4)] hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-tighter"
+              >
+                Continue to Next Sentence
               </Button>
             )}
           </CardContent>
         </Card>
+  
+        {/* FOOTER NAVIGATION */}
+<div className="w-full max-w-4xl mt-16 flex justify-between items-center px-4 pb-12">
+  <Button 
+    variant="ghost" 
+    onClick={handlePrevious} 
+    className="text-[var(--text-muted)] font-black hover:text-[var(--text-main)] transition-colors uppercase text-[10px] tracking-[0.2em]"
+  >
+    <FaArrowLeft className="mr-4" /> Exit Session
+  </Button>
 
-        <div className="w-full max-w-3xl mt-6 flex justify-between">
-          <Button variant="outline" onClick={handlePrevious} className="cursor-pointer">
-            <FaArrowLeft className="mr-2 h-4 w-4" /> End Practice
-          </Button>
-          <Button variant="outline" onClick={handleFinishAndNext} className="cursor-pointer">
-            Next Lesson <FaArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-        </div>
+  {/* UPDATED NEXT LESSON BUTTON: Styled like a primary action/Log Out button */}
+  <Button 
+    onClick={handleFinishAndNext}
+    className="rounded-full px-10 py-7 bg-[var(--brand-gold)] text-black font-black hover:scale-105 active:scale-95 transition-all shadow-xl uppercase text-[10px] tracking-[0.2em] border-none"
+  >
+    Next Lesson <FaArrowRight className="ml-4" />
+  </Button>
+</div>
       </main>
     </div>
   );

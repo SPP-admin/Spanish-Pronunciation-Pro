@@ -13,6 +13,8 @@ from pydantic import BaseModel
 
 from models import LoginSchema, SignUpSchema, ChunkSchema, BaseSchema
 
+
+
 #import pyrebase
 #import config
 from datetime import datetime, timezone
@@ -98,6 +100,11 @@ class TranscriptionData(BaseModel):
 import openai
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+#gemini import
+import google.generativeai as genai
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+model = genai.GenerativeModel("gemini-2.5-flash")
+
 
 #For testing
 #custom_http_client = httpx.Client(
@@ -131,6 +138,7 @@ async def send_voice_note(data: AudioData):
                 response_format="text",
                 language="es" 
             )
+            print(f"DEBUG: Whisper heard: {transcript.text}")
 
         return transcript  # returns raw text
     except Exception as e:
@@ -376,6 +384,7 @@ async def updateTopicProgress(uid, topic: int):
               detail= f"Error updating lesson progress. {str(e)}"
          )
 
+"""""
 # Generate a sentence or word for the user to practice.
 @app.post("/generateSentence")
 async def generateSentence(chunk: str, lesson: str, difficulty: str):
@@ -466,7 +475,154 @@ async def generateSentence(chunk: str, lesson: str, difficulty: str):
         current_sentence = random.choice(backup_sentences)
         
     return current_sentence
+"""
+@app.post("/generateSentence")
+async def generateSentence(chunk: str, lesson: str, difficulty: str):
+    try:
+        if chunk == "special_vowel_combinations" and difficulty == "sentences":
+            # Generate a word
+            word_prompt = (
+                f"SYSTEM: You are a helpful assistant that generates Spanish words for a pronunciation app for beginners. "
+                f"The current lesson chunk is '{chunk}', specific lesson is '{lesson}', and difficulty is 'word'. "
+                f"Make sure the word includes '{lesson}' exactly as it appears. "
+                f"USER: Generate one unique and creative Spanish word for the lesson '{lesson}' in the chunk '{chunk}'."
+            )
+            
+            word_response = model.generate_content(
+                word_prompt,
+                generation_config=genai.types.GenerationConfig(
+                temperature=0.5,  
+                top_p=1,
+                top_k=1,          
+                
+    )
+            )
+            generated_word = word_response.text.strip()
+
+            if "\n" in generated_word:
+                generated_word = generated_word.split("\n")[0].strip()
+
+            # Generate a sentence including that word
+            sentence_prompt = (
+                f"SYSTEM: You are a helpful assistant generating Spanish sentences (max 10 words). "
+                f"The sentence must include the word '{generated_word}' exactly. "
+                f"Generate ONLY the Spanish sentence, no extra text. Use correct accents. "
+                f"USER: Generate a unique Spanish sentence for lesson '{lesson}' including the word '{generated_word}'."
+            )
+            
+            sentence_response = model.generate_content(
+                sentence_prompt,
+                generation_config=genai.types.GenerationConfig(temperature=1.0)
+            )
+            current_sentence = sentence_response.text.strip()
+
+        else:
+            # General generation logic
+            general_prompt = (
+                f"SYSTEM: You are a helpful assistant generating Spanish {difficulty} for a pronunciation app. "
+                f"Lesson chunk: '{chunk}', Specific lesson: '{lesson}'. "
+                f"If the difficulty is sentences, keep it under 10 words unless it's 'complex sentences'. "
+                f"Generate ONLY the Spanish text, no explanations or introductions. "
+                f"CRITICAL RULES: "
+                f"1. Output ONLY the word itself. "
+                f"2. Do NOT provide a list. "
+                f"3. Do NOT provide definitions or translations. "
+                f"4. Do NOT use bullet points or numbering. "
+                f"5. No conversational filler (no 'Here is your word'). "
+                f"Example Request: Lesson 'll', Difficulty 'word' "
+                f"Example Response: Lluvia"
+                f"USER: Generate a unique and creative Spanish {difficulty} for the lesson '{lesson}' in the chunk '{chunk}'."
+            )
+            
+            response = model.generate_content(
+                general_prompt,
+                generation_config=genai.types.GenerationConfig(
+                temperature=0.5,  
+                top_p=1,
+                top_k=1,          
+                
+                )
+            )
+            current_sentence = response.text.strip()
+
+    except Exception as e:
+        print(f"!!! GEMINI ERROR: {e}")
+        backup_sentences = [
+            "El gato duerme.", "La niña corre.", "El perro ladra.", 
+            "Hace mucho calor.", "Llueve afuera.", "El vaso está lleno."
+        ]
+        current_sentence = random.choice(backup_sentences)
+        
+    return current_sentence
+
+
+
+
+"""""@app.post("/generateRegionalSentence")
+async def generateRegionalSentence(topic: str, region: str):
+    try:
+        prompt = (
+            f"You are a linguistic expert in Spanish dialects. Generate a short, natural sentence "
+            f"typical of the region: '{region}'. The topic category is '{topic}'. "
+            f"Include common regional slang (modismos) or specific vocabulary unique to that area. "
+            f"Return ONLY the Spanish sentence, no translation, no quotes, and no extra text."
+        )
+        
+        # Using your existing model variable
+        response = model.generate_content(prompt)
+        current_sentence = response.text.strip().replace('"', '')
+        
+        return {"sentence": current_sentence, "region": region}
+    except Exception as e:
+        print(f"Regional Generation Error: {e}")
+        # Fallback to a generic but safe regional phrase if AI fails
+        fallbacks = {
+            "mexico": "¡Qué onda, carnal! ¿Cómo va todo?",
+            "argentina": "Che, ¿viste lo que pasó ayer en el subte?",
+            "spain": "Vale, tío, nos vemos luego en la plaza.",
+            "colombia": "¡Qué más, parce! Todo bien por aquí."
+        }
+        return {"sentence": fallbacks.get(region, "¡Hola! ¿Cómo estás?"), "region": region}
+"""""
+
+@app.post("/generateRegionalSentence")
+async def generateRegionalSentence(topic: str, region: str, difficulty: str = "easy"):
+    try:
+        # Map levels to specific AI instructions
+        if difficulty == "easy":
+            constraints = "MAX 4 WORDS. Use extremely common greeting or phrase. Very simple."
+            word_limit = 4
+        elif difficulty == "medium":
+            constraints = "MAX 7 WORDS. Use a standard local idiom or slang word. Conversational."
+            word_limit = 7
+        else:  # Hard
+            constraints = "MAX 12 WORDS. Use deep regional jargon, thick dialect, or complex street slang."
+            word_limit = 12
+
+        prompt = (
+            f"SYSTEM: You are a Spanish dialect expert. Mode: {difficulty}. "
+            f"USER: Generate one sentence for the region: {region}. Topic: {topic}. "
+            f"STRICT RULES: "
+            f"1. {constraints} "
+            f"2. Return ONLY the Spanish text, no quotes or English."
+        )
+        
+        response = model.generate_content(prompt)
+        current_sentence = response.text.strip().replace('"', '').replace('*', '')
+        
+        # Safety Truncate
+        words = current_sentence.split()
+        if len(words) > word_limit + 1:
+            current_sentence = " ".join(words[:word_limit])
+            
+        return {"sentence": current_sentence, "region": region}
+    except Exception as e:
+        fallbacks = {"mexico": "¡Qué onda!", "spain": "¡Vale, tío!", "argentina": "¡Che!"}
+        return {"sentence": fallbacks.get(region, "¡Hola!"), "region": region}
     
+
+    
+
 @app.get("/testAI")
 async def testAI():
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))

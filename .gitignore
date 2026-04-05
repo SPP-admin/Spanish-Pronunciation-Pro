@@ -162,3 +162,17 @@ spanish-pronunciation-pro-firebase-adminsdk-fbsvc-af37a865d2.json
 *.sln
 .vscode/*
 !.vscode/extensions.json
+
+# Python virtual environments
+backend/venv/
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Node modules
+node_modules/
+frontend/node_modules/
+
+# Environment variables
+.env
