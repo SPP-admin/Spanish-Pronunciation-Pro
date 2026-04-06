@@ -5,7 +5,7 @@ import AudioRecorder from '@/components/audioRecorder.jsx';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FaArrowLeft, FaArrowRight, FaHighlighter, FaVolumeUp } from 'react-icons/fa';
-import api from '../api.js';
+import api, { getApiBaseUrl } from '../api.js';
 import { auth } from '@/firebase.js';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useProfile } from '@/profileContext.jsx';
@@ -75,8 +75,6 @@ const generateLessonData = (topic, lesson, level) => {
     phraseSpanish,
   };
 };
-
-const API_URL = import.meta.env.VITE_API_URL;
 
 function LessonsPracticePage() {
   const [user] = useAuthState(auth);
@@ -304,7 +302,7 @@ function LessonsPracticePage() {
     setHasHighlightedText(false); // Reset highlight state for new sentence
     try {
       const res = await fetch(
-        `${API_URL}/generateSentence?chunk=${topic}&lesson=${lesson}&difficulty=${level}`,
+        `${getApiBaseUrl()}/generateSentence?chunk=${topic}&lesson=${lesson}&difficulty=${level}`,
         { method: "POST" }
       );
       let data = await res.text();
@@ -375,7 +373,7 @@ function LessonsPracticePage() {
         dialect = lesson;
       }
       const payload = { base64_data: base64data, sentence: generatedSentence, dialect: dialect};
-      fetch(`${API_URL}/checkPronunciation`, {
+      fetch(`${getApiBaseUrl()}/checkPronunciation`, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify(payload),

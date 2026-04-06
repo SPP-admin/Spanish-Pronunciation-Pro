@@ -70,13 +70,16 @@ if __name__ == "__main__":
 
 origins = [
     "http://localhost:3002",
-    "https://chdr.cs.ucf.edu", 
+    "https://chdr.cs.ucf.edu",
     "http://chdr.cs.ucf.edu:3002",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "https://spanish-pronunciation-pro.vercel.app",
-	"https://spanish-pronunciation-pro-nine.vercel.app"
+    "https://spanish-pronunciation-pro-nine.vercel.app",
 ]
+_extra = os.environ.get("CORS_EXTRA_ORIGINS", "")
+if _extra:
+    origins.extend(o.strip() for o in _extra.split(",") if o.strip())
 
 app.add_middleware(
     CORSMiddleware,

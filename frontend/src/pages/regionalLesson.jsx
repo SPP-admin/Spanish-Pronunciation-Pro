@@ -7,6 +7,7 @@ import { RotateCw, CheckCircle2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FaArrowLeft, FaArrowRight, FaVolumeUp } from 'react-icons/fa';
+import { getApiBaseUrl } from '@/api.js';
 
 const RegionalLesson = () => {
     const [searchParams] = useSearchParams();
@@ -35,7 +36,7 @@ const RegionalLesson = () => {
             const regionValue = randomLesson.value;
     
             const response = await fetch(
-                `${import.meta.env.VITE_API_URL}/generateRegionalSentence?topic=${topicId}&region=${regionValue}&difficulty=${difficulty}`, 
+                `${getApiBaseUrl()}/generateRegionalSentence?topic=${topicId}&region=${regionValue}&difficulty=${difficulty}`,
                 { method: "POST" }
             );
 

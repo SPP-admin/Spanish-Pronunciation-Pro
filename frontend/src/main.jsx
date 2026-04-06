@@ -1,11 +1,13 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom';
-import './index.css'
-import App from './App.jsx'
+import { createRoot } from "react-dom/client"
+import { BrowserRouter } from "react-router-dom"
+import "./index.css"
+import App from "./App.jsx"
 
-createRoot(document.getElementById('root')).render(
-    <BrowserRouter basename="/pronunciemos-app">
-      <App />
-    </BrowserRouter>
+const base = import.meta.env.BASE_URL.replace(/\/$/, "") || "/"
+const routerBasename = base === "/" ? undefined : base
+
+createRoot(document.getElementById("root")).render(
+  <BrowserRouter basename={routerBasename}>
+    <App />
+  </BrowserRouter>,
 )
