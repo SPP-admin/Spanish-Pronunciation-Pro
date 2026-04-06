@@ -682,6 +682,7 @@ function LessonsPracticePage() {
                   <Button 
                     onClick={handleNextSentence} 
                     variant="ghost" 
+                    disabled={loading}
                     className="h-20 px-8 rounded-full border-2 border-[var(--border-color)] text-[var(--text-main)] font-black hover:bg-white/5 uppercase text-xs tracking-widest"
                   >
                     Regenerate Sentence
