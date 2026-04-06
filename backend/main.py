@@ -482,7 +482,7 @@ async def generateSentence(chunk: str, lesson: str, difficulty: str):
         if chunk == "special_vowel_combinations" and difficulty == "sentences":
             # Generate a word
             word_prompt = (
-                f"SYSTEM: You are a helpful assistant that generates Spanish words for a pronunciation app for beginners. "
+                f"SYSTEM: You are a helpful assistant that generates a large variety of clean Spanish words for a pronunciation app for beginners. "
                 f"The current lesson chunk is '{chunk}', specific lesson is '{lesson}', and difficulty is 'word'. "
                 f"Make sure the word includes '{lesson}' exactly as it appears. "
                 f"USER: Generate one unique and creative Spanish word for the lesson '{lesson}' in the chunk '{chunk}'."
@@ -605,6 +605,7 @@ async def generateRegionalSentence(topic: str, region: str, difficulty: str = "e
             f"STRICT RULES: "
             f"1. {constraints} "
             f"2. Return ONLY the Spanish text, no quotes or English."
+            f"3. Return ONLY Spanish words and slang that has a clean, school friendly meaning."
         )
         
         response = model.generate_content(prompt)
@@ -621,7 +622,7 @@ async def generateRegionalSentence(topic: str, region: str, difficulty: str = "e
         return {"sentence": fallbacks.get(region, "¡Hola!"), "region": region}
     
 
-    
+
 
 @app.get("/testAI")
 async def testAI():
