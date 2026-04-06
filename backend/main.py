@@ -639,6 +639,8 @@ async def testAI():
     except Exception as e:
         return {"status": "error", "detail": str(e)}
 
+
+""" 
 # Check the user's pronunciation of a sentence or word.
 @app.post("/checkPronunciation")
 async def checkPronunciation(data: TranscriptionData):
@@ -687,4 +689,81 @@ async def checkPronunciation(data: TranscriptionData):
                 detail=f"Error in pronunciation checking: {str(e)}"
             )
 
-      return output
+"""
+
+
+
+#Testing 
+# Check the user's pronunciation of a sentence or word.
+@app.post("/checkPronunciation")
+async def checkPronunciation(data: TranscriptionData):
+    import subprocess
+
+    file_id = ''.join(random.choices(string.ascii_letters + string.digits, k=20))
+    input_file = file_id + ".webm"
+    clean_wav = "tmp_" + file_id + ".wav"
+
+    try:
+        audio_bytes = base64.b64decode(data.base64_data)
+        sentence = data.sentence
+
+        # Save uploaded browser audio as webm first
+        with open(input_file, "wb") as f:
+            f.write(audio_bytes)
+
+        print("input exists:", os.path.isfile(input_file), flush=True)
+        print("input size:", os.path.getsize(input_file), flush=True)
+
+        # Convert to clean mono 16kHz PCM wav for Azure
+        subprocess.run([
+            "ffmpeg", "-y",
+            "-i", input_file,
+            "-ac", "1",
+            "-ar", "16000",
+            "-sample_fmt", "s16",
+            clean_wav
+        ], check=True)
+
+        print("wav exists:", os.path.isfile(clean_wav), flush=True)
+        print("wav size:", os.path.getsize(clean_wav), flush=True)
+
+        if data.dialect == "accent_marks":
+            output = pronunciationChecking.correct_pronunciation_with_accents(sentence, clean_wav)
+        else:
+            output = pronunciationChecking.correct_pronunciation_azure(sentence, clean_wav, data.dialect)
+
+        if os.path.exists(input_file):
+            os.remove(input_file)
+            print(input_file + " deleted successfully.", flush=True)
+        else:
+            print("Input file not found.", flush=True)
+
+        if os.path.exists(clean_wav):
+            os.remove(clean_wav)
+            print(clean_wav + " deleted successfully.", flush=True)
+        else:
+            print("Wav file not found.", flush=True)
+
+    except Exception as e:
+        if os.path.exists(input_file):
+            os.remove(input_file)
+            print(input_file + " deleted successfully.", flush=True)
+        else:
+            print("Input file not found.", flush=True)
+
+        if os.path.exists(clean_wav):
+            os.remove(clean_wav)
+            print(clean_wav + " deleted successfully.", flush=True)
+        else:
+            print("Wav file not found.", flush=True)
+
+        print("Error:", str(e), flush=True)
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error in pronunciation checking: {str(e)}"
+        )
+
+    return output
+
+   
