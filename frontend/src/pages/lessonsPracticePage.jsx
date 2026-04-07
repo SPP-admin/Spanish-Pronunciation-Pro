@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import correctFile from '@/assets/sounds/correct.mp3';
 import correctConfetti from 'https://cdn.skypack.dev/canvas-confetti';
 import { studyStreakHandler } from '../studyStreak.js';
+
 const generateLessonData = (topic, lesson, level) => {
   const category = lessonCategories.find(cat => cat.id === topic);
   if (!category) {
@@ -84,6 +85,23 @@ function LessonsPracticePage() {
   const navigate = useNavigate();
   const [showConfetti, setShowConfetti] = useState(false);
 
+const [dimensions, setDimensions] = useState({ 
+  width: window.innerWidth, 
+  height: window.innerHeight 
+});
+
+useEffect(() => {
+  const handleResize = () => {
+    setDimensions({
+      width: window.innerWidth,
+      height: window.innerHeight
+    });
+  };
+
+  window.addEventListener('resize', handleResize);
+  return () => window.removeEventListener('resize', handleResize);
+}, []);
+
   const topic = searchParams.get('topic');
   const lesson = searchParams.get('lesson');
   const level = searchParams.get('level');
@@ -95,6 +113,7 @@ function LessonsPracticePage() {
   const [recordedAudio, setRecordedAudio] = useState(null);
   const [transcription, setTranscription] = useState("");
   const [hasHighlightedText, setHasHighlightedText] = useState(false);
+  const [feedbackHTML, setFeedbackHTML] = useState(null); // STABILITY FIX
 
   const [practiced, setPracticed] = useState(false);
   const { profile, setProfile } = useProfile();
@@ -263,7 +282,7 @@ function LessonsPracticePage() {
   }, [amountToPracticeSession]);
 
   useEffect(() => {
-    if(!profile.lastLogin) return;
+    if(!profile?.lastLogin) return;
 
     if(!studyStreakChecked) {
       const action = studyStreakHandler(profile.lastLogin);
@@ -274,10 +293,13 @@ function LessonsPracticePage() {
     }
   }, [profile?.lastLogin]);
 
+  // FIX: Manual DOM manipulation removed
   const setFeedbackBox = (string) => {
-    const message = `<div>${string}</div>`;
-	document.getElementById("sentenceBox").innerHTML = message;
+    setFeedbackHTML(string);
+  };
 
+  const handlePrevious = () => {
+    navigate('/lessons');
   };
 
   const setQuestionStatus = (isSentenceCorrect, isWordCorrect) => {
@@ -299,9 +321,9 @@ function LessonsPracticePage() {
   const fetchSentence = async () => {
     setLoading(true);
     setSpanishSentence("");
-    setFeedbackBox("");
-    setSelectedText(null); // Clear any selected text on new sentence
-    setHasHighlightedText(false); // Reset highlight state for new sentence
+    setFeedbackBox(null);
+    setSelectedText(null); 
+    setHasHighlightedText(false); 
     try {
       const res = await fetch(
         `${API_URL}/generateSentence?chunk=${topic}&lesson=${lesson}&difficulty=${level}`,
@@ -365,24 +387,32 @@ function LessonsPracticePage() {
   const sendAudioToServer = (blob) => {
     setFeedbackBox("Pronunciation Checking Processing...");
     const reader = new FileReader();
+  
     reader.onloadend = () => {
       const base64data = reader.result.split(",")[1];
       const generatedSentence = selectedText ? selectedText : spanishSentence;
+  
       let dialect = "latam";
       if (topic === "accent_marks") {
         dialect = topic;
       } else {
         dialect = lesson;
       }
-      const payload = { base64_data: base64data, sentence: generatedSentence, dialect: dialect};
+  
+      const payload = {
+        base64_data: base64data,
+        mime_type: blob.type,
+        sentence: generatedSentence,
+        dialect: dialect
+      };
+  
       fetch(`${API_URL}/checkPronunciation`, {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       })
         .then(response => {
           if (!response.ok) {
-            console.log(response.statusText);
             setFeedbackBox("<span class='text-red-500'>Error completing pronunciation check, please try again.</span>");
             throw new Error("Failed to send voice note");
           }
@@ -392,12 +422,12 @@ function LessonsPracticePage() {
           let html = "";
           let parsedTranscript = decodeURI(JSON.parse(transcript));
           const arr = parsedTranscript.split(",");
-          const correctWords = sentenceWords;
+          const correctWords = { ...sentenceWords }; // Use copy to prevent direct mutation
           let amountCorrect = 0;
           let lettersCorrect = 0;
           let word = '';
           let wordStatus = false;
-
+  
           for (let i = 0; i < arr.length - 2; i++) {
             html += (arr[i+1] === "True" ? `<span class="text-green-500">` : `<span class="text-red-500">`);
             amountCorrect += (arr[i+1] === "True" ? 1 : 0);
@@ -405,42 +435,48 @@ function LessonsPracticePage() {
             html += arr[i];
             html += (arr[i+2] === "False" ? `</u>` : "");
             html += "</span>";
-
-            if(isDelimiter(arr[i])) {
-              if((lettersCorrect >= word.length * allowedError) && correctWords.hasOwnProperty(word)) correctWords[word] = true;
+  
+            if (isDelimiter(arr[i])) {
+              if ((lettersCorrect >= word.length * allowedError) && correctWords.hasOwnProperty(word)) {
+                correctWords[word] = true;
+              }
               word = '';
               lettersCorrect = 0;
             } else {
               word += arr[i];
               lettersCorrect += (arr[i+1] === "True" ? 1 : 0);
             }
-            i+=2;
+            i += 2;
           }
-
-          if(word !== '') {
-            if((lettersCorrect >= word.length * allowedError) && correctWords.hasOwnProperty(word)) {
+  
+          if (word !== '') {
+            if ((lettersCorrect >= word.length * allowedError) && correctWords.hasOwnProperty(word)) {
               correctWords[word] = true;
               wordStatus = true;
             }
           }
-
-          setSentenceWords(sentenceWords);
+  
+          setSentenceWords(correctWords);
           setUses(prev => prev + 1);
           setAttempts(prev => prev + 1);
           setCurrentAccuracy(prev => prev + (amountCorrect / generatedSentence.length));
-
-          const isSentenceFullyPronounced = !Object.values(sentenceWords).includes(false);
-
-          if(isSentenceFullyPronounced) {
-            if(!isLessonComplete && !isCurrentCorrect) handleCorrectAnswer();
-          } else setQuestionStatus(false, wordStatus);
-
+  
+          const isSentenceFullyPronounced = !Object.values(correctWords).includes(false);
+  
+          if (isSentenceFullyPronounced) {
+            if (!isLessonComplete && !isCurrentCorrect) handleCorrectAnswer();
+          } else {
+            setQuestionStatus(false, wordStatus);
+          }
+  
           setFeedbackBox(html);
         })
         .catch(error => console.error("Error sending audio:", error));
     };
+  
     reader.readAsDataURL(blob);
   };
+
 
   const handleAudioRecording = async (blob) => {
     setFeedbackBox("Processing...");
@@ -485,7 +521,6 @@ function LessonsPracticePage() {
       }
       case 'updateLastLogin': {
         try {
-          console.log(profile);
           api.patch(`/updateStudyStreak?uid=${user.uid}&new_streak=${0}`);
           const updated = { ...profile, studyStreak: 0, lastLogin: new Date().toISOString().replace('T', ' ').slice(0,19)};
           setProfile(updated, user.uid);
@@ -507,7 +542,7 @@ function LessonsPracticePage() {
     const practicePath = `/lessonsPractice?topic=${topic}&lesson=${[avalibleLessons[nextPage]["value"]]}&level=${level}`;
 
     if(nextPage > -1) {
-      setFeedbackBox("");
+      setFeedbackBox(null);
       setCurrentAccuracy(0);
       setCorrectAmount(0);
       setSentenceWords({});
@@ -522,7 +557,7 @@ function LessonsPracticePage() {
   };
 
   const completeTopic = async () => {
-    toast("Congratulations! You've completed this topic. To continue hit the 'Next Lesson' button or choose a new topic from the lessons page.");
+    toast("Congratulations! You've completed this topic.");
     setShowConfetti(true);
     setLessonComplete(true);
     setTimeout(() => {
@@ -554,7 +589,6 @@ function LessonsPracticePage() {
       const newComboCount = profile.comboCount + 1;
       const currentTotalAccuracy = currentAccuracy / uses * 100;
       const newAccuracy = Math.floor((((profile.accuracyRate * profile.comboCount) + currentTotalAccuracy) / newComboCount));
-      console.log("Accuracy updated to " + newAccuracy + "%");
       const completedTopic = lesson + "-" + level;
       let cur = [...(profile.completedCombos ?? [])];
 
@@ -593,10 +627,6 @@ function LessonsPracticePage() {
     }
   };
 
-  const handlePrevious = () => {
-    navigate('/lessons');
-  };
-
   const handleCorrectAnswer = () => {
     setCorrectAmount(prev => {
       let updated = prev;
@@ -610,37 +640,48 @@ function LessonsPracticePage() {
   const handleNextSentence = () => {
     setAttempts(0);
     setCurrentCorrect(false);
-    setFeedbackBox("");
+    setFeedbackBox(null);
     fetchSentence();
     setSentenceWords({});
-    setSelectedText(null); // Ensure selected text is cleared
+    setSelectedText(null); 
   };
 
   const handeRestoreSentence = () => {
-    setFeedbackBox(spanishSentence)
+    setFeedbackBox(null)
     setSelectedText(null);
   };
+
   return (
-    <div className="flex flex-col items-center min-h-screen p-6 relative bg-[var(--bg-main)] transition-all duration-500 overflow-x-hidden">
-      {showConfetti && <Confetti />}
-  
-      {/* Background Glow */}
+    <div className="flex flex-col items-center min-h-screen p-6 relative bg-[var(--bg-main)] transition-all duration-500 overflow-x-hidden lesson-content-container">
+    {showConfetti && (
+      <Confetti
+        width={dimensions.width}
+        height={dimensions.height}
+        recycle={false} // Stops it from looping forever
+        numberOfPieces={300}
+        gravity={0.2} // Makes it fall slightly slower for a "premium" feel
+        style={{
+          position: 'fixed', // Use fixed to ensure it ignores scroll/container height
+          top: 0,
+          left: 0,
+          zIndex: 1000 // Ensure it's on top of all cards
+        }}
+      />
+    )}
       <div className="absolute top-[-5%] right-[-10%] w-[400px] h-[400px] blur-[150px] rounded-full opacity-10 bg-[var(--brand-gold)] pointer-events-none" />
   
       <main className="relative z-10 w-full max-w-5xl flex flex-col items-center">
         
-        {/* HEADER SECTION - Adjusted for wider Progress Widget */}
         <div className="w-full mb-10 px-4 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="text-center md:text-left flex-1">
-            <span className="text-[var(--brand-gold)] text-[2px] font-black uppercase tracking-[0.4em] mb-2 block opacity-70">
+            <span className="text-[var(--brand-gold)] text-[20px] font-black uppercase tracking-[0.4em] mb-2 block opacity-70">
               Training Module
             </span>
-            <h1 className="text-4xl md:text-5l font-black text-[var(--text-main)] tracking-tighter leading-tight">
+            <h1 className="text-4xl md:text-5l font-black text-[var(--text-main)] tracking-tighter leading-tight" suppressHydrationWarning>
               {lessonTitle}
             </h1>
           </div>
   
-          {/* Fixed Progress Widget: Added min-width and whitespace-nowrap */}
           <div className="flex items-center gap-4 min-w-[200px]">
             <div className="bg-[var(--bg-card)] border-2 border-[var(--border-color)] px-8 py-4 rounded-[30px] shadow-xl w-full text-center whitespace-nowrap">
               <span className="text-[10px] font-black text-[var(--brand-gold)] uppercase mr-3 tracking-widest">Progress</span>
@@ -651,56 +692,55 @@ function LessonsPracticePage() {
           </div>
         </div>
   
-        {/* MAIN CONTENT CARD - Made Taller and Wider */}
         <Card className="w-full rounded-[60px] p-8 md:p-16 border-2 bg-[var(--bg-card)] border-[var(--border-color)] shadow-2xl transition-all duration-500 min-h-[500px] flex flex-col">
           <CardContent className="p-0 flex flex-col items-center flex-grow space-y-12">
             
-            {/* SENTENCE BOX SECTION */}
             <div className="text-center w-full relative">
-              <div className="flex flex-col items-center justify-center gap-8">
-                <div 
-                  className="text-4xl md:text-6xl font-black leading-tight text-[var(--text-main)] tracking-tight min-h-[160px] max-w-4xl mx-auto flex items-center justify-center transition-all duration-300" 
-                  id="sentenceBox"
-                >
-                  {loading ? (
-                    <span className="animate-pulse opacity-20 tracking-tighter">GENERATING...</span>
-                  ) : (
-                    spanishSentence
-                  )}
-                </div>
-  
-                {/* ACTION BUTTONS: Now includes Regenerate and Restore */}
-                <div className="flex flex-wrap justify-center gap-4">
-                  <Button
-                    onClick={() => handlePlayAudio(spanishSentence)}
-                    disabled={loading || isSpeaking}
-                    className="h-20 w-20 rounded-full bg-[var(--brand-gold)] text-black hover:scale-110 active:scale-95 transition-all shadow-lg"
-                  >
-                    <FaVolumeUp size={28} />
-                  </Button>
-                  
-                  <Button 
-                    onClick={handleNextSentence} 
-                    variant="ghost" 
-                    disabled={loading}
-                    className="h-20 px-8 rounded-full border-2 border-[var(--border-color)] text-[var(--text-main)] font-black hover:bg-white/5 uppercase text-xs tracking-widest"
-                  >
-                    Regenerate Sentence
-                  </Button>
-  
-                  {selectedText && (
-                    <Button 
-                      onClick={handeRestoreSentence} 
-                      variant="ghost" 
-                      className="h-20 px-8 rounded-full border-2 border-[var(--brand-gold)] text-[var(--brand-gold)] font-black hover:bg-[var(--brand-gold)] hover:text-black transition-all uppercase text-xs tracking-widest"
-                    >
-                      Restore Full
-                    </Button>
-                  )}
-                </div>
+              <div 
+                className="text-4xl md:text-6xl font-black leading-tight text-[var(--text-main)] tracking-tight min-h-[160px] max-w-4xl mx-auto flex items-center justify-center transition-all duration-300" 
+                id="sentenceBox"
+                suppressHydrationWarning
+              >
+                {loading ? (
+                  <span className="animate-pulse opacity-20 tracking-tighter">GENERATING...</span>
+                ) : (
+                    feedbackHTML ? (
+                        <div dangerouslySetInnerHTML={{ __html: feedbackHTML }} key="feedback-active" />
+                    ) : (
+                        <span key="sentence-plain">{spanishSentence}</span>
+                    )
+                )}
               </div>
   
-              {/* HIGHLIGHT TOOLBAR */}
+              <div className="flex flex-wrap justify-center gap-4 mt-8">
+                <Button
+                  onClick={() => handlePlayAudio(spanishSentence)}
+                  disabled={loading || isSpeaking}
+                  className="h-20 w-20 rounded-full bg-[var(--brand-gold)] text-black hover:scale-110 active:scale-95 transition-all shadow-lg"
+                >
+                  <FaVolumeUp size={28} />
+                </Button>
+                
+                <Button 
+                  onClick={handleNextSentence} 
+                  variant="ghost" 
+                  disabled={loading}
+                  className="h-20 px-8 rounded-full border-2 border-[var(--border-color)] text-[var(--text-main)] font-black hover:bg-white/5 uppercase text-xs tracking-widest"
+                >
+                  Regenerate Sentence
+                </Button>
+  
+                {selectedText && (
+                  <Button 
+                    onClick={handeRestoreSentence} 
+                    variant="ghost" 
+                    className="h-20 px-8 rounded-full border-2 border-[var(--brand-gold)] text-[var(--brand-gold)] font-black hover:bg-[var(--brand-gold)] hover:text-black transition-all uppercase text-xs tracking-widest"
+                  >
+                    Restore Full
+                  </Button>
+                )}
+              </div>
+  
               <div className="mt-12 pt-8 border-t border-[var(--border-color)] flex flex-col items-center gap-4">
                 <p className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest opacity-60">
                   Isolation Mode: Highlight text above to practice specific fragments
@@ -720,7 +760,6 @@ function LessonsPracticePage() {
               </div>
             </div>
   
-            {/* RECORDER SECTION */}
             <div className="w-full max-w-2xl p-10 rounded-[40px] bg-[var(--bg-main)] border-2 border-[var(--border-color)] relative shadow-inner">
               <AudioRecorder onRecordingComplete={handleAudioRecording} />
               {selectedText && (
@@ -731,7 +770,6 @@ function LessonsPracticePage() {
               )}
             </div>
   
-            {/* WORD CHIPS (REMAINING TARGETS) - Fixed Visibility */}
             <div className="w-full pt-4">
               <h3 className="text-center font-black text-[10px] uppercase tracking-[0.4em] text-[var(--text-muted)] mb-8 opacity-80">
                 Remaining Targets
@@ -739,53 +777,54 @@ function LessonsPracticePage() {
               <div className="flex flex-wrap gap-4 justify-center min-h-[60px]">
                 {Object.entries(sentenceWords)
                   .filter((([, value]) => value === false))
-                  .map(([key]) => (
+                  .map(([key], idx) => (
                     <button 
-                      key={key} 
+                      key={`word-${key}-${idx}`} 
                       onClick={() => setSelectedText(key)}
                       className="px-8 py-4 rounded-[20px] bg-white/5 border-2 border-[var(--border-color)] text-[var(--text-main)] font-black text-sm hover:border-[var(--brand-gold)] hover:text-[var(--brand-gold)] hover:bg-white/5 hover:scale-105 transition-all active:scale-95 shadow-sm"
                     >
                       {key}
                     </button>
                   ))}
-                {Object.values(sentenceWords).every(val => val === true) && Object.values(sentenceWords).length > 0 && (
-                  <div className="px-12 py-5 bg-[var(--brand-gold)] rounded-full shadow-[0_0_30px_rgba(197,163,88,0.3)]">
-                    <span className="text-black font-black text-sm uppercase tracking-widest">✓ Phrase Mastered</span>
-                  </div>
-                )}
               </div>
             </div>
   
-            {/* NEXT SENTENCE ACTION */}
             {isCurrentCorrect && !isLessonComplete && (
               <Button 
                 onClick={handleNextSentence}
-                className="w-full py-12 rounded-[30px] bg-[var(--brand-gold)] text-black text-3xl font-black shadow-[0_20px_50px_rgba(0,0,0,0.4)] hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-tighter"
+                className="w-full py-12 rounded-[30px] bg-[var(--brand-gold)] text-black text-3xl font-black shadow-[0_20px_50px_rgba(0,0,0,0.4)]"
               >
-                Continue to Next Sentence
+                Next Sentence
               </Button>
+            )}
+
+            {isLessonComplete && (
+                <Button 
+                    onClick={handleFinishAndNext}
+                    className="w-full py-12 rounded-[30px] bg-green-500 text-black text-3xl font-black shadow-xl"
+                >
+                    Finish Lesson
+                </Button>
             )}
           </CardContent>
         </Card>
-  
         {/* FOOTER NAVIGATION */}
-<div className="w-full max-w-4xl mt-16 flex justify-between items-center px-4 pb-12">
-  <Button 
-    variant="ghost" 
-    onClick={handlePrevious} 
-    className="text-[var(--text-muted)] font-black hover:text-[var(--text-main)] transition-colors uppercase text-[10px] tracking-[0.2em]"
-  >
-    <FaArrowLeft className="mr-4" /> Exit Session
-  </Button>
+        <div className="w-full max-w-4xl mt-16 flex justify-between items-center px-4 pb-12">
+          <Button
+            variant="ghost"
+            onClick={handlePrevious}
+            className="text-[var(--text-muted)] font-black hover:text-[var(--text-main)] transition-colors uppercase text-[10px] tracking-[0.2em]"
+          >
+            <FaArrowLeft className="mr-4" /> Exit Session
+          </Button>
 
-  {/* UPDATED NEXT LESSON BUTTON: Styled like a primary action/Log Out button */}
-  <Button 
-    onClick={handleFinishAndNext}
-    className="rounded-full px-10 py-7 bg-[var(--brand-gold)] text-black font-black hover:scale-105 active:scale-95 transition-all shadow-xl uppercase text-[10px] tracking-[0.2em] border-none"
-  >
-    Next Lesson <FaArrowRight className="ml-4" />
-  </Button>
-</div>
+          <Button
+            onClick={handleFinishAndNext}
+            className="rounded-full px-10 py-7 bg-[var(--brand-gold)] text-black font-black hover:scale-105 active:scale-95 transition-all shadow-xl uppercase text-[10px] tracking-[0.2em] border-none"
+          >
+            Next Lesson <FaArrowRight className="ml-4" />
+          </Button>
+        </div>
       </main>
     </div>
   );

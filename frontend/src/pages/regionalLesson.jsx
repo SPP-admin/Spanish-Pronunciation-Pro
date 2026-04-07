@@ -105,8 +105,13 @@ const RegionalLesson = () => {
     if (isFinished) {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen text-center p-8 bg-[var(--bg-main)]">
-                {showConfetti && <Confetti />}
-                <div className="mb-8 p-8 rounded-full bg-[var(--brand-gold)]/10 animate-bounce">
+                {showConfetti && (
+                     <Confetti
+                      width={window.innerWidth}
+                      height={window.innerHeight}
+                     />
+                    )}          
+                  <div className="mb-8 p-8 rounded-full bg-[var(--brand-gold)]/10 animate-bounce">
                     <CheckCircle2 size={100} style={{ color: "var(--brand-gold)" }} />
                 </div>
                 <h1 className="text-7xl font-black mb-4 tracking-tighter text-[var(--text-main)]">7 / 7</h1>

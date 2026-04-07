@@ -11,12 +11,16 @@ import {
 import { Moon, Sun, Type, Maximize } from "lucide-react";
 import { toast } from "sonner";
 
+// We keep the timer outside the component so it persists 
+// even if the component re-renders during state changes.
+let debounceTimer;
+
 function SettingsPage() {
   const [settings, setSettings] = useState({
     brandColor: localStorage.getItem("app-brand-color") || "#C5A358",
     textColor: localStorage.getItem("app-text-color") || "#FFFFFF",
     fontFamily: localStorage.getItem("app-font") || "Inter, sans-serif",
-    fontSize: localStorage.getItem("app-font-size") || "1", // Multiplier base
+    fontSize: localStorage.getItem("app-font-size") || "1", 
     isDark: localStorage.getItem("theme") !== "light",
   });
 
@@ -29,13 +33,34 @@ function SettingsPage() {
         brandColor: "app-brand-color",
         fontFamily: "app-font",
         textColor: "app-text-color",
-        fontSize: "app-font-size" // sizing multiplier
+        fontSize: "app-font-size"
       };
 
+      const storageKey = keyMap[key];
       const storageValue = key === "isDark" ? (value ? "dark" : "light") : value;
-      localStorage.setItem(keyMap[key], storageValue);
+      localStorage.setItem(storageKey, storageValue);
 
-      window.dispatchEvent(new Event("theme-update"));
+      // --- IMMEDIATE CSS UPDATES ---
+      // We update the CSS variables instantly so the UI feels snappy,
+      // but these don't trigger a full React re-render of other pages.
+      if (key === "fontSize") {
+        document.documentElement.style.setProperty("--font-size-multiplier", value);
+      }
+      if (key === "brandColor") {
+        document.documentElement.style.setProperty("--brand-gold", value);
+      }
+      if (key === "textColor") {
+        document.documentElement.style.setProperty("--text-main", value);
+      }
+
+      // --- DEBOUNCED GLOBAL SYNC ---
+      // This prevents the "removeChild" crash by waiting 150ms 
+      // after your last click before telling the rest of the app to update.
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        window.dispatchEvent(new Event("theme-update"));
+      }, 150);
+
       return newSet;
     });
   };
@@ -43,17 +68,18 @@ function SettingsPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6 relative bg-[var(--bg-main)] transition-all duration-500">
       
-      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] blur-[150px] rounded-full opacity-10 bg-[var(--brand-gold)]" />
+      {/* Background Blob - Added pointer-events-none to prevent blocking clicks */}
+      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] blur-[150px] rounded-full opacity-10 bg-[var(--brand-gold)] pointer-events-none" />
 
       <div className="relative z-10 rounded-[60px] p-12 w-full max-w-4xl border-2 bg-[var(--bg-card)] border-[var(--border-color)] shadow-2xl transition-all duration-500">
-        <h2 className="text-4xl font-black text-center mb-12 text-[var(--brand-gold)] tracking-tighter">Preferences</h2>
+        <h2 className="text-4xl font-black text-center mb-12 text-[var(--brand-gold)] tracking-tighter uppercase">Preferences</h2>
         
         <div className="space-y-10 max-w-2xl mx-auto">
           
           {/* 1. APPEARANCE MODE */}
           <div className="flex items-center justify-between py-2">
             <div className="space-y-1">
-              <Label className="text-xl font-bold text-[var(--brand-gold)]">Appearance</Label>
+              <Label className="text-xl font-bold text-[var(--brand-gold)] uppercase tracking-wide">Appearance</Label>
               <p className="text-xs text-[var(--text-muted)] font-medium">Switch between light and dark</p>
             </div>
             <div 
@@ -66,10 +92,10 @@ function SettingsPage() {
             </div>
           </div>
 
-          {/* 2. TYPOGRAPHY (FONT SELECTION) */}
+          {/* 2. TYPOGRAPHY */}
           <div className="flex items-center justify-between py-6 border-t border-[var(--border-color)]">
             <div className="space-y-1">
-              <Label className="text-xl font-bold text-[var(--brand-gold)]">Typography</Label>
+              <Label className="text-xl font-bold text-[var(--brand-gold)] uppercase tracking-wide">Typography</Label>
               <p className="text-xs text-[var(--text-muted)] font-medium">Select your preferred font style</p>
             </div>
             <Select 
@@ -79,7 +105,7 @@ function SettingsPage() {
               <SelectTrigger className="w-64 h-12 rounded-2xl bg-black/5 dark:bg-white/5 border-[var(--border-color)] text-[var(--text-main)] font-bold">
                 <SelectValue placeholder="Select Font" />
               </SelectTrigger>
-              <SelectContent className="rounded-2xl bg-black border-2">
+              <SelectContent className="rounded-2xl bg-[#1a1a1a] border-2 border-[var(--border-color)] text-white">
                 <SelectItem value="Inter, sans-serif">Inter (Modern)</SelectItem>
                 <SelectItem value="'Outfit', sans-serif">Outfit (Geometric)</SelectItem>
                 <SelectItem value="'Lexend', sans-serif">Lexend (Readable)</SelectItem>
@@ -90,18 +116,18 @@ function SettingsPage() {
             </Select>
           </div>
 
-          {/* 3. FONT SIZING  */}
+          {/* 3. FONT SIZING (With your custom values) */}
           <div className="flex items-center justify-between py-6 border-t border-[var(--border-color)]">
             <div className="space-y-1">
-              <Label className="text-xl font-bold text-[var(--brand-gold)]">Text Scale</Label>
-              <p className="text-xs text-[var(--text-muted)] font-medium">Adjust the size of the interface</p>
+              <Label className="text-xl font-bold text-[var(--brand-gold)] uppercase tracking-wide">Interface Scale</Label>
+              <p className="text-xs text-[var(--text-muted)] font-medium">Adjust the density of the UI</p>
             </div>
             <div className="flex gap-2 bg-black/5 dark:bg-white/5 p-1.5 rounded-2xl border border-[var(--border-color)]">
                {[
-                 { label: "S", val: "0.85" },
-                 { label: "M", val: "1" },
-                 { label: "L", val: "1.15" },
-                 { label: "XL", val: "1.3" }
+                 { label: "S", val: "0.6" },
+                 { label: "M", val: "0.78" },
+                 { label: "L", val: "1" },
+                 { label: "XL", val: "1.1" }
                ].map((size) => (
                  <button 
                   key={size.val}
@@ -117,7 +143,7 @@ function SettingsPage() {
           {/* 4. BRAND COLOR */}
           <div className="flex items-center justify-between py-6 border-t border-[var(--border-color)]">
             <div className="space-y-1">
-              <Label className="text-xl font-bold text-[var(--brand-gold)]">Brand Tint</Label>
+              <Label className="text-xl font-bold text-[var(--brand-gold)] uppercase tracking-wide">Brand Tint</Label>
               <p className="text-xs text-[var(--text-muted)] font-medium">Primary accent color</p>
             </div>
             <div className="flex gap-3">
@@ -132,10 +158,10 @@ function SettingsPage() {
             </div>
           </div>
 
-          {/* 5. TEXT COLOR */}
+          {/* 5. BODY BRIGHTNESS */}
           <div className="flex items-center justify-between py-6 border-t border-[var(--border-color)]">
             <div className="space-y-1">
-              <Label className="text-xl font-bold text-[var(--brand-gold)]">Body Brightness</Label>
+              <Label className="text-xl font-bold text-[var(--brand-gold)] uppercase tracking-wide">Body Brightness</Label>
               <p className="text-xs text-[var(--text-muted)] font-medium">Adjust the contrast of text</p>
             </div>
             <div className="flex gap-3 bg-black/5 dark:bg-white/5 p-2 rounded-2xl border border-[var(--border-color)]">
@@ -155,7 +181,7 @@ function SettingsPage() {
 
       <Button 
         onClick={() => toast.success("Preferences Saved!")}
-        className="mt-12 bg-[var(--brand-gold)] text-black hover:scale-105 active:scale-95 transition-all rounded-full px-16 py-8 text-2xl font-black shadow-2xl"
+        className="mt-12 bg-[var(--brand-gold)] text-black hover:scale-105 active:scale-95 transition-all rounded-full px-16 py-8 text-2xl font-black shadow-2xl uppercase tracking-tighter"
       >
         Save & Close
       </Button>

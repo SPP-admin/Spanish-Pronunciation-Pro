@@ -19,7 +19,7 @@ function AudioRecorder({ onRecordingComplete }) {
     };
   }, []);
 
-  const handleStartRecording = async () => {
+ /* const handleStartRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       audioChunksRef.current = []; 
@@ -42,7 +42,74 @@ function AudioRecorder({ onRecordingComplete }) {
     } catch (err) {
       console.error("Mic access error:", err);
     }
+  };*/
+
+  const getSupportedMimeType = () => {
+    const mimeTypes = [
+      'audio/webm;codecs=opus',
+      'audio/webm',
+      'audio/mp4',
+      'audio/ogg;codecs=opus',
+      'audio/ogg'
+    ];
+  
+    for (const type of mimeTypes) {
+      if (MediaRecorder.isTypeSupported(type)) {
+        return type;
+      }
+    }
+  
+    return '';
   };
+  
+  const handleStartRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioChunksRef.current = [];
+  
+      const mimeType = getSupportedMimeType();
+  
+      mediaRecorderRef.current = mimeType
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream);
+  
+      console.log("Recorder mimeType:", mediaRecorderRef.current.mimeType);
+  
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+  
+      mediaRecorderRef.current.onstop = () => {
+        const actualType =
+          mediaRecorderRef.current?.mimeType ||
+          audioChunksRef.current?.[0]?.type ||
+          'audio/webm';
+  
+        const blob = new Blob(audioChunksRef.current, { type: actualType });
+  
+        console.log("Final blob type:", blob.type);
+        console.log("Final blob size:", blob.size);
+  
+        setAudioBlob(blob);
+  
+        if (onRecordingComplete) {
+          onRecordingComplete(blob);
+        }
+  
+        stream.getTracks().forEach(track => track.stop());
+      };
+  
+      mediaRecorderRef.current.start();
+      setIsRecording(true);
+      setAudioBlob(null);
+    } catch (err) {
+      console.error("Mic access error:", err);
+    }
+  };
+
+
 
   const handleStopRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {

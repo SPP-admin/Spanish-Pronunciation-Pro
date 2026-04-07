@@ -54,9 +54,9 @@
 
 @layer base {
   html {
-    /* Controls the global text scaling */
-    font-size: calc(16px * var(--font-size-multiplier));
-    transition: font-size 0.3s ease;
+    /* Controls the global text scaling with a safety fallback of 1 */
+    font-size: calc(16px * var(--font-size-multiplier, 1)) !important;
+    transition: font-size 0.3s ease-in-out;
   }
 
   body {
@@ -75,6 +75,14 @@
   h1, h2, h3, h4, button, select, input {
     font-family: var(--font-main);
   }
+
+  /* CRASH PREVENTION: Prevents React from losing track of DOM nodes 
+     during text highlighting or rapid re-renders */
+  .lesson-content-container, #root {
+    -webkit-user-select: text;
+    user-select: text;
+    contain: layout;
+  }
 }
 
 /* Animations */
@@ -89,7 +97,20 @@
   100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
 }
 
+/* Trophy Shine Effect */
+@keyframes shine {
+  100% {
+    left: 125%;
+    opacity: 1;
+  }
+}
+
 .animate-float {
   animation: float-slow 5s ease-in-out infinite;
   transform-origin: center; 
+}
+
+/* Helper for the Trophy drawer expansion */
+.animate-shine {
+  animation: shine 1.5s ease-in-out;
 }
