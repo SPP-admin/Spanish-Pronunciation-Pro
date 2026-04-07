@@ -92,10 +92,20 @@ db = firestore.client()
 class AudioData(BaseModel):
     base64_data: str
 
+from typing import Optional
+
 class TranscriptionData(BaseModel):
      sentence: str
      base64_data: str
      dialect: str
+     mime_type: Optional[str] = None
+
+"""class TranscriptionData(BaseModel):
+     sentence: str
+     base64_data: str
+     dialect: str
+"""
+
 # openai import
 import openai
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -692,7 +702,7 @@ async def checkPronunciation(data: TranscriptionData):
 """
 
 
-
+"""
 #Testing 
 # Check the user's pronunciation of a sentence or word.
 @app.post("/checkPronunciation")
@@ -764,6 +774,64 @@ async def checkPronunciation(data: TranscriptionData):
             detail=f"Error in pronunciation checking: {str(e)}"
         )
 
+
+
     return output
 
-   
+   """
+@app.post("/checkPronunciation")
+async def checkPronunciation(data: TranscriptionData):
+    input_file = None
+    output_file = None
+
+    try:
+        sentence = data.sentence
+        audio_bytes = base64.b64decode(data.base64_data)
+        mime_type = (data.mime_type or "").split(";")[0].strip().lower()
+
+        ext_map = {
+            "audio/webm": ".webm",
+            "audio/wav": ".wav",
+            "audio/x-wav": ".wav",
+            "audio/mp4": ".mp4",
+            "audio/mpeg": ".mp3",
+            "audio/ogg": ".ogg",
+        }
+
+        input_ext = ext_map.get(mime_type, ".webm")
+        input_file = ''.join(random.choices(string.ascii_letters + string.digits, k=20)) + input_ext
+        output_file = "tmp_" + ''.join(random.choices(string.ascii_letters + string.digits, k=20)) + ".wav"
+
+        with open(input_file, "wb") as f:
+            f.write(audio_bytes)
+
+        print("Saved input file:", input_file)
+        print("Mime type:", mime_type if mime_type else "missing")
+        print("Input size:", os.path.getsize(input_file))
+
+        audio, sampling_rate = librosa.load(input_file, sr=16000, mono=True, duration=30.0)
+        sf.write(output_file, audio, 16000)
+
+        print("Converted output file:", output_file)
+        print("Converted output size:", os.path.getsize(output_file))
+
+        if data.dialect == "accent_marks":
+            output = pronunciationChecking.correct_pronunciation_with_accents(sentence, output_file)
+        else:
+            output = pronunciationChecking.correct_pronunciation_azure(sentence, output_file, data.dialect)
+
+        return output
+
+    except Exception as e:
+        print("Error:", str(e))
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error in pronunciation checking: {str(e)}"
+        )
+
+    finally:
+        for path in [input_file, output_file]:
+            if path and os.path.exists(path):
+                os.remove(path)
+                print(f"{path} deleted successfully.")

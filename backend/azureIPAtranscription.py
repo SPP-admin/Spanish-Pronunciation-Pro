@@ -5,6 +5,7 @@ import re
 # Get accuracy of each IPA symbol of correct pronunciation from Azure's Pronunciation Assessment tool
 def azure_transcribe(filepath, sentence, dialect):
 	speech_config = speechsdk.SpeechConfig(subscription=os.getenv("AZURE_API_KEY"), endpoint=os.getenv("AZURE_ENDPOINT"))
+	speech_config.set_property(speechsdk.PropertyId.Speech_LogFilename, "azure_log.txt")
 	audio_config = speechsdk.audio.AudioConfig(filename=filepath)
 	lang = ""
 	if dialect == "spain":
