@@ -52,8 +52,7 @@ export const achievements = [
     description: "Accuracy rate of over 90%",
     unlocked: false,
     completionDate: 0,
-    condition: (userStats) => userStats?.accuracyRate >= 10
-  },
+    condition: (userStats) => Number(userStats?.accuracyRate || 0) >= 5  },
   {
     id: 6,
     name: "World Traveler",

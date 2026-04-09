@@ -15,25 +15,29 @@ function ProfilePage({ user }) {
     if (user?.photoURL) setImage(user.photoURL);
   }, [user]);
 
-  if (!profile || !profile.achievements) {
+  if (!profile) {
     return (
       <div className="w-full min-h-screen flex items-center justify-center bg-[var(--bg-main)]">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[var(--brand-gold)]"></div>
       </div>
     );
   }
-
-  // Achievement Logic
-  const cleanAchievments = achievements.map(({ condition, ...rest }) => rest);
-  const localAchievements = structuredClone(cleanAchievments);
-  for (const key in localAchievements) {
-    if (profile?.achievements?.[key]?.completed === true) {
-      localAchievements[key].unlocked = true;
-      localAchievements[key].completionDate = profile.achievements[key].completion_date;
-    } else {
-      localAchievements[key].unlocked = false;
-    }
-  }
+  
+  const localAchievements = achievements.map((achievement) => {
+    const savedAchievement = profile?.achievements?.[achievement.id];
+  
+    return {
+      ...achievement,
+      unlocked:
+        savedAchievement?.completed === true ||
+        savedAchievement === true ||
+        achievement.condition(profile) === true,
+      completionDate:
+        savedAchievement?.completion_date ||
+        savedAchievement?.completionDate ||
+        0
+    };
+  });
 
   const handleProfile = async (e) => {
     try {

@@ -113,8 +113,42 @@ function AppContent() {
           </Route>
         </Route>
       </Routes>
-      <Toaster richColors position="bottom-right" />
-    </div>
+
+      
+      <Toaster 
+  position="top-right" 
+  offset="110px" 
+  gap={16}
+  closeButton={true}
+  toastOptions={{
+    style: {
+      // SIZE & SHAPE
+      marginRight: '2.5rem',
+      borderRadius: '12px',    
+      width: '320px',           
+      minHeight: '80px',        
+      padding: '20px',          
+      
+      // THEME
+      background: 'var(--bg-card)', // Matches current card background
+      color: 'var(--text-main)',    // Matches current text color
+      border: '2px solid var(--border-color)', 
+      
+      /* DYNAMIC BRAND SHADOW 
+         We use the brand variable. If you want it to glow, 
+         most browsers now support opacity inside the var 
+         if the variable is defined as RGB. 
+      */
+         boxShadow: '0px 10px 30px rgba(0,0,0,0.5), 0px 0px 40px var(--brand-gold)',    },
+    // This targets the success/error icons to also follow the theme
+    success: {
+      style: {
+        borderColor: 'var(--brand-gold)',
+      },
+    },
+  }}
+/> 
+  </div>
   );
 }
  
