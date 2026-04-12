@@ -1,13 +1,13 @@
 import axios from 'axios';
 
-
 const api = axios.create({
-    //baseURL: "http://localhost:8080/",
-    baseURL: "https://chdr.cs.ucf.edu/pronunciemos/",
+    // Dynamically use the Render URL from your build args,
+    // with a fallback to the Render backend just in case.
+    baseURL: import.meta.env.VITE_API_URL || "https://pronunciemos-latest.onrender.com/pronunciemos/",
     headers: {
-    'Content-Type': 'application/json',
-  },
+        'Content-Type': 'application/json',
+    },
 });
 
-export default api
+export default api;
   

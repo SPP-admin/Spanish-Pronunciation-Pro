@@ -1,10 +1,10 @@
+from pydub import AudioSegment
 import os
 import base64
 import uvicorn
 from fastapi import FastAPI, HTTPException, Form, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-
 import firebase_admin
 from firebase_admin import credentials, auth, firestore
 from google.cloud.firestore_v1.base_query import FieldFilter
@@ -70,12 +70,12 @@ if __name__ == "__main__":
 
 origins = [
     "http://localhost:3002",
-    "https://chdr.cs.ucf.edu", 
-    "http://chdr.cs.ucf.edu:3002",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "https://chdr.cs.ucf.edu",
     "https://spanish-pronunciation-pro.vercel.app",
-	"https://spanish-pronunciation-pro-nine.vercel.app"
+    "https://spanish-pronunciation-pro-nine.vercel.app",
+    "https://spanish-pronunciation-frontend-latest.onrender.com",
 ]
 
 app.add_middleware(
@@ -95,10 +95,10 @@ class AudioData(BaseModel):
 from typing import Optional
 
 class TranscriptionData(BaseModel):
-     sentence: str
-     base64_data: str
-     dialect: str
-     mime_type: Optional[str] = None
+    sentence: Optional[str] = None
+    base64_data: Optional[str] = None
+    dialect: Optional[str] = None
+    mime_type: Optional[str] = None
 
 """class TranscriptionData(BaseModel):
      sentence: str
@@ -394,98 +394,7 @@ async def updateTopicProgress(uid, topic: int):
               detail= f"Error updating lesson progress. {str(e)}"
          )
 
-"""""
-# Generate a sentence or word for the user to practice.
-@app.post("/generateSentence")
-async def generateSentence(chunk: str, lesson: str, difficulty: str):
-    client = OpenAI(
-         api_key=os.getenv("OPENAI_API_KEY"),
-    )
-    try:
-        # Special logic for special_vowel_combinations chunk with 'sentences' difficulty
-        if chunk == "special_vowel_combinations" and difficulty == "sentences":
-            # Step 1: Generate a word
-            word_prompt = (
-                f"You are a helpful assistant that generates Spanish words for a pronunciation app used by beginners. "
-                f"The current lesson chunk is '{chunk}', the specific lesson is '{lesson}', and the difficulty is 'word'. Make sure the word includes the target letter/sound in the lesson correctly. "
-                f"For the 'special_vowel_combinations' chunk, whatever the lesson is must be included in the generated word exactly how it appears in the lesson you are given. "
-                f"Generate ONLY the Spanish word requested, with NO extra text, explanations, or introductions. Do not say anything like 'Here is a word:' or 'OK'. Just output the Spanish word itself. "
-                f"Use the Spanish alphabet, correct accent marks and also make sure the word is grammatically correct. "
-                f"Return only a single word. "
-                f"Make sure the word is unique, creative, and not repetitive. Avoid using any words you have generated recently. "
-            )
-            word_user_content = (
-                f"Generate a unique and creative Spanish word for the lesson '{lesson}' in the chunk '{chunk}'. "
-                f"ONLY return the Spanish word, and nothing else. Avoid repeating previously used words. "
-            )
-            word_response = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[{"role": "system", "content": word_prompt},
-                          {"role": "user", "content": word_user_content}],
-                temperature=1.2,
-                timeout=60.0
-            )
-            generated_word = word_response.choices[0].message.content.strip()
 
-            # Step 2: Generate a sentence that includes the generated word
-            sentence_prompt = (
-                f"You are a helpful assistant that generates Spanish sentences for a pronunciation app used by beginners. "
-                f"The current lesson chunk is '{chunk}', the specific lesson is '{lesson}', and the difficulty is 'sentences'. Make sure the sentence includes the word '{generated_word}' exactly as it appears. "
-                f"Generate ONLY the Spanish sentence requested, with NO extra text, explanations, or introductions. Do not say anything like 'Here is a sentence:' or 'OK'. Just output the Spanish sentence itself. "
-                f"Use the Spanish alphabet, correct accent marks and also make sure the sentence is grammatically correct. "
-                f"Make sure the sentence is unique, creative, and not repetitive. Avoid using any sentences you have generated recently. "
-                f"Keep the sentence simple, clear, and easy to understand. It must be no longer than 10 words."
-            )
-            sentence_user_content = (
-                f"Generate a unique and creative Spanish sentence for the lesson '{lesson}' in the chunk '{chunk}' that includes the word '{generated_word}'. "
-                f"ONLY return the Spanish sentence, and nothing else. Avoid repeating previously used phrases. "
-                f"Keep the sentence simple and clear. It must be no longer than 10 words."
-            )
-            sentence_response = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[{"role": "system", "content": sentence_prompt},
-                          {"role": "user", "content": sentence_user_content}],
-                temperature=1.2,
-                timeout=60.0
-            )
-            current_sentence = sentence_response.choices[0].message.content.strip()
-        else:
-            prompt = (
-                f"You are a helpful assistant that generates Spanish sentences or words for a pronunciation app used by beginners. "
-                f"The current lesson chunk is '{chunk}', the specific lesson is '{lesson}', and the difficulty is '{difficulty}'. Make sure the sentence or word includes the target letter/sound in the lesson correctly. "
-                f"For the 'special_vowel_combinations' chunk, whatever the lesson is must be included in the generated sentence/word exactly how it appears in the lesson you are given. If the difficulty is sentences, first generate a word and then create a sentence that includes that given word. "
-                f"Generate ONLY the Spanish sentence or word requested, with NO extra text, explanations, or introductions. Do not say anything like 'Here is a sentence:' or 'OK'. Just output the Spanish sentence or word itself. "
-                f"Use the Spanish alphabet, correct accent marks and also make sure the sentences are grammatically correct. "
-                f"If the difficulty is or includes 'word', return only a single word. "
-                f"Make sure the sentence or word is unique, creative, and not repetitive. Avoid using any sentences you have generated recently. "
-                f"Unless the difficulty is explicitly 'complex sentences', keep the sentences simple, clear, and easy to understand. They must be no longer than 10 words. Only use more complex grammar or longer sentences (no more than 20 words) if the difficulty is 'complex sentences'."
-            )
-            user_content = (
-                f"Generate a unique and creative Spanish {difficulty} for the lesson '{lesson}' in the chunk '{chunk}'. "
-                f"ONLY return the Spanish sentence or word, and nothing else. Avoid repeating previously used phrases. "
-                f"Keep the sentence simple and clear unless the difficulty is 'complex sentences'. If the difficulty is 'complex sentences', use more advanced grammar and longer sentences."
-            )
-            response = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[{"role": "system", "content": prompt},
-                          {"role": "user", "content": user_content}],
-                temperature=1.2,
-                timeout=60.0
-            )
-            current_sentence = response.choices[0].message.content
-    except Exception as e:
-        print(f"!!! OPENAI ERROR: {e}")
-        backup_sentences = [
-            "El gato duerme.", "La niña corre.", 
-            "El perro ladra.", "Hace mucho calor.",
-            "Llueve afuera.", "El vaso está lleno.",
-            "La casa es grande.", "El pan está caliente.",
-            "Hay una flor.", "La cama es cómoda."
-        ]
-        current_sentence = random.choice(backup_sentences)
-        
-    return current_sentence
-"""
 @app.post("/generateSentence")
 async def generateSentence(chunk: str, lesson: str, difficulty: str):
     try:
@@ -565,36 +474,6 @@ async def generateSentence(chunk: str, lesson: str, difficulty: str):
         
     return current_sentence
 
-
-
-
-"""""@app.post("/generateRegionalSentence")
-async def generateRegionalSentence(topic: str, region: str):
-    try:
-        prompt = (
-            f"You are a linguistic expert in Spanish dialects. Generate a short, natural sentence "
-            f"typical of the region: '{region}'. The topic category is '{topic}'. "
-            f"Include common regional slang (modismos) or specific vocabulary unique to that area. "
-            f"Return ONLY the Spanish sentence, no translation, no quotes, and no extra text."
-        )
-        
-        # Using your existing model variable
-        response = model.generate_content(prompt)
-        current_sentence = response.text.strip().replace('"', '')
-        
-        return {"sentence": current_sentence, "region": region}
-    except Exception as e:
-        print(f"Regional Generation Error: {e}")
-        # Fallback to a generic but safe regional phrase if AI fails
-        fallbacks = {
-            "mexico": "¡Qué onda, carnal! ¿Cómo va todo?",
-            "argentina": "Che, ¿viste lo que pasó ayer en el subte?",
-            "spain": "Vale, tío, nos vemos luego en la plaza.",
-            "colombia": "¡Qué más, parce! Todo bien por aquí."
-        }
-        return {"sentence": fallbacks.get(region, "¡Hola! ¿Cómo estás?"), "region": region}
-"""""
-
 @app.post("/generateRegionalSentence")
 async def generateRegionalSentence(topic: str, region: str, difficulty: str = "easy"):
     try:
@@ -650,188 +529,60 @@ async def testAI():
         return {"status": "error", "detail": str(e)}
 
 
-""" 
-# Check the user's pronunciation of a sentence or word.
+
 @app.post("/checkPronunciation")
 async def checkPronunciation(data: TranscriptionData):
-      random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=20))
-      random_string = random_string + ".wav"
-      random2 = "tmp_" + random_string
-      try:
-        audio_bytes = base64.b64decode(data.base64_data)
-        sentence = data.sentence
+    print("--- AT THE START OF FUNCTION ---", flush=True)
 
-		# Generating random name for the audio files
-        
-        with open(random_string, "wb") as f:
-              f.write(audio_bytes)
-        
-        print(os.path.isfile(random_string))
-        audio, sampling_rate = librosa.load(random_string, sr=16000, mono=True, duration=30.0, dtype=np.int32)
-        sf.write(random2, audio, 16000)
-        if data.dialect == "accent_marks":
-             output = pronunciationChecking.correct_pronunciation_with_accents(sentence, random2)
-        else:
-             output = pronunciationChecking.correct_pronunciation_azure(sentence, random2, data.dialect)
+    sentence = data.sentence
+    print(f"DEBUG: Sentence received: {sentence}", flush=True)
 
-        # Get rid of audio recordings
-        if os.path.exists(random_string):
-            os.remove(random_string)
-            print(random_string + " deleted successfully.")
-        else: print(f"File not found.")
-        if os.path.exists(random2):
-            os.remove(random2)
-            print(random2 + " deleted successfully.")
-        else: print(f"File not found.")
-      except Exception as e:
-            if os.path.exists(random_string):
-                 os.remove(random_string)
-                 print(random_string + " deleted successfully.")
-            else: print(f"File not found.")
-            if os.path.exists(random2):
-                os.remove(random2)
-                print(random2 + " deleted successfully.")
-            else: print(f"File not found.")
-            print('Error: ', str(e))
-            traceback.print_exc()
-            raise HTTPException(
-                status_code=500,
-                detail=f"Error in pronunciation checking: {str(e)}"
-            )
-
-"""
-
-
-"""
-#Testing 
-# Check the user's pronunciation of a sentence or word.
-@app.post("/checkPronunciation")
-async def checkPronunciation(data: TranscriptionData):
-    import subprocess
-
-    file_id = ''.join(random.choices(string.ascii_letters + string.digits, k=20))
-    input_file = file_id + ".webm"
-    clean_wav = "tmp_" + file_id + ".wav"
-
-    try:
-        audio_bytes = base64.b64decode(data.base64_data)
-        sentence = data.sentence
-
-        # Save uploaded browser audio as webm first
-        with open(input_file, "wb") as f:
-            f.write(audio_bytes)
-
-        print("input exists:", os.path.isfile(input_file), flush=True)
-        print("input size:", os.path.getsize(input_file), flush=True)
-
-        # Convert to clean mono 16kHz PCM wav for Azure
-        subprocess.run([
-            "ffmpeg", "-y",
-            "-i", input_file,
-            "-ac", "1",
-            "-ar", "16000",
-            "-sample_fmt", "s16",
-            clean_wav
-        ], check=True)
-
-        print("wav exists:", os.path.isfile(clean_wav), flush=True)
-        print("wav size:", os.path.getsize(clean_wav), flush=True)
-
-        if data.dialect == "accent_marks":
-            output = pronunciationChecking.correct_pronunciation_with_accents(sentence, clean_wav)
-        else:
-            output = pronunciationChecking.correct_pronunciation_azure(sentence, clean_wav, data.dialect)
-
-        if os.path.exists(input_file):
-            os.remove(input_file)
-            print(input_file + " deleted successfully.", flush=True)
-        else:
-            print("Input file not found.", flush=True)
-
-        if os.path.exists(clean_wav):
-            os.remove(clean_wav)
-            print(clean_wav + " deleted successfully.", flush=True)
-        else:
-            print("Wav file not found.", flush=True)
-
-    except Exception as e:
-        if os.path.exists(input_file):
-            os.remove(input_file)
-            print(input_file + " deleted successfully.", flush=True)
-        else:
-            print("Input file not found.", flush=True)
-
-        if os.path.exists(clean_wav):
-            os.remove(clean_wav)
-            print(clean_wav + " deleted successfully.", flush=True)
-        else:
-            print("Wav file not found.", flush=True)
-
-        print("Error:", str(e), flush=True)
-        traceback.print_exc()
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error in pronunciation checking: {str(e)}"
-        )
-
-
-
-    return output
-
-   """
-@app.post("/checkPronunciation")
-async def checkPronunciation(data: TranscriptionData):
     input_file = None
     output_file = None
 
     try:
-        sentence = data.sentence
         audio_bytes = base64.b64decode(data.base64_data)
+        print("DEBUG: Audio bytes decoded", flush=True)
+
         mime_type = (data.mime_type or "").split(";")[0].strip().lower()
 
-        ext_map = {
-            "audio/webm": ".webm",
-            "audio/wav": ".wav",
-            "audio/x-wav": ".wav",
-            "audio/mp4": ".mp4",
-            "audio/mpeg": ".mp3",
-            "audio/ogg": ".ogg",
-        }
+        tmp_dir = "/tmp"
+        # We use a random name but ensure it matches the format
+        random_suffix = ''.join(random.choices(string.ascii_letters + string.digits, k=20))
+        input_file = os.path.join(tmp_dir, f"{random_suffix}.webm")
+        output_file = os.path.join(tmp_dir, f"tmp_{random_suffix}.wav")
 
-        input_ext = ext_map.get(mime_type, ".webm")
-        input_file = ''.join(random.choices(string.ascii_letters + string.digits, k=20)) + input_ext
-        output_file = "tmp_" + ''.join(random.choices(string.ascii_letters + string.digits, k=20)) + ".wav"
+        print(f"DEBUG: Paths created. Input: {input_file}", flush=True)
 
         with open(input_file, "wb") as f:
             f.write(audio_bytes)
+        print("DEBUG: File written to disk", flush=True)
 
-        print("Saved input file:", input_file)
-        print("Mime type:", mime_type if mime_type else "missing")
-        print("Input size:", os.path.getsize(input_file))
+        # --- REPLACED LIBROSA WITH PYDUB HERE ---
+        print("DEBUG: Starting pydub conversion (Low Memory)", flush=True)
+        audio = AudioSegment.from_file(input_file)
+        # Convert to 16kHz, Mono, which Azure/AI services prefer
+        audio = audio.set_frame_rate(16000).set_channels(1)
+        audio.export(output_file, format="wav")
+        print("DEBUG: Conversion complete", flush=True)
+        # ----------------------------------------
 
-        audio, sampling_rate = librosa.load(input_file, sr=16000, mono=True, duration=30.0)
-        sf.write(output_file, audio, 16000)
-
-        print("Converted output file:", output_file)
-        print("Converted output size:", os.path.getsize(output_file))
-
+        print(f"DEBUG: Handing over to AI for {data.dialect}", flush=True)
         if data.dialect == "accent_marks":
             output = pronunciationChecking.correct_pronunciation_with_accents(sentence, output_file)
         else:
             output = pronunciationChecking.correct_pronunciation_azure(sentence, output_file, data.dialect)
 
+        print("DEBUG: AI responded successfully!", flush=True)
         return output
 
     except Exception as e:
-        print("Error:", str(e))
+        print(f"!!! ERROR !!!: {str(e)}", flush=True)
         traceback.print_exc()
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error in pronunciation checking: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=str(e))
 
     finally:
         for path in [input_file, output_file]:
             if path and os.path.exists(path):
                 os.remove(path)
-                print(f"{path} deleted successfully.")
+                print(f"DEBUG: Cleaned up {path}", flush=True)
