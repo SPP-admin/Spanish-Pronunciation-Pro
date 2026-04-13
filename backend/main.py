@@ -555,7 +555,31 @@ async def generateSentence(chunk: str, lesson: str, difficulty: str):
         
     return current_sentence
 
+# Add this to your CHDR backend/main.py
+@app.post("/get-coaching")
+async def get_coaching(data: dict):
+    failed_letters = data.get("failed_letters", [])
+    sentence = data.get("sentence", "")
+    dialect = data.get("dialect", "latam")
 
+    if not failed_letters:
+        return {"coach_tip": "¡Perfecto! Tu fluidez y pronunciación son excelentes."}
+
+    # PROMPT TUNING: Focus on word-level patterns instead of letter-by-letter
+    prompt = (
+        f"SYSTEM: You are an expert Spanish Phonetics Coach. A student is practicing: '{sentence}' ({dialect} accent). "
+        f"The student struggled with these specific sounds: {failed_letters}. "
+        f"USER: Provide a single, cohesive tip (max 2 sentences) that explains why those mistakes happen in the context of the whole word. "
+        f"Instead of listing letters, talk about the 'flow' or 'tongue placement' needed for the word. "
+        f"Example: Instead of 'Pronounce R and O better', say 'Make sure to flick your tongue for the rolling R so it carries smoothly into the next vowel'."
+        f"CRITICAL: Keep the feedback in English."
+    )
+
+    try:
+        response = model.generate_content(prompt)
+        return {"coach_tip": response.text.strip()}
+    except Exception as e:
+        return {"coach_tip": "Buen intento. Trata de relajar la lengua y conectar los sonidos más suavemente."}
 
 
 """""@app.post("/generateRegionalSentence")

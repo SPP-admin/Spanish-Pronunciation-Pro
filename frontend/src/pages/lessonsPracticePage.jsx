@@ -5,7 +5,8 @@ import AudioRecorder from '@/components/audioRecorder.jsx';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FaArrowLeft, FaArrowRight, FaHighlighter, FaVolumeUp } from 'react-icons/fa';
-import api from '../api.js';
+
+import api, { renderBridge } from '../api.js';
 import { auth } from '@/firebase.js';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useProfile } from '@/profileContext.jsx';
@@ -13,7 +14,7 @@ import { lessonCategories } from '@/lessonCategories.js';
 import { completionRequirements } from '@/lessonCategories.js';
 import { toast } from 'sonner';
 import correctFile from '@/assets/sounds/correct.mp3';
-import correctConfetti from 'https://cdn.skypack.dev/canvas-confetti';
+
 import { studyStreakHandler } from '../studyStreak.js';
 const generateLessonData = (topic, lesson, level) => {
   const category = lessonCategories.find(cat => cat.id === topic);
@@ -284,12 +285,12 @@ function LessonsPracticePage() {
     if(isSentenceCorrect) {
       toast.success("Correct! Well done!", { duration: 3000 });
       correctSFX.play();
-      correctConfetti();
+      
       setFeedbackBox("<span class='text-green-500 font-bold'>Correct!</span>");
     } else if(selectedText && isWordCorrect) {
       toast.success("Correct word! Try the whole sentence again or pick a new word!", { duration: 4000 });
       correctSFX.play();
-      correctConfetti();
+      
       setFeedbackBox("<span class='text-green-500 font-bold'>Correct word!</span>");
     } else {
       setFeedbackBox("<span class='motion-preset-pulse motion-duration-2000 text-red-500 font-bold'>Try Again</span>");
@@ -362,82 +363,104 @@ function LessonsPracticePage() {
     };
   }, []);
 
-  const sendAudioToServer = (blob) => {
+const sendAudioToServer = (blob) => {
     setFeedbackBox("Pronunciation Checking Processing...");
     const reader = new FileReader();
-    reader.onloadend = () => {
+    
+    // We make this 'async' to use 'await' for the two different server calls
+    reader.onloadend = async () => { 
       const base64data = reader.result.split(",")[1];
       const generatedSentence = selectedText ? selectedText : spanishSentence;
-      let dialect = "latam";
-      if (topic === "accent_marks") {
-        dialect = topic;
-      } else {
-        dialect = lesson;
+      let dialect = (topic === "accent_marks") ? topic : lesson;
+
+      const payload = { 
+        base64_data: base64data, 
+        sentence: generatedSentence, 
+        dialect: dialect
+      };
+
+      try {
+        // --- STEP 1: CALL RENDER (Azure Pronunciation) ---
+        // Note: You must define 'renderBridge' in your api.js pointing to Render
+        console.log("Current Bridge URL:", renderBridge.defaults.baseURL);
+        const azureResponse = await renderBridge.post("/analyze", payload);
+
+      
+
+        const results = azureResponse.data; // This is the [[letter, bool, bool], ...] array
+
+        // --- STEP 2: CALL CHDR (Gemini Coaching) ---
+        // Filter the results to get the failed letters for the coach
+        const failedLetters = results
+          .filter(item => item[1] === "False")
+          .map(item => item[0]);
+
+          console.log("Failed Letters for Coaching:", failedLetters);
+        const coachingResponse = await api.post("/get-coaching", {
+          failed_letters: failedLetters,
+          sentence: generatedSentence,
+          dialect: dialect
+        });
+        // --- STEP 3: YOUR ORIGINAL POST-PROCESSING LOGIC ---
+        let html = "";
+        const correctWords = { ...sentenceWords }; // Shallow copy to maintain state safely
+        let amountCorrect = 0;
+        let lettersCorrect = 0;
+        let word = '';
+        let wordStatus = false;
+
+        // Note: Results is already an array from the JSON response
+        results.forEach((arrItem) => {
+          const [letter, isPronouncedCorrect, isStressedCorrect] = arrItem;
+          
+          html += (isPronouncedCorrect === "True" ? `<span class="text-green-500">` : `<span class="text-red-500">`);
+          amountCorrect += (isPronouncedCorrect === "True" ? 1 : 0);
+          html += (isStressedCorrect === "False" ? `<u>` : "");
+          html += letter;
+          html += (isStressedCorrect === "False" ? `</u>` : "");
+          html += "</span>";
+
+          if(isDelimiter(letter)) {
+            if((lettersCorrect >= word.length * allowedError) && correctWords.hasOwnProperty(word)) correctWords[word] = true;
+            word = '';
+            lettersCorrect = 0;
+          } else {
+            word += letter;
+            lettersCorrect += (isPronouncedCorrect === "True" ? 1 : 0);
+          }
+        });
+
+        // Handle the final word in the sentence
+        if(word !== '') {
+          if((lettersCorrect >= word.length * allowedError) && correctWords.hasOwnProperty(word)) {
+            correctWords[word] = true;
+            wordStatus = true;
+          }
+        }
+
+        // --- STEP 4: UPDATE UI STATE (Preserving your original setters) ---
+        setSentenceWords(correctWords);
+        setUses(prev => prev + 1);
+        setAttempts(prev => prev + 1);
+        setCurrentAccuracy(prev => prev + (amountCorrect / generatedSentence.length));
+
+        const isSentenceFullyPronounced = !Object.values(correctWords).includes(false);
+
+        if(isSentenceFullyPronounced) {
+          if(!isLessonComplete && !isCurrentCorrect) handleCorrectAnswer();
+        } else {
+          setQuestionStatus(false, wordStatus);
+        }
+
+
+        // Finally, update the DOM with the colored text and the coach tip
+        const finalHtml = `${html}<div class='mt-4 text-[20px] italic text-[var(--brand-gold)]'>${coachingResponse.data.coach_tip}</div>`;
+        setFeedbackBox(finalHtml);
+
+      } catch (error) {
+        console.error("Evaluation flow failed:", error);
+        setFeedbackBox("<span class='text-red-500'>Connection error. Please check your network.</span>");
       }
-      const payload = { base64_data: base64data, sentence: generatedSentence, dialect: dialect};
-      fetch(`${API_URL}/checkPronunciation`, {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(payload),
-      })
-        .then(response => {
-          if (!response.ok) {
-            console.log(response.statusText);
-            setFeedbackBox("<span class='text-red-500'>Error completing pronunciation check, please try again.</span>");
-            throw new Error("Failed to send voice note");
-          }
-          return response.text();
-        })
-        .then(transcript => {
-          let html = "";
-          let parsedTranscript = decodeURI(JSON.parse(transcript));
-          const arr = parsedTranscript.split(",");
-          const correctWords = sentenceWords;
-          let amountCorrect = 0;
-          let lettersCorrect = 0;
-          let word = '';
-          let wordStatus = false;
-
-          for (let i = 0; i < arr.length - 2; i++) {
-            html += (arr[i+1] === "True" ? `<span class="text-green-500">` : `<span class="text-red-500">`);
-            amountCorrect += (arr[i+1] === "True" ? 1 : 0);
-            html += (arr[i+2] === "False" ? `<u>` : "");
-            html += arr[i];
-            html += (arr[i+2] === "False" ? `</u>` : "");
-            html += "</span>";
-
-            if(isDelimiter(arr[i])) {
-              if((lettersCorrect >= word.length * allowedError) && correctWords.hasOwnProperty(word)) correctWords[word] = true;
-              word = '';
-              lettersCorrect = 0;
-            } else {
-              word += arr[i];
-              lettersCorrect += (arr[i+1] === "True" ? 1 : 0);
-            }
-            i+=2;
-          }
-
-          if(word !== '') {
-            if((lettersCorrect >= word.length * allowedError) && correctWords.hasOwnProperty(word)) {
-              correctWords[word] = true;
-              wordStatus = true;
-            }
-          }
-
-          setSentenceWords(sentenceWords);
-          setUses(prev => prev + 1);
-          setAttempts(prev => prev + 1);
-          setCurrentAccuracy(prev => prev + (amountCorrect / generatedSentence.length));
-
-          const isSentenceFullyPronounced = !Object.values(sentenceWords).includes(false);
-
-          if(isSentenceFullyPronounced) {
-            if(!isLessonComplete && !isCurrentCorrect) handleCorrectAnswer();
-          } else setQuestionStatus(false, wordStatus);
-
-          setFeedbackBox(html);
-        })
-        .catch(error => console.error("Error sending audio:", error));
     };
     reader.readAsDataURL(blob);
   };
