@@ -23,6 +23,13 @@ function ProfilePage({ user }) {
     );
   }
   
+  console.log("profile accuracyRate:", profile?.accuracyRate);
+  console.log("profile studyStreak:", profile?.studyStreak);
+  console.log("profile completedTopics:", profile?.completedTopics);
+  console.log("profile achievements:", profile?.achievements);
+
+
+
   const localAchievements = achievements.map((achievement) => {
     const savedAchievement = profile?.achievements?.[achievement.id];
   
@@ -39,20 +46,35 @@ function ProfilePage({ user }) {
     };
   });
 
-  const handleProfile = async (e) => {
-    try {
-      const file = e.target.files[0];
-      if (!file) return;
-      const storageRef = ref(storage, `users/${user.uid}/profile_${Date.now()}.jpg`);
-      const snapshot = await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(snapshot.ref);
-      await updateProfile(user, { photoURL: downloadURL });
-      setImage(downloadURL); 
-      if (setProfile) setProfile({ ...profile, photoURL: downloadURL });
-    } catch (error) {
-      console.error("Error updating profile picture:", error);
+  console.log("localAchievements:", localAchievements);
+
+
+const handleProfile = async (e) => {
+  try {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    const storageRef = ref(storage, `users/${user.uid}/profile_${Date.now()}`);
+    const snapshot = await uploadBytes(storageRef, file);
+    const downloadURL = await getDownloadURL(snapshot.ref);
+
+    await updateProfile(user, { photoURL: downloadURL });
+    await user.reload();
+
+    setImage(downloadURL);
+
+    if (setProfile) {
+      setProfile((prev) => ({
+        ...prev,
+        photoURL: downloadURL,
+      }));
     }
-  };
+
+    console.log('Profile image updated:', downloadURL);
+  } catch (error) {
+    console.error('Error updating profile picture:', error);
+  }
+};
 
   return (
     <div className="w-full min-h-screen relative overflow-x-hidden bg-[var(--bg-main)]">

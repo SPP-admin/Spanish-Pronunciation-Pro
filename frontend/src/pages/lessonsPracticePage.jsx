@@ -13,7 +13,8 @@ import { lessonCategories } from '@/lessonCategories.js';
 import { completionRequirements } from '@/lessonCategories.js';
 import { toast } from 'sonner';
 import correctFile from '@/assets/sounds/correct.mp3';
-import correctConfetti from 'https://cdn.skypack.dev/canvas-confetti';
+import correctConfetti from 'canvas-confetti';
+//import correctConfetti from 'https://cdn.skypack.dev/canvas-confetti';
 import { studyStreakHandler } from '../studyStreak.js';
 
 const generateLessonData = (topic, lesson, level) => {
@@ -304,7 +305,7 @@ useEffect(() => {
 
   const setQuestionStatus = (isSentenceCorrect, isWordCorrect) => {
     if(isSentenceCorrect) {
-      toast.success("Correct! Well done!", { duration: 3000 });
+     // toast.success("Correct! Well done!", { duration: 3000 });
       correctSFX.play();
       correctConfetti();
       setFeedbackBox("<span class='text-green-500 font-bold'>Correct!</span>");
@@ -587,22 +588,63 @@ useEffect(() => {
 
     try {
       const newComboCount = profile.comboCount + 1;
-      const currentTotalAccuracy = currentAccuracy / uses * 100;
+      const currentTotalAccuracy = (currentAccuracy / uses) * 100;
       const newAccuracy = Math.floor((((profile.accuracyRate * profile.comboCount) + currentTotalAccuracy) / newComboCount));
-      const completedTopic = lesson + "-" + level;
-      let cur = [...(profile.completedCombos ?? [])];
-
-      if(!(completedTopic in (cur[topicIndex] ?? {}))) {
+      
+      // Ensure the key is lowercase to avoid matching errors
+      const currentLessonLower = lesson.toLowerCase();
+      const currentLevelLower = level.toLowerCase();
+      const completedTopicKey = `${currentLessonLower}-${currentLevelLower}`;
+      
+      let cur = { ...(profile.completedCombos ?? {}) };
+      // If this combo hasn't been completed before
+      if (!(completedTopicKey in (cur[topicIndex] ?? {}))) {
         await sendTopic(newComboCount, newAccuracy);
+        
         cur[topicIndex] = {
           ...(cur[topicIndex] ?? {}),
-          [completedTopic]: true
+          [completedTopicKey]: true
         };
-        const updated = { ...profile, completedCombos: cur, comboCount: newComboCount, accuracyRate: newAccuracy};
+
+        // --- UPDATED TROPHY LOGIC ---
+        let newTrophies = [...(profile.trophies ?? [])];
+        
+        // Let's check Vowels (Topic Index 0)
+        if (topicIndex === 0) {
+          const vowelList = ['a', 'e', 'i', 'o', 'u'];
+          
+          // Check if EVERY vowel exists in cur[0] for the CURRENT level
+          const allVowelsDone = vowelList.every(v => {
+            const key = `${v}-${currentLevelLower}`;
+            return cur[0] && cur[0][key] === true;
+          });
+
+          const trophyName = `vowels-${currentLevelLower}`;
+
+          if (allVowelsDone && !newTrophies.includes(trophyName)) {
+            newTrophies.push(trophyName);
+            toast.success(`🏆 Unlocked: ${level.toUpperCase()} Vowels Trophy!`, {
+              style: {
+                boxShadow: '0px 10px 30px rgba(0,0,0,0.5), 0px 0px 40px var(--brand-gold)',
+              }
+            });
+            
+            // Persist to DB
+            await api.patch(`/updateTrophies?uid=${user.uid}&trophy=${trophyName}`);
+          }
+        }
+
+        const updated = { 
+          ...profile, 
+          completedCombos: cur, 
+          comboCount: newComboCount, 
+          accuracyRate: newAccuracy,
+          trophies: newTrophies 
+        };
         setProfile(updated, user.uid);
       }
     } catch (error) {
-      console.log(error);
+      console.log("Trophy Error:", error);
     }
   };
 

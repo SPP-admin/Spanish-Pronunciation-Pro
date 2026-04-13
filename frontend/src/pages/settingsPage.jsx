@@ -11,8 +11,7 @@ import {
 import { Moon, Sun, Type, Maximize } from "lucide-react";
 import { toast } from "sonner";
 
-// We keep the timer outside the component so it persists 
-// even if the component re-renders during state changes.
+
 let debounceTimer;
 
 function SettingsPage() {
@@ -40,9 +39,6 @@ function SettingsPage() {
       const storageValue = key === "isDark" ? (value ? "dark" : "light") : value;
       localStorage.setItem(storageKey, storageValue);
 
-      // --- IMMEDIATE CSS UPDATES ---
-      // We update the CSS variables instantly so the UI feels snappy,
-      // but these don't trigger a full React re-render of other pages.
       if (key === "fontSize") {
         document.documentElement.style.setProperty("--font-size-multiplier", value);
       }
@@ -53,9 +49,6 @@ function SettingsPage() {
         document.documentElement.style.setProperty("--text-main", value);
       }
 
-      // --- DEBOUNCED GLOBAL SYNC ---
-      // This prevents the "removeChild" crash by waiting 150ms 
-      // after your last click before telling the rest of the app to update.
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
         window.dispatchEvent(new Event("theme-update"));
@@ -68,7 +61,7 @@ function SettingsPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6 relative bg-[var(--bg-main)] transition-all duration-500">
       
-      {/* Background Blob - Added pointer-events-none to prevent blocking clicks */}
+      {}
       <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] blur-[150px] rounded-full opacity-10 bg-[var(--brand-gold)] pointer-events-none" />
 
       <div className="relative z-10 rounded-[60px] p-12 w-full max-w-4xl border-2 bg-[var(--bg-card)] border-[var(--border-color)] shadow-2xl transition-all duration-500">
@@ -76,7 +69,7 @@ function SettingsPage() {
         
         <div className="space-y-10 max-w-2xl mx-auto">
           
-          {/* 1. APPEARANCE MODE */}
+          {}
           <div className="flex items-center justify-between py-2">
             <div className="space-y-1">
               <Label className="text-xl font-bold text-[var(--brand-gold)] uppercase tracking-wide">Appearance</Label>
@@ -92,10 +85,10 @@ function SettingsPage() {
             </div>
           </div>
 
-          {/* 2. TYPOGRAPHY */}
+          {}
           <div className="flex items-center justify-between py-6 border-t border-[var(--border-color)]">
             <div className="space-y-1">
-              <Label className="text-xl font-bold text-[var(--brand-gold)] uppercase tracking-wide">Typography</Label>
+              <Label className="text-xl font-bold text-[var(--brand-gold)] uppercase tracking-wide">Font</Label>
               <p className="text-xs text-[var(--text-muted)] font-medium">Select your preferred font style</p>
             </div>
             <Select 
@@ -116,10 +109,10 @@ function SettingsPage() {
             </Select>
           </div>
 
-          {/* 3. FONT SIZING (With your custom values) */}
+          {}
           <div className="flex items-center justify-between py-6 border-t border-[var(--border-color)]">
             <div className="space-y-1">
-              <Label className="text-xl font-bold text-[var(--brand-gold)] uppercase tracking-wide">Interface Scale</Label>
+              <Label className="text-xl font-bold text-[var(--brand-gold)] uppercase tracking-wide">Widgit Scale</Label>
               <p className="text-xs text-[var(--text-muted)] font-medium">Adjust the density of the UI</p>
             </div>
             <div className="flex gap-2 bg-black/5 dark:bg-white/5 p-1.5 rounded-2xl border border-[var(--border-color)]">
@@ -140,10 +133,10 @@ function SettingsPage() {
             </div>
           </div>
 
-          {/* 4. BRAND COLOR */}
+          {}
           <div className="flex items-center justify-between py-6 border-t border-[var(--border-color)]">
             <div className="space-y-1">
-              <Label className="text-xl font-bold text-[var(--brand-gold)] uppercase tracking-wide">Brand Tint</Label>
+              <Label className="text-xl font-bold text-[var(--brand-gold)] uppercase tracking-wide">Color Theme</Label>
               <p className="text-xs text-[var(--text-muted)] font-medium">Primary accent color</p>
             </div>
             <div className="flex gap-3">
@@ -158,10 +151,10 @@ function SettingsPage() {
             </div>
           </div>
 
-          {/* 5. BODY BRIGHTNESS */}
+          {}
           <div className="flex items-center justify-between py-6 border-t border-[var(--border-color)]">
             <div className="space-y-1">
-              <Label className="text-xl font-bold text-[var(--brand-gold)] uppercase tracking-wide">Body Brightness</Label>
+              <Label className="text-xl font-bold text-[var(--brand-gold)] uppercase tracking-wide">Body text Brightness</Label>
               <p className="text-xs text-[var(--text-muted)] font-medium">Adjust the contrast of text</p>
             </div>
             <div className="flex gap-3 bg-black/5 dark:bg-white/5 p-2 rounded-2xl border border-[var(--border-color)]">

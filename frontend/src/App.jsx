@@ -22,7 +22,7 @@ import { QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { fetchData } from './fetchData.js';
 
 
-
+ 
 
 function AppContent() {
   const [user] = useAuthState(auth);

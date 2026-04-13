@@ -7,7 +7,29 @@ import LOGO from '@/assets/images/LOGO.png';
 
 function Navbar() {
   const location = useLocation();
-  const handleLogout = () => signOut(auth);
+
+  const handleLogout = async () => {
+    try {
+      // 1. Clear the theme/settings from localStorage
+      localStorage.removeItem("theme");
+      localStorage.removeItem("app-brand-color");
+      localStorage.removeItem("app-font");
+      localStorage.removeItem("app-text-color");
+      localStorage.removeItem("app-font-size");
+
+      // 2. Notify the app to reset the CSS variables to defaults
+      window.dispatchEvent(new Event("theme-update"));
+
+      // 3. Sign out from Firebase/Auth
+      await signOut(auth);
+      
+      console.log("Logged out and preferences cleared.");
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
+ // const handleLogout = () => signOut(auth);
+  
   const isActive = (path) => location.pathname === path;
 
   return (
