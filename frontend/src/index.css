@@ -5,7 +5,6 @@
 @plugin "tailwindcss-motion";
 
 :root {
-  /* Maestro Theme Engine Variables */
   --brand-gold: #C5A358;
   --bg-main: #171818;
   --bg-card: #222222;
@@ -54,7 +53,6 @@
 
 @layer base {
   html {
-    /* Controls the global text scaling with a safety fallback of 1 */
     font-size: calc(16px * var(--font-size-multiplier, 1)) !important;
     transition: font-size 0.3s ease-in-out;
   }
@@ -76,8 +74,7 @@
     font-family: var(--font-main);
   }
 
-  /* CRASH PREVENTION: Prevents React from losing track of DOM nodes 
-     during text highlighting or rapid re-renders */
+  
   .lesson-content-container, #root {
     -webkit-user-select: text;
     user-select: text;
@@ -85,7 +82,6 @@
   }
 }
 
-/* Animations */
 @keyframes RomboConfettiPop {
   0% { opacity: 0; transform: scale(1); }
   100% { opacity: 1; transform: scale(1); }
@@ -97,7 +93,6 @@
   100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
 }
 
-/* Trophy Shine Effect */
 @keyframes shine {
   100% {
     left: 125%;
@@ -110,7 +105,6 @@
   transform-origin: center; 
 }
 
-/* Helper for the Trophy drawer expansion */
 .animate-shine {
   animation: shine 1.5s ease-in-out;
 }

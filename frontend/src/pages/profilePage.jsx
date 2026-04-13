@@ -79,7 +79,7 @@ const handleProfile = async (e) => {
   return (
     <div className="w-full min-h-screen relative overflow-x-hidden bg-[var(--bg-main)]">
       
-      {/* Background Glows */}
+      {}
       <div className="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] blur-[250px] rounded-full pointer-events-none opacity-[0.1] bg-[var(--brand-gold)] z-0" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] blur-[250px] rounded-full pointer-events-none opacity-[0.1] bg-[var(--brand-gold)] z-0" />
 
@@ -88,7 +88,7 @@ const handleProfile = async (e) => {
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           
-          {/* LEFT COLUMN: User Card */}
+          {}
           <div className="col-span-1 space-y-8">
             <div className="group backdrop-blur-xl rounded-[80px] p-12 border-2 transition-all duration-500 hover:scale-[1.02] bg-[var(--bg-card)] border-[var(--border-color)] shadow-[var(--card-shadow)] flex flex-col items-center">
               
@@ -121,7 +121,7 @@ const handleProfile = async (e) => {
               </div>
             </div>
 
-            {/* Stats Block */}
+            {}
             <div className="backdrop-blur-xl rounded-[60px] p-10 border-2 transition-all duration-500 hover:scale-[1.02] bg-[var(--bg-card)] border-[var(--border-color)] shadow-[var(--card-shadow)]">
               <h3 className="text-xl font-black mb-6 uppercase tracking-tight text-[var(--brand-gold)]">Statistics</h3>
               <div className="space-y-4 font-bold">
@@ -137,16 +137,16 @@ const handleProfile = async (e) => {
             </div>
           </div>
 
-          {/* RIGHT COLUMN: Trophies & Activity */}
+          {}
           <div className="col-span-1 lg:col-span-2 space-y-12">
             
-            {/* Trophies  */}
+            {}
             <div className="backdrop-blur-xl rounded-[80px] p-12 border-2 transition-all duration-500 hover:scale-[1.01] bg-[var(--bg-card)] border-[var(--border-color)] shadow-[var(--card-shadow)]">
               <h2 className="text-3xl font-black mb-10 uppercase text-[var(--brand-gold)]">Trophies</h2>
               <TrophiesCard trophies={localAchievements} />
             </div>
 
-            {/* Recent Activity  */}
+            {}
             <div className="backdrop-blur-xl rounded-[80px] p-12 border-2 transition-all duration-500 hover:scale-[1.01] bg-[var(--bg-card)] border-[var(--border-color)] shadow-[var(--card-shadow)]">
               <h3 className="text-2xl font-black mb-8 uppercase tracking-tight text-[var(--brand-gold)]">Recent Milestones</h3>
               {profile.activities?.length > 0 ? (

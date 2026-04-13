@@ -51,13 +51,9 @@ function LoginPage({ user, isFetching }) {
   };
 
   return (
-    /* MAIN WRAPPER: Centers everything and hides overflow from the moving blob */
     <div className="flex items-center justify-center min-h-screen bg-[#171818] p-6 relative overflow-hidden">
       
-      {/* THE FLOATING BLOB
-          - 'fixed' + 'top-1/2 left-1/2' places it in the center.
-          - '-translate-x-1/2 -translate-y-1/2' works with your CSS keyframes to keep it centered.
-      */}
+      {}
       <img
         src={blob}
         alt="Background Glow"
@@ -65,13 +61,10 @@ function LoginPage({ user, isFetching }) {
         style={{ transformOrigin: 'center' }}
       />
 
-      {/* CONTENT STACK
-          - Bundles Logo and Card so they move together.
-          - 'z-10' lifts them above the blob.
-      */}
+      {}
       <div className="relative z-10 flex flex-col items-center w-full max-w-lg">
         
-        {/* LOGO SECTION */}
+        {}
         <div className="mb-8"> 
           <img
             src={loginImage} 
@@ -80,7 +73,7 @@ function LoginPage({ user, isFetching }) {
           />
         </div>
 
-        {/* LOGIN CARD */}
+        {}
         <Card className="w-full bg-white shadow-2xl rounded-[40px] border-none overflow-hidden">
           <CardHeader className="text-center space-y-1 pt-10 px-6">
             <CardTitle className="text-xl text-[#171818] font-bold">Welcome To</CardTitle>

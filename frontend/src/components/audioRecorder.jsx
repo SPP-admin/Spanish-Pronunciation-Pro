@@ -19,31 +19,6 @@ function AudioRecorder({ onRecordingComplete }) {
     };
   }, []);
 
- /* const handleStartRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      audioChunksRef.current = []; 
-      mediaRecorderRef.current = new MediaRecorder(stream);
-      
-      mediaRecorderRef.current.ondataavailable = (event) => {
-        if (event.data.size > 0) { audioChunksRef.current.push(event.data); }
-      };
-
-      mediaRecorderRef.current.onstop = () => {
-        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        setAudioBlob(blob);
-        if (onRecordingComplete) { onRecordingComplete(blob); }
-        stream.getTracks().forEach(track => track.stop());
-      };
-
-      mediaRecorderRef.current.start();
-      setIsRecording(true);
-      setAudioBlob(null);
-    } catch (err) {
-      console.error("Mic access error:", err);
-    }
-  };*/
-
   const getSupportedMimeType = () => {
     const mimeTypes = [
       'audio/webm;codecs=opus',
@@ -142,7 +117,7 @@ function AudioRecorder({ onRecordingComplete }) {
   return (
     <div className="flex flex-col items-center space-y-6 py-4">
       <div className="relative">
-        {/* Recording Pulse - Gold Tint */}
+        {}
         {isRecording && (
           <div className="absolute inset-0 rounded-full bg-[var(--brand-gold)] opacity-20 animate-ping" />
         )}
@@ -169,7 +144,7 @@ function AudioRecorder({ onRecordingComplete }) {
         {isRecording ? 'Listening...' : 'Tap to Practice'}
       </p>
 
-      {/* Playback Button - Anti-Grey Glassmorphism */}
+      {}
       {audioBlob && (
         <Button
           onClick={playRecording}

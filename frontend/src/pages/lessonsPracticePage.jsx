@@ -294,7 +294,6 @@ useEffect(() => {
     }
   }, [profile?.lastLogin]);
 
-  // FIX: Manual DOM manipulation removed
   const setFeedbackBox = (string) => {
     setFeedbackHTML(string);
   };
@@ -606,10 +605,8 @@ useEffect(() => {
           [completedTopicKey]: true
         };
 
-        // --- UPDATED TROPHY LOGIC ---
         let newTrophies = [...(profile.trophies ?? [])];
         
-        // Let's check Vowels (Topic Index 0)
         if (topicIndex === 0) {
           const vowelList = ['a', 'e', 'i', 'o', 'u'];
           
@@ -701,7 +698,7 @@ useEffect(() => {
         height={dimensions.height}
         recycle={false} // Stops it from looping forever
         numberOfPieces={300}
-        gravity={0.2} // Makes it fall slightly slower for a "premium" feel
+        gravity={0.2} // Makes it fall slightly slower 
         style={{
           position: 'fixed', // Use fixed to ensure it ignores scroll/container height
           top: 0,
@@ -850,7 +847,7 @@ useEffect(() => {
             )}
           </CardContent>
         </Card>
-        {/* FOOTER NAVIGATION */}
+        {}
         <div className="w-full max-w-4xl mt-16 flex justify-between items-center px-4 pb-12">
           <Button
             variant="ghost"

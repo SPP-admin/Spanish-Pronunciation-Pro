@@ -46,10 +46,9 @@ function SignupPage() {
   };
 
   return (
-    /* MAIN CONTAINER: Matches Login exactly */
     <div className="flex items-center justify-center min-h-screen bg-[#171818] p-6 relative overflow-hidden">
       
-      {/* THE BLOB: Shifted left and down slightly per your preference */}
+      {}
       <img
         src={blob}
         alt="Background Glow"
@@ -57,10 +56,10 @@ function SignupPage() {
         style={{ transformOrigin: 'center' }}
       />
 
-      {/* CONTENT STACK */}
+      {}
       <div className="relative z-10 flex flex-col items-center w-full max-w-lg">
         
-        {/* LOGO */}
+        {}
         <div className="mb-6"> 
           <img
             src={loginImage} 
@@ -69,7 +68,7 @@ function SignupPage() {
           />
         </div>
 
-        {/* SIGNUP CARD */}
+        {}
         <Card className="w-full bg-white shadow-2xl rounded-[40px] border-none overflow-hidden">
           <CardHeader className="text-center space-y-1 pt-10 px-6">
             <CardTitle className="text-xl text-[#171818] font-bold">Create Account</CardTitle>
