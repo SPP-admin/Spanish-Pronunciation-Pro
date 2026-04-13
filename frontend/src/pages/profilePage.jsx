@@ -15,45 +15,71 @@ function ProfilePage({ user }) {
     if (user?.photoURL) setImage(user.photoURL);
   }, [user]);
 
-  if (!profile || !profile.achievements) {
+  if (!profile) {
     return (
       <div className="w-full min-h-screen flex items-center justify-center bg-[var(--bg-main)]">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[var(--brand-gold)]"></div>
       </div>
     );
   }
+  
+  console.log("profile accuracyRate:", profile?.accuracyRate);
+  console.log("profile studyStreak:", profile?.studyStreak);
+  console.log("profile completedTopics:", profile?.completedTopics);
+  console.log("profile achievements:", profile?.achievements);
 
-  // Achievement Logic
-  const cleanAchievments = achievements.map(({ condition, ...rest }) => rest);
-  const localAchievements = structuredClone(cleanAchievments);
-  for (const key in localAchievements) {
-    if (profile?.achievements?.[key]?.completed === true) {
-      localAchievements[key].unlocked = true;
-      localAchievements[key].completionDate = profile.achievements[key].completion_date;
-    } else {
-      localAchievements[key].unlocked = false;
+
+
+  const localAchievements = achievements.map((achievement) => {
+    const savedAchievement = profile?.achievements?.[achievement.id];
+  
+    return {
+      ...achievement,
+      unlocked:
+        savedAchievement?.completed === true ||
+        savedAchievement === true ||
+        achievement.condition(profile) === true,
+      completionDate:
+        savedAchievement?.completion_date ||
+        savedAchievement?.completionDate ||
+        0
+    };
+  });
+
+  console.log("localAchievements:", localAchievements);
+
+
+const handleProfile = async (e) => {
+  try {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    const storageRef = ref(storage, `users/${user.uid}/profile_${Date.now()}`);
+    const snapshot = await uploadBytes(storageRef, file);
+    const downloadURL = await getDownloadURL(snapshot.ref);
+
+    await updateProfile(user, { photoURL: downloadURL });
+    await user.reload();
+
+    setImage(downloadURL);
+
+    if (setProfile) {
+      setProfile((prev) => ({
+        ...prev,
+        photoURL: downloadURL,
+      }));
     }
+
+    console.log('Profile image updated:', downloadURL);
+  } catch (error) {
+    console.error('Error updating profile picture:', error);
   }
-
-  const handleProfile = async (e) => {
-    try {
-      const file = e.target.files[0];
-      if (!file) return;
-      const storageRef = ref(storage, `users/${user.uid}/profile_${Date.now()}.jpg`);
-      const snapshot = await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(snapshot.ref);
-      await updateProfile(user, { photoURL: downloadURL });
-      setImage(downloadURL); 
-      if (setProfile) setProfile({ ...profile, photoURL: downloadURL });
-    } catch (error) {
-      console.error("Error updating profile picture:", error);
-    }
-  };
+};
 
   return (
     <div className="w-full min-h-screen relative overflow-x-hidden bg-[var(--bg-main)]">
       
-      {/* Background Glows */}
+      {}
       <div className="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] blur-[250px] rounded-full pointer-events-none opacity-[0.1] bg-[var(--brand-gold)] z-0" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] blur-[250px] rounded-full pointer-events-none opacity-[0.1] bg-[var(--brand-gold)] z-0" />
 
@@ -62,7 +88,7 @@ function ProfilePage({ user }) {
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           
-          {/* LEFT COLUMN: User Card */}
+          {}
           <div className="col-span-1 space-y-8">
             <div className="group backdrop-blur-xl rounded-[80px] p-12 border-2 transition-all duration-500 hover:scale-[1.02] bg-[var(--bg-card)] border-[var(--border-color)] shadow-[var(--card-shadow)] flex flex-col items-center">
               
@@ -95,7 +121,7 @@ function ProfilePage({ user }) {
               </div>
             </div>
 
-            {/* Stats Block */}
+            {}
             <div className="backdrop-blur-xl rounded-[60px] p-10 border-2 transition-all duration-500 hover:scale-[1.02] bg-[var(--bg-card)] border-[var(--border-color)] shadow-[var(--card-shadow)]">
               <h3 className="text-xl font-black mb-6 uppercase tracking-tight text-[var(--brand-gold)]">Statistics</h3>
               <div className="space-y-4 font-bold">
@@ -111,16 +137,16 @@ function ProfilePage({ user }) {
             </div>
           </div>
 
-          {/* RIGHT COLUMN: Trophies & Activity */}
+          {}
           <div className="col-span-1 lg:col-span-2 space-y-12">
             
-            {/* Trophies  */}
+            {}
             <div className="backdrop-blur-xl rounded-[80px] p-12 border-2 transition-all duration-500 hover:scale-[1.01] bg-[var(--bg-card)] border-[var(--border-color)] shadow-[var(--card-shadow)]">
               <h2 className="text-3xl font-black mb-10 uppercase text-[var(--brand-gold)]">Trophies</h2>
               <TrophiesCard trophies={localAchievements} />
             </div>
 
-            {/* Recent Activity  */}
+            {}
             <div className="backdrop-blur-xl rounded-[80px] p-12 border-2 transition-all duration-500 hover:scale-[1.01] bg-[var(--bg-card)] border-[var(--border-color)] shadow-[var(--card-shadow)]">
               <h3 className="text-2xl font-black mb-8 uppercase tracking-tight text-[var(--brand-gold)]">Recent Milestones</h3>
               {profile.activities?.length > 0 ? (

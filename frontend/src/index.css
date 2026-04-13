@@ -5,7 +5,6 @@
 @plugin "tailwindcss-motion";
 
 :root {
-  /* Maestro Theme Engine Variables */
   --brand-gold: #C5A358;
   --bg-main: #171818;
   --bg-card: #222222;
@@ -54,9 +53,8 @@
 
 @layer base {
   html {
-    /* Controls the global text scaling */
-    font-size: calc(16px * var(--font-size-multiplier));
-    transition: font-size 0.3s ease;
+    font-size: calc(16px * var(--font-size-multiplier, 1)) !important;
+    transition: font-size 0.3s ease-in-out;
   }
 
   body {
@@ -75,9 +73,15 @@
   h1, h2, h3, h4, button, select, input {
     font-family: var(--font-main);
   }
+
+  
+  .lesson-content-container, #root {
+    -webkit-user-select: text;
+    user-select: text;
+    contain: layout;
+  }
 }
 
-/* Animations */
 @keyframes RomboConfettiPop {
   0% { opacity: 0; transform: scale(1); }
   100% { opacity: 1; transform: scale(1); }
@@ -89,7 +93,18 @@
   100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
 }
 
+@keyframes shine {
+  100% {
+    left: 125%;
+    opacity: 1;
+  }
+}
+
 .animate-float {
   animation: float-slow 5s ease-in-out infinite;
   transform-origin: center; 
+}
+
+.animate-shine {
+  animation: shine 1.5s ease-in-out;
 }

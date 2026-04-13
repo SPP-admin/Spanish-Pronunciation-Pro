@@ -22,7 +22,7 @@ import { QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { fetchData } from './fetchData.js';
 
 
-
+ 
 
 function AppContent() {
   const [user] = useAuthState(auth);
@@ -94,14 +94,14 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-[var(--bg-main)] font-[var(--font-main)] transition-colors duration-500">
       <Routes>
-        {/* PUBLIC ROUTES */}
+        {}
         <Route path="/" element={<LoginPage user={user} isFetching={isFetching} />} />
         <Route path="/login" element={<LoginPage user={user} isFetching={isFetching} />} />
         <Route path="/signup" element={<SignupPage />} />
-        {/* 2. Use the Capitalized name here */}
+        {}
         <Route path="/passwordReset" element={<PasswordReset />} />
 
-        {/* PROTECTED ROUTES */}
+        {}
         <Route element={<ProtectedRoute user={user} />}>
           <Route element={<Layout user={user} />}>
             <Route path="/lessons" element={<LessonsPage user={user} />} />
@@ -113,8 +113,36 @@ function AppContent() {
           </Route>
         </Route>
       </Routes>
-      <Toaster richColors position="bottom-right" />
-    </div>
+
+      
+      <Toaster 
+  position="top-right" 
+  offset="110px" 
+  gap={16}
+  closeButton={true}
+  toastOptions={{
+    style: {
+      // SIZE & SHAPE
+      marginRight: '2.5rem',
+      borderRadius: '12px',    
+      width: '320px',           
+      minHeight: '80px',        
+      padding: '20px',          
+      
+      background: 'var(--bg-card)', // Matches current card background
+      color: 'var(--text-main)',    // Matches current text color
+      border: '2px solid var(--border-color)', 
+      
+     
+         boxShadow: '0px 10px 30px rgba(0,0,0,0.5), 0px 0px 40px var(--brand-gold)',    },
+    success: {
+      style: {
+        borderColor: 'var(--brand-gold)',
+      },
+    },
+  }}
+/> 
+  </div>
   );
 }
  

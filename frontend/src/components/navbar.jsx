@@ -7,32 +7,51 @@ import LOGO from '@/assets/images/LOGO.png';
 
 function Navbar() {
   const location = useLocation();
-  const handleLogout = () => signOut(auth);
+
+  const handleLogout = async () => {
+    try {
+      // 1. Clear the theme/settings from localStorage
+      localStorage.removeItem("theme");
+      localStorage.removeItem("app-brand-color");
+      localStorage.removeItem("app-font");
+      localStorage.removeItem("app-text-color");
+      localStorage.removeItem("app-font-size");
+
+      // 2. Notify the app to reset the CSS variables to defaults
+      window.dispatchEvent(new Event("theme-update"));
+
+      // 3. Sign out from Firebase/Auth
+      await signOut(auth);
+      
+      console.log("Logged out and preferences cleared.");
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
+ // const handleLogout = () => signOut(auth);
+  
   const isActive = (path) => location.pathname === path;
 
   return (
     <nav 
       className="w-full h-24 px-8 md:px-16 flex items-center justify-between transition-all duration-500 sticky top-0 z-50 border-b"
       style={{ 
-        /* 1. We use bg-card which is distinct from bg-main */
-        /* 2. We use 'opacity: 1' or a hex color to ensure it is NOT transparent */
+       
         backgroundColor: "var(--bg-card)", 
         borderColor: "var(--border-color)",
         color: "var(--text-main)",
-        /* 3. Explicitly kill the shadow */
         boxShadow: "none",
-        /* 4. Ensure it is solid to block the 'glows' from underneath */
         opacity: 1
       }}
     >
-      {/* Logo Section */}
+      {}
       <div className="flex items-center gap-4">
         <Link to="/dashboard" className="flex items-center hover:scale-105 transition-transform">
           <img src={LOGO} alt="Logo" className="h-14 w-auto object-contain" />
         </Link>
       </div>
 
-      {/* Navigation Links */}
+      {}
       <div className="hidden md:flex items-center gap-12">
         {[
           { name: 'Dashboard', path: '/dashboard' },

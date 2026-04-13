@@ -24,7 +24,8 @@ function passwordReset() {
 
     try {
       await sendPasswordResetEmail(auth, email);
-      toast.success("Password Reset Email Sent!");
+      toast.success(<>Password Reset Email Sent! 
+      <br /> Please check your Spam!</>);
       setTimeout(() => navigate('/login'), 3000);
     } catch (error) {
       switch (error.code) {

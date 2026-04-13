@@ -19,23 +19,63 @@ function AudioRecorder({ onRecordingComplete }) {
     };
   }, []);
 
+  const getSupportedMimeType = () => {
+    const mimeTypes = [
+      'audio/webm;codecs=opus',
+      'audio/webm',
+      'audio/mp4',
+      'audio/ogg;codecs=opus',
+      'audio/ogg'
+    ];
+  
+    for (const type of mimeTypes) {
+      if (MediaRecorder.isTypeSupported(type)) {
+        return type;
+      }
+    }
+  
+    return '';
+  };
+  
   const handleStartRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      audioChunksRef.current = []; 
-      mediaRecorderRef.current = new MediaRecorder(stream);
-      
+      audioChunksRef.current = [];
+  
+      const mimeType = getSupportedMimeType();
+  
+      mediaRecorderRef.current = mimeType
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream);
+  
+      console.log("Recorder mimeType:", mediaRecorderRef.current.mimeType);
+  
       mediaRecorderRef.current.ondataavailable = (event) => {
-        if (event.data.size > 0) { audioChunksRef.current.push(event.data); }
+        if (event.data && event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
       };
-
+  
       mediaRecorderRef.current.onstop = () => {
-        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const actualType =
+          mediaRecorderRef.current?.mimeType ||
+          audioChunksRef.current?.[0]?.type ||
+          'audio/webm';
+  
+        const blob = new Blob(audioChunksRef.current, { type: actualType });
+  
+        console.log("Final blob type:", blob.type);
+        console.log("Final blob size:", blob.size);
+  
         setAudioBlob(blob);
-        if (onRecordingComplete) { onRecordingComplete(blob); }
+  
+        if (onRecordingComplete) {
+          onRecordingComplete(blob);
+        }
+  
         stream.getTracks().forEach(track => track.stop());
       };
-
+  
       mediaRecorderRef.current.start();
       setIsRecording(true);
       setAudioBlob(null);
@@ -43,6 +83,8 @@ function AudioRecorder({ onRecordingComplete }) {
       console.error("Mic access error:", err);
     }
   };
+
+
 
   const handleStopRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
@@ -75,7 +117,7 @@ function AudioRecorder({ onRecordingComplete }) {
   return (
     <div className="flex flex-col items-center space-y-6 py-4">
       <div className="relative">
-        {/* Recording Pulse - Gold Tint */}
+        {}
         {isRecording && (
           <div className="absolute inset-0 rounded-full bg-[var(--brand-gold)] opacity-20 animate-ping" />
         )}
@@ -102,7 +144,7 @@ function AudioRecorder({ onRecordingComplete }) {
         {isRecording ? 'Listening...' : 'Tap to Practice'}
       </p>
 
-      {/* Playback Button - Anti-Grey Glassmorphism */}
+      {}
       {audioBlob && (
         <Button
           onClick={playRecording}
