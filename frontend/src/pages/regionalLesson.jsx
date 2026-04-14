@@ -77,7 +77,8 @@ const RegionalLesson = () => {
             const data = await response.json();
             setCurrentQuestion({
                 sentence: data.sentence,
-                correctAnswer: data.region
+                correctAnswer: data.region,
+                audioUrl: import.meta.env.VITE_API_URL + data.audio_url
             });
         } catch (err) {
             const regions = Object.keys(category.fallbacks || {});
@@ -94,6 +95,16 @@ const RegionalLesson = () => {
     useEffect(() => {
         if (category) generateQuestion();
     }, [category]);
+
+    const handlePlayAudio = (audioUrl) => {
+        if (!audioUrl) return;
+
+        const audio = new Audio(audioUrl);
+        audio.play().catch((err) => {
+            console.error("Audio playback error:", err);
+            toast.error("Couldn't play audio.");
+        });
+    };
 
     const handleGuess = (guess) => {
         if (!currentQuestion || isRegenerating) return;
@@ -113,16 +124,6 @@ const RegionalLesson = () => {
         } else {
             toast.error("Not quite! Try again.");
         }
-    };
-
-    const handlePlayAudio = (text) => {
-        if (!text || !window.speechSynthesis) return;
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        if (currentQuestion?.correctAnswer === 'spain') { utterance.lang = 'es-ES'; } 
-        else { utterance.lang = 'es-MX'; }
-        utterance.rate = difficulty === 'hard' ? 1.0 : 0.85; 
-        window.speechSynthesis.speak(utterance);
     };
 
     if (!category) return null;
@@ -184,7 +185,10 @@ const RegionalLesson = () => {
                                 )}
 
                                 <div className="flex flex-wrap justify-center gap-4">
-                                    <Button className="h-20 w-20 rounded-full bg-[var(--brand-gold)] text-black shadow-lg" onClick={() => handlePlayAudio(currentQuestion?.sentence)}>
+                                    <Button
+                                        className="h-20 w-20 rounded-full bg-[var(--brand-gold)] text-black hover:scale-110 active:scale-95 transition-all shadow-lg"
+                                        onClick={() => handlePlayAudio(currentQuestion?.audioUrl)}
+                                    >
                                         <FaVolumeUp size={28} />
                                     </Button>
                                     <Button onClick={generateQuestion} className="h-20 px-8 rounded-full border-2 border-[var(--border-color)] bg-[var(--bg-main)] text-[var(--text-main)] font-black uppercase text-xs tracking-widest">

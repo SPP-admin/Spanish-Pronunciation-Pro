@@ -1,9 +1,12 @@
 import os
+import json
 import base64
 import uvicorn
 from fastapi import FastAPI, HTTPException, Form, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+
 
 import firebase_admin
 from firebase_admin import credentials, auth, firestore
@@ -56,6 +59,11 @@ app = FastAPI(
     title = "SPP API's",
     
 )
+
+app.mount("/audio", StaticFiles(directory="audio"), name="audio")
+
+with open("accent_metadata.json", "r", encoding="utf-8") as f:
+    accent_data = json.load(f)
 
 @app.get("/")
 async def root():
@@ -501,40 +509,26 @@ async def get_coaching(data: dict):
         return {"coach_tip": "Buen intento. Trata de relajar la lengua y conectar los sonidos más suavemente."}
 
 @app.post("/generateRegionalSentence")
-async def generateRegionalSentence(topic: str, region: str, difficulty: str = "easy"):
+async def generateRegionalSentence(topic: str, region: str = "", difficulty: str = "easy"):
     try:
-        # Map levels to specific AI instructions
-        if difficulty == "easy":
-            constraints = "MAX 4 WORDS. Use extremely common greeting or phrase. Very simple."
-            word_limit = 4
-        elif difficulty == "medium":
-            constraints = "MAX 7 WORDS. Use a standard local idiom or slang word. Conversational."
-            word_limit = 7
-        else:  # Hard
-            constraints = "MAX 12 WORDS. Use deep regional jargon, thick dialect, or complex street slang."
-            word_limit = 12
+        matches = [
+            item for item in accent_data
+        ]
+        if not matches:
+            raise HTTPException(status_code=404, detail="No matching audio clips found")
 
-        prompt = (
-            f"SYSTEM: You are a Spanish dialect expert. Mode: {difficulty}. "
-            f"USER: Generate one sentence for the region: {region}. Topic: {topic}. "
-            f"STRICT RULES: "
-            f"1. {constraints} "
-            f"2. Return ONLY the Spanish text, no quotes or English."
-            f"3. Return ONLY Spanish words and slang that has a clean, school friendly meaning."
-        )
-        
-        response = model.generate_content(prompt)
-        current_sentence = response.text.strip().replace('"', '').replace('*', '')
-        
-        # Safety Truncate
-        words = current_sentence.split()
-        if len(words) > word_limit + 1:
-            current_sentence = " ".join(words[:word_limit])
-            
-        return {"sentence": current_sentence, "region": region}
+        clip = random.choice(matches)
+
+        return {
+            "sentence": clip["sentence"],
+            "region": clip["accent"],
+            "audio_url": f"/pronunciemos/audio/{clip['file']}",
+            "clip_id": clip["id"]
+        }
+
     except Exception as e:
-        fallbacks = {"mexico": "¡Qué onda!", "spain": "¡Vale, tío!", "argentina": "¡Che!"}
-        return {"sentence": fallbacks.get(region, "¡Hola!"), "region": region}
+        print(f"Audio clip selection error: {e}")
+        raise HTTPException(status_code=500, detail=f"Error loading audio: {str(e)}")
     
 
 

@@ -14,7 +14,7 @@ import { lessonCategories } from '@/lessonCategories.js';
 import { completionRequirements } from '@/lessonCategories.js';
 import { toast } from 'sonner';
 import correctFile from '@/assets/sounds/correct.mp3';
-import correctConfetti from 'canvas-confetti';
+//import correctConfetti from 'canvas-confetti';
 //import correctConfetti from 'https://cdn.skypack.dev/canvas-confetti';
 import { studyStreakHandler } from '../studyStreak.js';
 

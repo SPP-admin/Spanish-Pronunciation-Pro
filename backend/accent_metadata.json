@@ -1,0 +1,17 @@
+[
+    {"id": "espana_1", "file": "espana_1.mp3", "sentence": "Es un cactus de fácil cultivo, de crecimiento vigoroso y rápido.", "accent": "spain", "difficulty": "easy"},
+    {"id": "espana_2", "file": "espana_2.mp3", "sentence": "El sistema tampoco tiene límite en un ataque frontal.", "accent": "spain", "difficulty": "easy"},
+    {"id": "espana_3", "file": "espana_3.mp3", "sentence": "Contribuyó a la Antropología con su concepto del hombre como 'ser proyectivo'.", "accent": "spain", "difficulty": "easy"},
+
+    {"id": "mexico_1", "file": "mexico_1.mp3", "sentence": "Entre los paralelismos con la 'Fantasía en Fa menor', del Op.", "accent": "mexico", "difficulty": "easy"},
+    {"id": "mexico_2", "file": "mexico_2.mp3", "sentence": "De la mano de Felipe Solá se incorporó al Frente Renovador.", "accent": "mexico", "difficulty": "easy"},
+    {"id": "mexico_3", "file": "mexico_3.mp3", "sentence": "Cuando se encontró en dificultades financieras, Cristóbal le ayudó económicamente.", "accent": "mexico", "difficulty": "easy"},
+
+    {"id": "argentina_1", "file": "argentina_1.mp3", "sentence": "Se debe hacer al menos un mes antes de salir al pasto.", "accent": "argentina", "difficulty": "easy"},
+    {"id": "argentina_2", "file": "argentina_2.mp3", "sentence": "Proyecto en el que el mismo eligió el elenco.", "accent": "argentina", "difficulty": "easy"},
+    {"id": "argentina_3", "file": "argentina_3.mp3", "sentence": "Otros varios autores reconocidos por su obra de ficción han publicado críticas e investigaciones.", "accent": "argentina", "difficulty": "easy"},
+
+    {"id": "caribe_1", "file": "caribe_1.mp3", "sentence": "Donde no hay cabeza, todo se vuelven patas.", "accent": "puerto_rico", "difficulty": "easy"},
+    {"id": "caribe_2", "file": "caribe_2.mp3", "sentence": "Louis, y al igual que Pauline había trabajado para la revista 'Vogue' en París.", "accent": "puerto_rico", "difficulty": "easy"},
+    {"id": "caribe_3", "file": "caribe_3.mp3", "sentence": "Quinn pelea con Batman, pero es derrotada y encarcelada.", "accent": "puerto_rico", "difficulty": "easy"}
+]
