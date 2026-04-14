@@ -496,10 +496,10 @@ async def get_coaching(data: dict):
     prompt = (
         f"SYSTEM: You are an expert Spanish Phonetics Coach. A student is practicing: '{sentence}' ({dialect} accent). "
         f"The student struggled with these specific sounds: {failed_letters}. "
-        f"USER: Provide a single, cohesive tip (max 2 sentences) that explains why those mistakes happen in the context of the whole word. "
-        f"Instead of listing letters, talk about the 'flow' or 'tongue placement' needed for the word. "
-        f"Example: Instead of 'Pronounce R and O better', say 'Make sure to flick your tongue for the rolling R so it carries smoothly into the next vowel'."
+        f"USER: Provide a single, brief, cohesive tip (max 2 sentences) excluding overly-complicated phonetic jargon that explains why those mistakes happen in the context of the whole word. "
+        f"Instead of listing letters, talk about the 'flow', 'common mistakes English speakers may make in Spanish pronunciation based off of the failed letters', etc needed for the word. "
         f"CRITICAL: Keep the feedback in English."
+        f"CRITICAL: Do not use 'diphthongize' or any similar high level phonetic jargon to ensure maximum user understanding."
     )
 
     try:
