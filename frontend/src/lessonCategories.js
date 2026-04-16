@@ -88,7 +88,7 @@ export const lessonCategories = [
             { value: "mexico", label: "Mexico" },
             { value: "spain", label: "Spain" },
             { value: "argentina", label: "Argentina" },
-            { value: "puerto_rico", label: "Puerto Rico" },
+            { value: "caribe", label: "Caribbean" },
         ],
         levels: [
             { value: "easy", label: "Easy" },

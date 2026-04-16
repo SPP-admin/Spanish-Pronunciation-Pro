@@ -171,7 +171,7 @@ useEffect(() => {
         }
         sentence = sentence.replace("z", "s");
         break;
-      case "puerto_rico":
+      case "caribe":
         array = [...text.matchAll(regexIntervocalicD)];
         for (let group of array) {
           replacement = group[1] + " " + group[2];
