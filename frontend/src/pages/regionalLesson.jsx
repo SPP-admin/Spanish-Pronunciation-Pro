@@ -20,7 +20,7 @@ const RegionalLesson = () => {
     const user = auth.currentUser;
     
     const topicId = searchParams.get('topic');
-   const difficulty = searchParams.get('level') || 'easy'; 
+    //const difficulty = searchParams.get('level') || 'easy'; 
     const category = lessonCategories?.find(c => c.id === topicId);
 
     const [score, setScore] = useState(0);
@@ -29,7 +29,8 @@ const RegionalLesson = () => {
     const [isRegenerating, setIsRegenerating] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
 
-    const isCurrentComboComplete = profile?.completedCombos?.[5]?.[`${topicId}-${difficulty}`] === true;
+    const isCurrentComboComplete = profile?.completedCombos?.[5]?.[`${topicId}-easy`] === true;
+    //const isCurrentComboComplete = profile?.completedCombos?.[5]?.[topicId] === true;
 
     const handleTrophyUnlock = async () => {
         if (!user || !profile) return;
@@ -42,13 +43,14 @@ const RegionalLesson = () => {
         let curCombos = profile.completedCombos ? { ...profile.completedCombos } : {};
         const regionalCombos = curCombos[5] ? { ...curCombos[5] } : {};
         
-        regionalCombos[`${topicId}-${difficulty}`] = true;
+        regionalCombos[`${topicId}-easy`] = true;
+        //regionalCombos[topicId] = true;
         curCombos[5] = regionalCombos;
       
         try {
-          await axios.patch(`${import.meta.env.VITE_API_URL}/updateTopicStatus?uid=${user.uid}&topicIndex=5&status=true`);
+          await axios.patch(`${import.meta.env.VITE_API_URL}/updateTopicProgress?uid=${user.uid}&topic=5`);
           
-          await axios.patch(`${import.meta.env.VITE_API_URL}/updateCompletedCombos?uid=${user.uid}&topic=5&lesson=${topicId}&level=${difficulty}`);
+          await axios.patch(`${import.meta.env.VITE_API_URL}/updateCompletedCombos?uid=${user.uid}&topic=5&lesson=${topicId}&level=easy`);
       
           setProfile({ 
             ...profile, 
@@ -71,7 +73,8 @@ const RegionalLesson = () => {
             const regionValue = randomLesson.value;
     
             const response = await fetch(
-                `${import.meta.env.VITE_API_URL}/generateRegionalSentence?topic=${topicId}&region=${regionValue}&difficulty=${difficulty}`, 
+                //`${import.meta.env.VITE_API_URL}/generateRegionalSentence?topic=${topicId}&region=${regionValue}&difficulty=${difficulty}`, 
+                `${import.meta.env.VITE_API_URL}/generateRegionalSentence?topic=${topicId}&region=${regionValue}`,
                 { method: "POST" }
             );
             const data = await response.json();
@@ -151,7 +154,7 @@ const RegionalLesson = () => {
                 <div className="w-full mb-10 px-4 flex flex-col md:flex-row items-center justify-between gap-6">
                     <div className="flex-1">
                         <span className="text-[var(--brand-gold)] text-[20px] font-black uppercase tracking-[0.4em] mb-2 block opacity-70">
-                            Training Module • {difficulty}
+                            Training Module
                         </span>
                         <h1 className="text-4xl md:text-3xl font-black text-[var(--text-main)] tracking-tighter leading-tight">
                             Regional Dialects: {category.title}

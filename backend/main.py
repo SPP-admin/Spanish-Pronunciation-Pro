@@ -541,7 +541,7 @@ async def get_coaching(data: dict):
         return {"coach_tip": "Buen intento. Trata de relajar la lengua y conectar los sonidos más suavemente."}
 
 @app.post("/generateRegionalSentence")
-async def generateRegionalSentence(topic: str, region: str = "", difficulty: str = "easy"):
+async def generateRegionalSentence(topic: str, region: str = ""):
     try:
         matches = [
             item for item in accent_data

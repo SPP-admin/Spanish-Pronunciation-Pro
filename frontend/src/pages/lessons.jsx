@@ -183,7 +183,7 @@ function LessonsPage({ user }) {
 
           const practicePath =
             category.id === 'regional_differences'
-              ? `/regionalLesson?topic=${category.id}&level=${currentLevel}`
+              ? `/regionalLesson?topic=${category.id}`
               : `/lessonsPractice?topic=${category.id}&lesson=${currentLesson}&level=${currentLevel}`;
 
           return (
