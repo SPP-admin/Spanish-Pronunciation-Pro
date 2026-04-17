@@ -554,7 +554,7 @@ async def generateRegionalSentence(topic: str, region: str = "", difficulty: str
         return {
             "sentence": clip["sentence"],
             "region": clip["accent"],
-            "audio_url": f"/pronunciemos/audio/{clip['file']}",
+            "audio_url": f"audio/{clip['file']}",
             "clip_id": clip["id"]
         }
 
