@@ -76,8 +76,7 @@ export const lessonCategories = [
 
         ],
         levels: [
-            { value: "words", label: "Words" },
-            { value: "sentences", label: "Sentences" },
+            { value: "regional_practice", label: "Practice" },
         ],
     },
     {
