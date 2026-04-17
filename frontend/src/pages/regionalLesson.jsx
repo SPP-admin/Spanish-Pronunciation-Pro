@@ -20,7 +20,7 @@ const RegionalLesson = () => {
     const user = auth.currentUser;
     
     const topicId = searchParams.get('topic');
-    const difficulty = searchParams.get('level') || 'easy'; 
+   const difficulty = searchParams.get('level') || 'easy'; 
     const category = lessonCategories?.find(c => c.id === topicId);
 
     const [score, setScore] = useState(0);

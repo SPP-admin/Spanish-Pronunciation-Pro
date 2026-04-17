@@ -27,7 +27,7 @@ function LessonsPage({ user }) {
 
   useEffect(() => {
     console.log("completedTopics:", profile?.completedTopics);
-console.log("achievementsToGrant:", achievementChecker(profile, achievements));
+    console.log("achievementsToGrant:", achievementChecker(profile, achievements));
     const achievementsToGrant = achievementChecker(profile, achievements);
     if (achievementsToGrant.length === 0) return;
 
@@ -118,13 +118,14 @@ console.log("achievementsToGrant:", achievementChecker(profile, achievements));
 
   const completeCategory = async (index) => {
     try {
+     
       await api.patch(`/updateTopicProgress?uid=${user.uid}&topic=${index}`);
-
+  
       const currentTopics = getSafeCollection(profile?.completedTopics);
       const updatedTopics = Array.isArray(currentTopics)
         ? [...currentTopics]
         : { ...currentTopics };
-
+  
       updatedTopics[index] = true;
       setProfile({ ...profile, completedTopics: updatedTopics }, user.uid);
     } catch (error) {
@@ -254,33 +255,36 @@ console.log("achievementsToGrant:", achievementChecker(profile, achievements));
                     </div>
                   )}
 
-                  <div className="space-y-3">
-                    <Label
-                      className="uppercase tracking-widest text-xs font-bold ml-1 opacity-80"
-                      style={{ color: "var(--brand-gold)" }}
-                    >
-                      Difficulty
-                    </Label>
+                
+                  {category.id !== 'regional_differences' && (
+                    <div className="space-y-3">
+                      <Label
+                        className="uppercase tracking-widest text-xs font-bold ml-1 opacity-80"
+                        style={{ color: "var(--brand-gold)" }}
+                      >
+                        Difficulty
+                      </Label>
 
-                    <Select
-                      onValueChange={(value) =>
-                        handleSelectionChange(category.id, 'currentLevel', value)
-                      }
-                      defaultValue={currentLevel}
-                    >
-                      <SelectTrigger className="bg-black/20 border-[var(--border-color)] rounded-full h-12">
-                        <SelectValue />
-                      </SelectTrigger>
+                      <Select
+                        onValueChange={(value) =>
+                          handleSelectionChange(category.id, 'currentLevel', value)
+                        }
+                        defaultValue={currentLevel}
+                      >
+                        <SelectTrigger className="bg-black/20 border-[var(--border-color)] rounded-full h-12">
+                          <SelectValue />
+                        </SelectTrigger>
 
-                      <SelectContent className="bg-[var(--bg-card)] border-[var(--border-color)] rounded-2xl">
-                        {category.levels.map((level) => (
-                          <SelectItem key={level.value} value={level.value}>
-                            {level.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                        <SelectContent className="bg-[var(--bg-card)] border-[var(--border-color)] rounded-2xl">
+                          {category.levels.map((level) => (
+                            <SelectItem key={level.value} value={level.value}>
+                              {level.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                 </div>
               </div>
 
