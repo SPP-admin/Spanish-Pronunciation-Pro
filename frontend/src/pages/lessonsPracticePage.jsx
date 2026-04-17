@@ -229,7 +229,7 @@ useEffect(() => {
   const [currentAccuracy, setCurrentAccuracy] = useState(0);
   const [studyStreakChecked, setStudyStreakChecked] = useState(false);
 
-  const allowedError = .5;
+  const allowedError = 1.0;
 
   const correctSFX = new Audio(correctFile);
 
@@ -390,98 +390,104 @@ const sendAudioToServer = (blob) => {
     const reader = new FileReader();
 
     reader.onloadend = async () => { 
-      const base64data = reader.result.split(",")[1];
-      const generatedSentence = selectedText ? selectedText : spanishSentence;
-      let dialect = (topic === "accent_marks") ? topic : lesson;
+        const base64data = reader.result.split(",")[1];
+        const generatedSentence = selectedText ? selectedText : spanishSentence;
+        let dialect = (topic === "accent_marks") ? topic : lesson;
 
-      const payload = { 
-        base64_data: base64data, 
-        sentence: generatedSentence, 
-        dialect: dialect
-      };
+        const payload = { 
+            base64_data: base64data, 
+            sentence: generatedSentence, 
+            dialect: dialect
+        };
 
-      try {
+        try {
+    
+            const azureResponse = await renderBridge.post("/analyze", payload);
+            const results = azureResponse.data;
+
+            const failedLetters = results
+                .filter(item => item[1] === "False")
+                .map(item => item[0]);
+
+            let html = "";
+            const correctWords = { ...sentenceWords }; 
+            let amountCorrect = 0;
+            let lettersCorrect = 0;
+            let word = '';
+            let wordStatus = false;
+
+            results.forEach((arrItem) => {
+                const [letter, isPronouncedCorrect, isStressedCorrect] = arrItem;
+                html += (isPronouncedCorrect === "True" ? `<span class="text-green-500">` : `<span class="text-red-500">`);
+                amountCorrect += (isPronouncedCorrect === "True" ? 1 : 0);
+                html += (isStressedCorrect === "False" ? `<u>` : "");
+                html += letter;
+                html += (isStressedCorrect === "False" ? `</u>` : "");
+                html += "</span>";
+
+                if(isDelimiter(letter)) {
+                    if((lettersCorrect >= word.length * allowedError) && correctWords.hasOwnProperty(word)) correctWords[word] = true;
+                    word = '';
+                    lettersCorrect = 0;
+                } else {
+                    word += letter;
+                    lettersCorrect += (isPronouncedCorrect === "True" ? 1 : 0);
+                }
+            });
+
+            if(word !== '') {
+                if((lettersCorrect >= word.length * allowedError) && correctWords.hasOwnProperty(word)) {
+                    correctWords[word] = true;
+                    wordStatus = true;
+                }
+            }
+
+            setSentenceWords(correctWords);
+            setUses(prev => prev + 1);
+            setAttempts(prev => prev + 1);
+            setCurrentAccuracy(prev => prev + (amountCorrect / generatedSentence.length));
+
+            const isSentenceFullyPronounced = !Object.values(correctWords).includes(false);
   
-        console.log("Current Bridge URL:", renderBridge.defaults.baseURL);
-        const azureResponse = await renderBridge.post("/analyze", payload);
+            if (isSentenceFullyPronounced) {
+              console.log("Sentence pronounced correctly!");
+              if (!isLessonComplete && !isCurrentCorrect) handleCorrectAnswer();
+            } else {
+              setQuestionStatus(false, wordStatus);
+            }
+    
+            const loadingHtml = `${html}<div class='mt-6 p-4 rounded-2xl bg-black/5 border border-[var(--brand-gold)]/10 text-[20px] italic text-[var(--text-main)] animate-pulse'>
+                Loading additional feedback...
+            </div>`;
+            setFeedbackBox(loadingHtml);
 
-      
+            try {
+                const coachingResponse = await api.post("/get-coaching", {
+                    failed_letters: failedLetters,
+                    sentence: generatedSentence,
+                    dialect: dialect,
+                    base64_data: base64data,
+                    azure_results: results
+                });
 
-        const results = azureResponse.data;
+                
+                const finalHtml = `${html}<div class='mt-6 p-4 rounded-2xl bg-black/10 border border-[var(--brand-gold)]/20 text-[20px] italic text-[var(--text-main)]'>
+                    ${coachingResponse.data.coach_tip}
+                </div>`;
+                setFeedbackBox(finalHtml);
+            } catch (coachError) {
+                console.error("Coaching failed:", coachError);
+                setFeedbackBox(html); 
+            }
 
-        const failedLetters = results
-          .filter(item => item[1] === "False")
-          .map(item => item[0]);
-
-          console.log("Failed Letters for Coaching:", failedLetters);
-        const coachingResponse = await api.post("/get-coaching", {
-          failed_letters: failedLetters,
-          sentence: generatedSentence,
-          dialect: dialect
-        });
-        
-        let html = "";
-        const correctWords = { ...sentenceWords }; 
-        let amountCorrect = 0;
-        let lettersCorrect = 0;
-        let word = '';
-        let wordStatus = false;
-
-        
-        results.forEach((arrItem) => {
-          const [letter, isPronouncedCorrect, isStressedCorrect] = arrItem;
-          
-          html += (isPronouncedCorrect === "True" ? `<span class="text-green-500">` : `<span class="text-red-500">`);
-          amountCorrect += (isPronouncedCorrect === "True" ? 1 : 0);
-          html += (isStressedCorrect === "False" ? `<u>` : "");
-          html += letter;
-          html += (isStressedCorrect === "False" ? `</u>` : "");
-          html += "</span>";
-
-          if(isDelimiter(letter)) {
-            if((lettersCorrect >= word.length * allowedError) && correctWords.hasOwnProperty(word)) correctWords[word] = true;
-            word = '';
-            lettersCorrect = 0;
-          } else {
-            word += letter;
-            lettersCorrect += (isPronouncedCorrect === "True" ? 1 : 0);
-          }
-        });
-
-        
-        if(word !== '') {
-          if((lettersCorrect >= word.length * allowedError) && correctWords.hasOwnProperty(word)) {
-            correctWords[word] = true;
-            wordStatus = true;
-          }
+        } catch (error) {
+            console.error("Evaluation flow failed:", error);
+            setFeedbackBox("<span class='text-red-500'>Connection error. Please check your network.</span>");
         }
-
-
-        setSentenceWords(correctWords);
-        setUses(prev => prev + 1);
-        setAttempts(prev => prev + 1);
-        setCurrentAccuracy(prev => prev + (amountCorrect / generatedSentence.length));
-
-        const isSentenceFullyPronounced = !Object.values(correctWords).includes(false);
-
-        if(isSentenceFullyPronounced) {
-          if(!isLessonComplete && !isCurrentCorrect) handleCorrectAnswer();
-        } else {
-          setQuestionStatus(false, wordStatus);
-        }
-
-        const finalHtml = `${html}<div class='mt-4 text-[20px] italic text-[var(--brand-gold)]'>${coachingResponse.data.coach_tip}</div>`;
-        setFeedbackBox(finalHtml);
-
-      } catch (error) {
-        console.error("Evaluation flow failed:", error);
-        setFeedbackBox("<span class='text-red-500'>Connection error. Please check your network.</span>");
-      }
-
     };
   
     reader.readAsDataURL(blob);
-  };
+};
 
 
   const handleAudioRecording = async (blob) => {

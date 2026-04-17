@@ -121,7 +121,14 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 #gemini import
 import google.generativeai as genai
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel("gemini-2.5-flash")
+generation_config = {
+  "temperature": 0.4,
+}
+
+model = genai.GenerativeModel(
+  model_name="gemini-2.5-flash",
+  generation_config=generation_config,
+)
 
 
 #For testing
@@ -482,25 +489,50 @@ async def generateSentence(chunk: str, lesson: str, difficulty: str):
         
     return current_sentence
 
-# Add this to your CHDR backend/main.py
+
 @app.post("/get-coaching")
 async def get_coaching(data: dict):
     failed_letters = data.get("failed_letters", [])
     sentence = data.get("sentence", "")
     dialect = data.get("dialect", "latam")
+    base64_audio = data.get("base64_data")
+    results = data.get("azure_results", [])
+    
+    print(f"DEBUG: Coaching request received. azure_results: {results}, Sentence: '{sentence}', Dialect: '{dialect}'")
 
     if not failed_letters:
-        return {"coach_tip": "¡Perfecto! Tu fluidez y pronunciación son excelentes."}
+        return {"coach_tip": "¡Perfecto!"}
+    
+    marked_word = ""
+    current_pos = 0
+    
+    for result in results:
+        sound = result[0]      
+        is_correct = result[1] 
+       
+        sound_len = len(sound)
+        
+        original_segment = sentence[current_pos : current_pos + sound_len]
+        
+        if is_correct == "False":
+            marked_word += f"[{original_segment}]"
+        else:
+            marked_word += original_segment
+            
+        
+        current_pos += sound_len
+
+    print(f"DEBUG: Received coaching request with failed letters: {marked_word}, sentence: '{sentence}', dialect: '{dialect}'")
 
     # PROMPT TUNING: Focus on word-level patterns instead of letter-by-letter
-    prompt = (
-        f"SYSTEM: You are an expert Spanish Phonetics Coach. A student is practicing: '{sentence}' ({dialect} accent). "
-        f"The student struggled with these specific sounds: {failed_letters}. "
-        f"USER: Provide a single, brief, cohesive tip (max 2 sentences) excluding overly-complicated phonetic jargon that explains why those mistakes happen in the context of the whole word. "
-        f"Instead of listing letters, talk about the 'flow', 'common mistakes English speakers may make in Spanish pronunciation based off of the failed letters', etc needed for the word. "
-        f"CRITICAL: Keep the feedback in English."
-        f"CRITICAL: Do not use 'diphthongize' or any similar high level phonetic jargon to ensure maximum user understanding."
-    )
+    prompt = [
+        { "mime_type": "audio/wav", "data": base64_audio },
+        f"SYSTEM: High-precision grading (Azure) confirmed errors in these bracketed zones: {marked_word} for the word/text '{sentence}', with focus on '{dialect}' dialect/sound. "
+        f"ANALYSIS TASK (Internal): Listen to the audio. Why did they miss the bracketed sounds? Did they substitute a word (like 'dog')? "
+        f"OUTPUT RULE: Do NOT show your internal analysis. Do NOT list '1.' or '2.' in your response. "
+        f"COACHING TIP: Provide exactly 2 sentences of direct, physical advice to the student. "
+        f"Focus ONLY on the bracketed errors. If they said the wrong word entirely, tell them."
+    ]
 
     try:
         response = model.generate_content(prompt)
