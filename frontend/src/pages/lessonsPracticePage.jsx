@@ -229,7 +229,7 @@ useEffect(() => {
   const [currentAccuracy, setCurrentAccuracy] = useState(0);
   const [studyStreakChecked, setStudyStreakChecked] = useState(false);
 
-  const allowedError = 1.0;
+  const allowedError = 0.5;
 
   const correctSFX = new Audio(correctFile);
 
@@ -454,30 +454,29 @@ const sendAudioToServer = (blob) => {
               if (!isLessonComplete && !isCurrentCorrect) handleCorrectAnswer();
             } else {
               setQuestionStatus(false, wordStatus);
-            }
     
-            const loadingHtml = `${html}<div class='mt-6 p-4 rounded-2xl bg-black/5 border border-[var(--brand-gold)]/10 text-[20px] italic text-[var(--text-main)] animate-pulse'>
-                Loading additional feedback...
-            </div>`;
-            setFeedbackBox(loadingHtml);
+              const loadingHtml = `${html}<div class='mt-6 p-4 rounded-2xl bg-black/5 border border-[var(--brand-gold)]/10 text-[20px] italic text-[var(--text-main)] animate-pulse'>
+                  Loading additional feedback...
+              </div>`;
+              setFeedbackBox(loadingHtml);
 
-            try {
-                const coachingResponse = await api.post("/get-coaching", {
-                    failed_letters: failedLetters,
-                    sentence: generatedSentence,
-                    dialect: dialect,
-                    base64_data: base64data,
-                    azure_results: results
-                });
+              try {
+                  const coachingResponse = await api.post("/get-coaching", {
+                      failed_letters: failedLetters,
+                      sentence: generatedSentence,
+                      dialect: dialect,
+                      base64_data: base64data,
+                      azure_results: results
+                  });
 
-                
-                const finalHtml = `${html}<div class='mt-6 p-4 rounded-2xl bg-black/10 border border-[var(--brand-gold)]/20 text-[20px] italic text-[var(--text-main)]'>
-                    ${coachingResponse.data.coach_tip}
-                </div>`;
-                setFeedbackBox(finalHtml);
-            } catch (coachError) {
-                console.error("Coaching failed:", coachError);
-                setFeedbackBox(html); 
+                  const finalHtml = `${html}<div class='mt-6 p-4 rounded-2xl bg-black/10 border border-[var(--brand-gold)]/20 text-[20px] italic text-[var(--text-main)]'>
+                      ${coachingResponse.data.coach_tip}
+                  </div>`;
+                  setFeedbackBox(finalHtml);
+              } catch (coachError) {
+                  console.error("Coaching failed:", coachError);
+                  setFeedbackBox(html);
+              }
             }
 
         } catch (error) {
